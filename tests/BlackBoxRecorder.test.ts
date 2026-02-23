@@ -195,8 +195,10 @@ describe('BlackBoxRecorder', () => {
             expect(frame2.accelX).toBeCloseTo(100);
             expect(frame2.accelY).toBeCloseTo(0);
 
-            // G-Force: sqrt(100^2 + 0^2) / 9.81 ~= 10.19
-            expect(frame2.gForce).toBeCloseTo(100 / 9.81);
+            // G-Force: Proper acceleration includes gravity counteraction (-9.81 in Y)
+            // sqrt(100^2 + (-9.81)^2) / 9.81
+            const expectedGForce = Math.sqrt(100 * 100 + 9.81 * 9.81) / 9.81;
+            expect(frame2.gForce).toBeCloseTo(expectedGForce);
         });
 
         it('should update summary statistics', () => {

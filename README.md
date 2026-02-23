@@ -1,71 +1,56 @@
-# 🚀 DeltaV Lab - Professional Rocket Launch Simulation (v3.1.0)
+# 🚀 DeltaV Lab - Professional Rocket Launch Simulation
 
-Engineering-Grade Spaceflight Simulation. Features accurate physics using RK4 integration, atmospheric modelling, environmental hazards, autonomous guidance, telemetry recording, modular vehicle assembly, and Kerbal Space Program-inspired controls.
+<p align="center">
+  <img src="https://via.placeholder.com/800x400?text=DeltaV+Lab+Simulation+Demo" alt="DeltaV Lab Simulation Demo">
+</p>
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)
-![Build](https://img.shields.io/badge/build-esbuild-yellow.svg)
-![Tests](https://img.shields.io/badge/tests-vitest-green.svg)
+<p align="center">
+  <strong>Engineering-Grade Spaceflight Simulation.</strong> Features accurate physics using RK4 integration, atmospheric modelling, environmental hazards, autonomous guidance, telemetry recording, and modular vehicle assembly. Inspired by Kerbal Space Program.
+</p>
 
-## Features
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  <img src="https://img.shields.io/badge/TypeScript-5.3-blue.svg" alt="TypeScript">
+  <img src="https://img.shields.io/badge/build-esbuild-yellow.svg" alt="Build">
+  <img src="https://img.shields.io/badge/tests-vitest-green.svg" alt="Tests">
+</p>
 
-### Mission Operations & analysis (v3.0.0)
-- **Remote Telemetry** - Broadcast live flight data to a second monitor or device via `telemetry.html`.
-- **Post-Flight Analysis** - Replay missions with `analysis.html`, featuring synchronized data charts, time scrubbing, and 3D replay.
-- **Flight Data Recorder** - Import/Export flight logs in CSV/JSON formats for external analysis.
-- **Advanced Visualization** - Visual wind vectors, safe flight corridors, and thermal heatmaps.
+## 📑 Table of Contents
+- [Quick Start](#-quick-start)
+- [Key Features](#-key-features)
+- [How to Fly (Controls)](#-how-to-fly-controls--shortcuts)
+- [Mission Walkthrough](#-mission-walkthrough-step-by-step)
+- [The Flight Computer (DSL)](#-the-flight-computer-dsl)
+- [Advanced Under the Hood](#-advanced-under-the-hood)
+- [Project Structure](#-project-structure)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-### Safety Systems (v2.7.0)
-New professional-grade safety features for training and operations:
-- **Flight Termination System (FTS)** - Independent system with SAFE, ARM, and DESTRUCT modes. Automatically triggers if the rocket breaches the safety corridor.
-- **Launch Checklist** - Interactive Go/No-Go checklist that gates the launch sequence.
-- **Fault Injection System (FIS)** - Instructor tool to inject failures (Engine Flameout, Gimbal Lock, Sensor Glitch, Fuel Leak) for emergency training.
+## 🏁 Quick Start
 
-### Engineering Improvements (v2.7.0)
-- **Deterministic Physics** - Physics loop runs in a Web Worker for consistent 50Hz simulation independent of frame rate.
-- **Vitest Testing** - Comprehensive unit test suite covering physics, safety logic, and state management.
-- **Strict State Management** - Redux-like store pattern for predictable state updates.
+**Prerequisites:** Ensure you have [Node.js](https://nodejs.org/) (v18 or higher) installed.
 
-### Mission Control & Orbital Planning
-- **Orbital Maneuver Planner** - Calculate burns for Circularization and Hohmann Transfers.
-- **Ground Track Visualization** - Mercator map projection of rocket path and impact zone.
-- **Spherical Physics** - Accurate latitude/longitude calculation based on downrange distance.
+```bash
+# 1. Clone the repository
+git clone https://github.com/DhaatuTheGamer/professional-rocket-launch-simulation.git
+cd professional-rocket-launch-simulation
 
-### Physics Engine
-- **RK4 Integration** - 4th order Runge-Kutta for accurate orbital mechanics
-- **Advanced Aerodynamics** - Lift/Drag calculation based on Angle of Attack (AoA) & Center of Pressure (CP)
-- **Thermal Protection System** - Skin temperature simulation with ablation & radiative cooling
-- **Atmospheric Drag** - Transonic effects with Mach-dependent drag coefficient
-- **Inverse-Square Gravity** - Realistic orbital mechanics
-- **Pressure-Dependent Isp** - Engine efficiency varies with altitude
-- **Component Reliability** - Probabilistic failure modes (engine flameout, structural fatigue, sensor glitches)
+# 2. Install dependencies
+npm install
 
-### Modular Vehicle Assembly (v1.7.0)
-Build custom rockets from modular parts in the VAB:
+# 3. Start the local development server
+npm run dev
+```
 
-**Parts Catalog:**
-| Category | Parts |
-|----------|-------|
-| Engines | Merlin 1D, Merlin Vacuum, Raptor 2, RL-10 |
-| Tanks | Small (5t), Medium (15t), Large (30t), Jumbo (50t) |
-| Avionics | Basic (SAS), Advanced (SAS + RCS) |
-| Structure | Payload Fairings (S/L), Stage Decouplers |
-| Boosters | SRBs (Small, Large) |
+Navigate to `http://localhost:8080` in your browser to start the simulation.
+*Note: To view live remote telemetry, open `http://localhost:8080/telemetry.html` on a second monitor.*
 
-**Features:**
-- Drag-and-drop part stacking
-- Multi-stage configuration with decouplers
-- Real-time Delta-V and TWR calculation
-- Save/Load blueprints to localStorage
-- Preset rockets (Falcon 9, Simple Rocket)
+## ✨ Key Features
 
-### Rocket Stages
-| Stage | Description |
-|-------|-------------|
-| **FullStack** | Initial combined rocket |
-| **Booster** | First stage with landing autopilot |
-| **UpperStage** | Second stage with payload fairing |
-| **Payload** | Deployable satellite |
+* **Modular Vehicle Assembly (VAB):** Build multi-stage rockets using a catalog of engines (Merlin, Raptor, RL-10), tanks, avionics, and fairings. Calculates real-time Delta-V and TWR.
+* **Professional Mission Control:** Includes remote telemetry broadcasting, post-flight replay analysis with synchronized data charts, and CSV/JSON flight log exports.
+* **Safety & Instructor Systems:** Features a Flight Termination System (FTS), interactive Go/No-Go checklists, and an Instructor Fault Injection System to trigger engine flameouts, sensor glitches, and more.
+* **Deterministic Physics Engine:** Runs at a consistent 50Hz in a Web Worker, ensuring accurate orbital mechanics regardless of rendering framerate.
 
 ## 🎮 How to Fly: Controls & Shortcuts
 
@@ -122,22 +107,52 @@ Build custom rockets from modular parts in the VAB:
 - If the rocket deviates from course, press `T` to **ARM** the Flight Termination System.
 - Click the red **DESTRUCT** button in the FTS panel to terminate the flight safely.
 
-## Quick Start
+## 💻 The Flight Computer (DSL)
 
-```bash
-# Install dependencies
-npm install
+DeltaV Lab includes an autonomous guidance system powered by a custom Domain Specific Language (DSL).
 
-# Run Tests (New!)
-npm test
+<details>
+<summary><strong>Click to expand DSL Syntax & Examples</strong></summary>
 
-# Build & Start local server
-npm run dev
+**Syntax:**
+
+```text
+WHEN <condition> THEN <action>
+WHEN <condition> AND <condition> THEN <action>
 ```
 
-Then open http://localhost:8080
+**Conditions:** `ALTITUDE`, `VELOCITY`, `APOGEE`, `FUEL`, `TIME`
 
-## Project Structure
+**Operators:** `>`, `<`, `>=`, `<=`, `==`
+
+**Actions:** `PITCH <degrees>`, `THROTTLE <0-100>`, `STAGE`, `SAS <OFF|STABILITY|PROGRADE|RETROGRADE>`
+
+**Example: Gravity Turn to Orbit**
+
+```text
+WHEN ALTITUDE > 1000 THEN PITCH 80
+WHEN ALTITUDE > 10000 THEN PITCH 60
+WHEN ALTITUDE > 30000 THEN PITCH 45
+WHEN APOGEE > 100000 THEN THROTTLE 0
+```
+
+</details>
+
+## 🔬 Advanced Under the Hood
+
+DeltaV Lab doesn't cut corners on physics. Here is a look at the math powering the simulation.
+
+<details>
+<summary><strong>Click to explore Physics, Thermodynamics & Aerodynamics</strong></summary>
+
+* **Aerodynamics & Stability:** Calculates Center of Pressure (CP) vs Center of Mass (CoM). Lift and drag are dynamically calculated based on Angle of Attack (AoA) and Mach number (transonic effects).
+* **Thermal Protection (TPS):** Utilizes the Sutton-Graves Equation for stagnation point heating. Simulates realistic mass loss and heat absorption via ablation.
+* **Orbital Mechanics:** 4th-order Runge-Kutta (RK4) integration handles inverse-square gravity and orbital maneuver planning (Hohmann Transfers).
+* **Environmental Hazards:** Simulates wind shear layers, Dryden-style turbulence, and pressure-dependent engine Specific Impulse (Isp).
+
+</details>
+
+## 📂 Project Structure
 
 ```
 ├── src/
@@ -154,51 +169,11 @@ Then open http://localhost:8080
 └── package.json
 ```
 
-## Flight Computer (v1.5.0)
+## 🤝 Contributing
 
-Autonomous guidance system with a custom DSL for mission scripts.
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/DhaatuTheGamer/professional-rocket-launch-simulation/issues).
 
-### DSL Syntax
-```
-WHEN <condition> THEN <action>
-WHEN <condition> AND <condition> THEN <action>
-```
+## 📜 License
 
-**Conditions:** `ALTITUDE`, `VELOCITY`, `APOGEE`, `FUEL`, `TIME`  
-**Operators:** `>`, `<`, `>=`, `<=`, `==`  
-**Actions:** `PITCH <degrees>`, `THROTTLE <0-100>`, `STAGE`, `SAS <OFF|STABILITY|PROGRADE|RETROGRADE>`
-
-### Example Script
-```
-# Gravity Turn to Orbit
-WHEN ALTITUDE > 1000 THEN PITCH 80
-WHEN ALTITUDE > 10000 THEN PITCH 60
-WHEN ALTITUDE > 30000 THEN PITCH 45
-WHEN APOGEE > 100000 THEN THROTTLE 0
-```
-
-## Advanced Physics Details
-
-### Aerodynamics & Stability
-The simulation now calculates:
-- **Center of Pressure (CP)** vs **Center of Mass (CoM)** relation
-- **Stability Margin**: Positive when CP is behind CoM (stable), negative when ahead (unstable)
-- **Lift & Drag**: Calculated based on Angle of Attack (AoA) and Mach number
-
-### Thermal Protection
-- **Sutton-Graves Equation**: Stagnation point heating based on velocity and nose radius
-- **Ablation**: Mass loss and heat absorption when shield temperature critical
-
-### Reliability & Failure Modes
-- **Bathtub Curve**: Engines have "infant mortality" and "wear-out" phases.
-- **Sensor Glitches**: Random telemetry noise simulating real-world sensor imperfections.
-
-### Environmental Hazards (v1.8.0)
-- **Wind Shear Layers**: Altitude-based wind profiles.
-- **Gusts & Turbulence**: Dryden-style turbulence model.
-- **Go/No-Go Launch Conditions**: Real-time evaluation based on surface wind limits.
-
-## License
-
-MIT License - See [LICENSE](LICENSE) for details.
+Distributed under the MIT License. See `LICENSE` for more information.
 
