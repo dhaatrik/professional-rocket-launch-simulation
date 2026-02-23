@@ -309,7 +309,7 @@ function postState() {
             sharedView[base + EntityOffset.SKIN_TEMP] = e.skinTemp;
             sharedView[base + EntityOffset.HEAT_SHIELD] = e.heatShieldRemaining;
             sharedView[base + EntityOffset.ABLATING] = e.isAblating ? 1 : 0;
-            sharedView[base + EntityOffset.FAIRING_DEP] = (e instanceof UpperStage && e.fairingsDeployed) ? 1 : 0;
+            sharedView[base + EntityOffset.FAIRING_DEP] = e instanceof UpperStage && e.fairingsDeployed ? 1 : 0;
             sharedView[base + EntityOffset.MASS] = e.mass;
             sharedView[base + EntityOffset.APOGEE] = e.apogee;
         }
