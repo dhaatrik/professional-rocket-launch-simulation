@@ -527,7 +527,9 @@ export class Vessel implements IVessel {
 
         // Spawn explosion particles
         for (let i = 0; i < 30; i++) {
-            addParticle(Particle.create(this.x + Math.random() * 20 - 10, this.y + this.h - Math.random() * 20, 'fire'));
+            addParticle(
+                Particle.create(this.x + Math.random() * 20 - 10, this.y + this.h - Math.random() * 20, 'fire')
+            );
             addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
         }
     }

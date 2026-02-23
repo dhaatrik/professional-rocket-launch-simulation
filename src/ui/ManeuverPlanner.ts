@@ -41,10 +41,10 @@ export class ManeuverPlanner {
         modal.className = 'script-editor-modal'; // Reuse script editor styling for consistency
         modal.style.display = 'none'; // Hidden by default
         modal.innerHTML = `
-            <div class="script-editor-content maneuver-planner-content">
+            <div class="script-editor-content maneuver-planner-content" role="dialog" aria-modal="true" aria-labelledby="planner-title">
                 <div class="script-editor-header">
-                    <h2>Orbital Maneuver Planner</h2>
-                    <button id="planner-close-btn" class="script-close-btn">×</button>
+                    <h2 id="planner-title">Orbital Maneuver Planner</h2>
+                    <button id="planner-close-btn" class="script-close-btn" aria-label="Close Maneuver Planner">×</button>
                 </div>
                 
                 <div class="script-editor-body maneuver-planner-body">
@@ -72,7 +72,7 @@ export class ManeuverPlanner {
 
                     <div class="maneuver-section">
                         <h3>Maneuver Plan</h3>
-                        <div id="planner-results" class="maneuver-results">
+                        <div id="planner-results" class="maneuver-results" aria-live="polite">
                             Select a maneuver to calculate...
                         </div>
                     </div>
@@ -307,7 +307,6 @@ export class ManeuverPlanner {
 
                 this.renderHohmannPlan(hResult, targetAltKm, resultDiv);
             }
-
         } catch (e: any) {
             resultDiv.innerHTML = '';
             const errorSpan = document.createElement('span');
