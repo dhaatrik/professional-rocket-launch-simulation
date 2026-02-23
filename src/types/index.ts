@@ -311,6 +311,7 @@ export interface IParticle {
     vx: number;
     vy: number;
     type: ParticleType;
+    typeId: number;
     life: number;
     size: number;
     decay: number;

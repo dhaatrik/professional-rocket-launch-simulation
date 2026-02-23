@@ -52,6 +52,7 @@ export class Particle implements IParticle {
 
     // Type and visual properties
     public type: ParticleType;
+    public typeId: number;
     public life: number;
     public size: number;
     public decay: number;
@@ -101,6 +102,7 @@ export class Particle implements IParticle {
 
         // Initialize with default values to satisfy TS, then call reset
         this.life = 0;
+        this.typeId = 0;
         this.size = 0;
         this.decay = 0;
         this.growRate = 0;
@@ -117,6 +119,22 @@ export class Particle implements IParticle {
         this.x = x;
         this.y = y;
         this.type = type;
+        switch (type) {
+            case 'smoke':
+                this.typeId = 0;
+                break;
+            case 'fire':
+                this.typeId = 1;
+                break;
+            case 'spark':
+                this.typeId = 2;
+                break;
+            case 'debris':
+                this.typeId = 3;
+                break;
+            default:
+                this.typeId = 0;
+        }
         this.life = 1.0;
 
         // Get base configuration
@@ -205,14 +223,13 @@ export class Particle implements IParticle {
     }
 
     // Reusable batches to reduce GC pressure
-    private static batches: Record<ParticleType, Particle[][]> = {
-        smoke: Array.from({ length: 20 }, () => []),
-        fire: Array.from({ length: 20 }, () => []),
-        spark: Array.from({ length: 20 }, () => []),
-        debris: Array.from({ length: 20 }, () => [])
-    };
-
-    private static BATCH_TYPES: ParticleType[] = ['smoke', 'fire', 'spark', 'debris'];
+    // 0: smoke, 1: fire, 2: spark, 3: debris
+    private static batchArrays: Particle[][][] = [
+        Array.from({ length: 20 }, () => []),
+        Array.from({ length: 20 }, () => []),
+        Array.from({ length: 20 }, () => []),
+        Array.from({ length: 20 }, () => [])
+    ];
 
     /**
      * Batch render multiple particles
@@ -222,13 +239,11 @@ export class Particle implements IParticle {
         const len = particles.length;
         if (len === 0) return;
 
-        const batches = Particle.batches;
-        const types = Particle.BATCH_TYPES;
+        const batches = Particle.batchArrays;
 
         // Clear existing batches
-        // Optimized: Avoid for...in loop and object.keys overhead
-        for (let i = 0; i < types.length; i++) {
-            const buckets = batches[types[i]];
+        for (let i = 0; i < 4; i++) {
+            const buckets = batches[i];
             for (let j = 0; j < 20; j++) {
                 buckets[j].length = 0;
             }
@@ -242,8 +257,7 @@ export class Particle implements IParticle {
             // Optimized: Use bitwise OR for faster floor
             const lifeIndex = Math.max(0, Math.min(19, (p.life * 20) | 0));
 
-            // Direct access is safe because ParticleType is exhausted in batches initialization
-            const buckets = batches[p.type];
+            const buckets = batches[p.typeId];
             if (buckets) {
                 const bucket = buckets[lifeIndex];
                 if (bucket) {
@@ -256,9 +270,8 @@ export class Particle implements IParticle {
         }
 
         // Render each batch
-        for (let i = 0; i < types.length; i++) {
-            const type = types[i];
-            const buckets = batches[type];
+        for (let i = 0; i < 4; i++) {
+            const buckets = batches[i];
             if (!buckets) continue;
 
             for (let j = 0; j < 20; j++) {
@@ -274,23 +287,25 @@ export class Particle implements IParticle {
                 const sample = group[0];
                 if (!sample) continue;
 
-                switch (type) {
-                    case 'smoke': {
+                // Map index back to type behavior
+                // 0: smoke, 1: fire, 2: spark, 3: debris
+                switch (i) {
+                    case 0: { // smoke
                         // Smoke color is constant 200, alpha is constant 0.5
                         const c = Math.floor(sample.color);
                         ctx.fillStyle = `rgba(${c},${c},${c},${sample.alpha * life})`;
                         break;
                     }
-                    case 'fire': {
+                    case 1: { // fire
                         const g = Math.floor(255 * life);
                         ctx.fillStyle = `rgba(255,${g},0,${life})`;
                         break;
                     }
-                    case 'spark': {
+                    case 2: { // spark
                         ctx.fillStyle = `rgba(255, 200, 150, ${life})`;
                         break;
                     }
-                    case 'debris': {
+                    case 3: { // debris
                         ctx.fillStyle = `rgba(100,100,100,${life})`;
                         break;
                     }
@@ -301,7 +316,8 @@ export class Particle implements IParticle {
 
                 // Optimization: Use rect for small, simple particles (spark, debris)
                 // Use arc for larger, round particles (smoke, fire)
-                if (type === 'spark' || type === 'debris') {
+                // 0=smoke, 1=fire use arc; 2=spark, 3=debris use rect
+                if (i === 2 || i === 3) {
                     for (const p of group) {
                         const size = Math.max(0, p.size);
                         // Center the rect to match arc behavior
