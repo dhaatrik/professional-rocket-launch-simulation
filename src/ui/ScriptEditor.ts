@@ -97,7 +97,7 @@ export class ScriptEditor {
                         <button id="script-clear-btn" class="script-btn script-btn-danger">Clear</button>
                     </div>
                     
-                    <div class="script-syntax-help">
+                    <div id="script-syntax-help" class="script-syntax-help">
                         <strong>Syntax:</strong> WHEN &lt;condition&gt; THEN &lt;action&gt;
                         <br>
                         <span class="script-help-vars">
@@ -106,14 +106,14 @@ export class ScriptEditor {
                         </span>
                     </div>
                     
-                    <textarea id="script-textarea" class="script-textarea" aria-label="Script editor content"
+                    <textarea id="script-textarea" class="script-textarea" aria-label="Script editor content" aria-describedby="script-syntax-help"
                         placeholder="# Mission Script
 # Example:
 WHEN ALTITUDE > 1000 THEN PITCH 80
 WHEN ALTITUDE > 10000 THEN PITCH 60
 WHEN APOGEE > 100000 THEN THROTTLE 0"></textarea>
                     
-                    <div id="script-errors" class="script-errors"></div>
+                    <div id="script-errors" class="script-errors" role="alert"></div>
                 </div>
                 
                 <div class="script-editor-footer">
