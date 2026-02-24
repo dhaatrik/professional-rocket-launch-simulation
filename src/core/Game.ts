@@ -783,58 +783,99 @@ export class Game {
         this.ctx.restore();
 
         // 2. Draw Wind Vectors
-        // Draw every 100 pixels vertically
+        // Optimized: Batched drawing by color to reduce draw calls and state changes
         this.ctx.save();
         const step = 200; // pixels
         const startY = Math.floor(camY / step) * step;
         const tempWind = { speed: 0, direction: 0 };
 
+        // Batches for each color category (stores vertices)
+        // Format: [x1, y1, x2, y2, ...]
+        const lowWind: number[] = [];    // White (< 10 m/s)
+        const medWind: number[] = [];    // Yellow (10-30 m/s)
+        const highWind: number[] = [];   // Red (> 30 m/s)
+
+        // Text batch: [speed, x, y]
+        const windText: { text: string; x: number; y: number }[] = [];
+
         for (let y = startY; y < camY + this.height / this.ZOOM; y += step) {
             const alt = (this.groundY - y) / PIXELS_PER_METER;
             if (alt < 0) continue;
 
-            // Optimized: Use polar coordinates directly to avoid trig and object allocation
             this.environment.getWindPolar(alt, tempWind);
             const { speed, direction } = tempWind;
 
             if (speed > 1) {
                 const screenY = y;
-                const screenX = 50 / this.ZOOM; // Draw on left side (scaled)
+                const screenX = 50 / this.ZOOM;
 
-                // Draw arrow
-                this.ctx.translate(screenX, screenY);
-                // Note: Wind vector points WHERE wind is going.
-                // direction is where wind comes FROM, so we add PI to point where it goes.
+                // Pre-calculate rotation
                 const angle = direction + Math.PI;
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
 
-                this.ctx.rotate(angle);
-
-                // Color based on speed
-                if (speed < 10) this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                else if (speed < 30) this.ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                else this.ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
-
-                // Arrow shape
+                // Arrow shape vertices (relative to origin)
                 const len = Math.min(50, speed * 2);
-                this.ctx.beginPath();
-                this.ctx.moveTo(0, -2);
-                this.ctx.lineTo(len - 5, -2);
-                this.ctx.lineTo(len - 5, -5);
-                this.ctx.lineTo(len, 0);
-                this.ctx.lineTo(len - 5, 5);
-                this.ctx.lineTo(len - 5, 2);
-                this.ctx.lineTo(0, 2);
-                this.ctx.fill();
+                const vertices = [
+                    0, -2,
+                    len - 5, -2,
+                    len - 5, -5,
+                    len, 0,
+                    len - 5, 5,
+                    len - 5, 2,
+                    0, 2
+                ];
 
-                // Text
-                this.ctx.rotate(-angle); // Reset rotation for text
-                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                this.ctx.font = `${10 / this.ZOOM}px monospace`;
-                this.ctx.fillText(`${speed.toFixed(0)} m/s`, 10, 15);
+                // Transform vertices
+                for (let i = 0; i < vertices.length; i += 2) {
+                    const vx = vertices[i];
+                    const vy = vertices[i + 1];
+                    // Rotate and translate
+                    const tx = vx * c - vy * s + screenX;
+                    const ty = vx * s + vy * c + screenY;
 
-                this.ctx.translate(-screenX, -screenY);
+                    // Add to appropriate batch
+                    if (speed < 10) lowWind.push(tx, ty);
+                    else if (speed < 30) medWind.push(tx, ty);
+                    else highWind.push(tx, ty);
+                }
+
+                // Add text info (offset by 10, 15 relative to arrow center)
+                windText.push({
+                    text: `${speed.toFixed(0)} m/s`,
+                    x: screenX + 10,
+                    y: screenY + 15
+                });
             }
         }
+
+        // Render batches
+        const drawBatch = (points: number[], color: string) => {
+            if (points.length === 0) return;
+            this.ctx.fillStyle = color;
+            this.ctx.beginPath();
+            for (let i = 0; i < points.length; i += 14) { // 7 vertices * 2 coords
+                this.ctx.moveTo(points[i], points[i + 1]);
+                for (let j = 2; j < 14; j += 2) {
+                    this.ctx.lineTo(points[i + j], points[i + j + 1]);
+                }
+            }
+            this.ctx.fill();
+        };
+
+        drawBatch(lowWind, 'rgba(255, 255, 255, 0.3)');
+        drawBatch(medWind, 'rgba(255, 255, 0, 0.5)');
+        drawBatch(highWind, 'rgba(255, 0, 0, 0.6)');
+
+        // Draw text
+        if (windText.length > 0) {
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            this.ctx.font = `${10 / this.ZOOM}px monospace`;
+            for (const t of windText) {
+                this.ctx.fillText(t.text, t.x, t.y);
+            }
+        }
+
         this.ctx.restore();
     }
 
