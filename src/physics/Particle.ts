@@ -223,6 +223,7 @@ export class Particle implements IParticle {
     }
 
     // Reusable batches to reduce GC pressure
+    // Benchmark Note: This nested array structure is faster than flat arrays/linked lists.
     // 0: smoke, 1: fire, 2: spark, 3: debris
     private static batchArrays: Particle[][][] = [
         Array.from({ length: 20 }, () => []),
