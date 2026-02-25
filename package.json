@@ -4,8 +4,8 @@
     "description": "Engineering-Grade Spaceflight Simulation",
     "type": "module",
     "scripts": {
-        "build": "esbuild src/main.ts --bundle --outfile=dist/bundle.js --format=esm && esbuild src/telemetry/TelemetryReceiver.ts --bundle --outfile=dist/telemetry.bundle.js --format=esm && esbuild src/analysis/AnalysisApp.ts --bundle --outfile=dist/analysis.bundle.js --format=esm && esbuild src/core/PhysicsWorker.ts --bundle --outfile=dist/physics.worker.js --format=esm",
-        "watch": "esbuild src/main.ts --bundle --outfile=dist/bundle.js --format=esm --watch & esbuild src/telemetry/TelemetryReceiver.ts --bundle --outfile=dist/telemetry.bundle.js --format=esm --watch & esbuild src/analysis/AnalysisApp.ts --bundle --outfile=dist/analysis.bundle.js --format=esm --watch & esbuild src/core/PhysicsWorker.ts --bundle --outfile=dist/physics.worker.js --format=esm --watch",
+        "build": "esbuild src/main.ts --bundle --outfile=public/dist/bundle.js --format=esm && esbuild src/telemetry/TelemetryReceiver.ts --bundle --outfile=public/dist/telemetry.bundle.js --format=esm && esbuild src/analysis/AnalysisApp.ts --bundle --outfile=public/dist/analysis.bundle.js --format=esm && esbuild src/core/PhysicsWorker.ts --bundle --outfile=public/dist/physics.worker.js --format=esm",
+        "watch": "esbuild src/main.ts --bundle --outfile=public/dist/bundle.js --format=esm --watch & esbuild src/telemetry/TelemetryReceiver.ts --bundle --outfile=public/dist/telemetry.bundle.js --format=esm --watch & esbuild src/analysis/AnalysisApp.ts --bundle --outfile=public/dist/analysis.bundle.js --format=esm --watch & esbuild src/core/PhysicsWorker.ts --bundle --outfile=public/dist/physics.worker.js --format=esm --watch",
         "serve": "node server.js",
         "dev": "npm run serve",
         "test": "vitest run",

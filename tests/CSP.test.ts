@@ -8,7 +8,7 @@ describe('CSP Security Headers', () => {
 
     htmlFiles.forEach((file) => {
         it(`${file} should have a strict Content-Security-Policy`, () => {
-            const filePath = path.resolve(__dirname, '..', file);
+            const filePath = path.resolve(__dirname, '..', 'public', file);
             const content = fs.readFileSync(filePath, 'utf-8');
 
             // Check for meta tag existence

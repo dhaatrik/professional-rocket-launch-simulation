@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const PORT = 8080;
-const ROOT_DIR = path.resolve('.');
+const ROOT_DIR = path.join(process.cwd(), 'public');
 
 const MIME_TYPES = {
     '.html': 'text/html',
@@ -84,6 +84,16 @@ http.createServer((req, res) => {
 
         if (pathname === '/') {
             pathname = '/index.html';
+        }
+
+        // Security: Prevent access to hidden files/directories (starting with .)
+        if (pathname.split('/').some(part => part.startsWith('.'))) {
+            res.writeHead(403, {
+                'Content-Type': 'text/plain',
+                ...SECURITY_HEADERS
+            });
+            res.end('Forbidden');
+            return;
         }
 
         const filePath = path.join(ROOT_DIR, pathname);
