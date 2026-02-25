@@ -164,17 +164,23 @@ export class FullStack extends Vessel {
         ctx.strokeRect(-24, 100, 6, 12);
         // Fin grid pattern
         ctx.beginPath();
-        ctx.moveTo(-21, 100); ctx.lineTo(-21, 112);
-        ctx.moveTo(-24, 104); ctx.lineTo(-18, 104);
-        ctx.moveTo(-24, 108); ctx.lineTo(-18, 108);
+        ctx.moveTo(-21, 100);
+        ctx.lineTo(-21, 112);
+        ctx.moveTo(-24, 104);
+        ctx.lineTo(-18, 104);
+        ctx.moveTo(-24, 108);
+        ctx.lineTo(-18, 108);
         ctx.stroke();
         // Right fin
         ctx.fillRect(18, 100, 6, 2);
         ctx.strokeRect(18, 100, 6, 12);
         ctx.beginPath();
-        ctx.moveTo(21, 100); ctx.lineTo(21, 112);
-        ctx.moveTo(18, 104); ctx.lineTo(24, 104);
-        ctx.moveTo(18, 108); ctx.lineTo(24, 108);
+        ctx.moveTo(21, 100);
+        ctx.lineTo(21, 112);
+        ctx.moveTo(18, 104);
+        ctx.lineTo(24, 104);
+        ctx.moveTo(18, 108);
+        ctx.lineTo(24, 108);
         ctx.stroke();
         ctx.restore();
 
@@ -225,8 +231,8 @@ export class FullStack extends Vessel {
 
 /**
  * Booster - First stage after separation
-* Capable of propulsive landing with autopilot
-*/
+ * Capable of propulsive landing with autopilot
+ */
 export class Booster extends Vessel {
     public override readonly type = EntityType.BOOSTER;
 
@@ -367,12 +373,18 @@ export class Booster extends Vessel {
         ctx.strokeRect(-24, 8, 6, 12);
         ctx.strokeRect(18, 8, 6, 12);
         ctx.beginPath();
-        ctx.moveTo(-21, 8); ctx.lineTo(-21, 20);
-        ctx.moveTo(-24, 12); ctx.lineTo(-18, 12);
-        ctx.moveTo(-24, 16); ctx.lineTo(-18, 16);
-        ctx.moveTo(21, 8); ctx.lineTo(21, 20);
-        ctx.moveTo(18, 12); ctx.lineTo(24, 12);
-        ctx.moveTo(18, 16); ctx.lineTo(24, 16);
+        ctx.moveTo(-21, 8);
+        ctx.lineTo(-21, 20);
+        ctx.moveTo(-24, 12);
+        ctx.lineTo(-18, 12);
+        ctx.moveTo(-24, 16);
+        ctx.lineTo(-18, 16);
+        ctx.moveTo(21, 8);
+        ctx.lineTo(21, 20);
+        ctx.moveTo(18, 12);
+        ctx.lineTo(24, 12);
+        ctx.moveTo(18, 16);
+        ctx.lineTo(24, 16);
         ctx.stroke();
         ctx.restore();
 

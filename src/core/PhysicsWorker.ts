@@ -148,7 +148,7 @@ function step(inputs: any) {
         });
 
         // 4. Fault Injector
-        entities.forEach(vessel => {
+        entities.forEach((vessel) => {
             if (vessel.reliability) {
                 faultInjector.update(vessel, vessel.reliability, groundY, simDt);
             }

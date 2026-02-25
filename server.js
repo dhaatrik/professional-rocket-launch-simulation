@@ -106,6 +106,17 @@ http.createServer((req, res) => {
 
         let pathname = decodeURIComponent(safeUrl.pathname);
 
+        // Security: Prevent Null Byte Injection
+        if (pathname.includes('\0')) {
+            console.warn(`[WARN] Blocked null byte injection attempt: ${safeUrl.pathname}`);
+            res.writeHead(400, {
+                'Content-Type': 'text/plain',
+                ...SECURITY_HEADERS
+            });
+            res.end('Bad Request');
+            return;
+        }
+
         // Security: Block access to sensitive files and directories
         const rootPath = pathname.split('/').filter(Boolean)[0]; // robustly extract first segment
         if (rootPath && BLOCKED_RESOURCES.has(rootPath)) {

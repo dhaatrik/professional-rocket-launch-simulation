@@ -795,9 +795,9 @@ export class Game {
 
         // Batches for each color category (stores vertices)
         // Format: [x1, y1, x2, y2, ...]
-        const lowWind: number[] = [];    // White (< 10 m/s)
-        const medWind: number[] = [];    // Yellow (10-30 m/s)
-        const highWind: number[] = [];   // Red (> 30 m/s)
+        const lowWind: number[] = []; // White (< 10 m/s)
+        const medWind: number[] = []; // Yellow (10-30 m/s)
+        const highWind: number[] = []; // Red (> 30 m/s)
 
         // Text batch: [speed, x, y]
         const windText: { text: string; x: number; y: number }[] = [];
@@ -820,15 +820,7 @@ export class Game {
 
                 // Arrow shape vertices (relative to origin)
                 const len = Math.min(50, speed * 2);
-                const vertices = [
-                    0, -2,
-                    len - 5, -2,
-                    len - 5, -5,
-                    len, 0,
-                    len - 5, 5,
-                    len - 5, 2,
-                    0, 2
-                ];
+                const vertices = [0, -2, len - 5, -2, len - 5, -5, len, 0, len - 5, 5, len - 5, 2, 0, 2];
 
                 // Transform vertices
                 for (let i = 0; i < vertices.length; i += 2) {
@@ -858,7 +850,8 @@ export class Game {
             if (points.length === 0) return;
             this.ctx.fillStyle = color;
             this.ctx.beginPath();
-            for (let i = 0; i < points.length; i += 14) { // 7 vertices * 2 coords
+            for (let i = 0; i < points.length; i += 14) {
+                // 7 vertices * 2 coords
                 this.ctx.moveTo(points[i], points[i + 1]);
                 for (let j = 2; j < 14; j += 2) {
                     this.ctx.lineTo(points[i + j], points[i + j + 1]);
