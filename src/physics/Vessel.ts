@@ -136,6 +136,14 @@ export class Vessel implements IVessel {
     public orbitPath: OrbitalElements[] | null = null;
     public lastOrbitUpdate: number = 0;
 
+    // Reusable objects for RK4 to avoid garbage collection
+    private _rk4State: PhysicsState = { x: 0, y: 0, vx: 0, vy: 0, mass: 0 };
+    private _tempState: PhysicsState = { x: 0, y: 0, vx: 0, vy: 0, mass: 0 };
+    private _k1: Derivatives = { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
+    private _k2: Derivatives = { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
+    private _k3: Derivatives = { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
+    private _k4: Derivatives = { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
+
     /**
      * Create a new vessel
      *
@@ -156,9 +164,10 @@ export class Vessel implements IVessel {
      * @param s - Current state
      * @param t - Current time (unused, for interface)
      * @param dt - Time step
+     * @param out - Optional output object to avoid allocation
      * @returns Derivatives for integration
      */
-    protected getDerivatives(s: PhysicsState, t: number, dt: number): Derivatives {
+    protected getDerivatives(s: PhysicsState, t: number, dt: number, out?: Derivatives): Derivatives {
         const altitude = (state.groundY - s.y * PIXELS_PER_METER - this.h) / PIXELS_PER_METER;
         const safeAlt = Math.max(0, altitude);
 
@@ -235,13 +244,14 @@ export class Vessel implements IVessel {
         this.dragForce = aeroForces.drag;
         this.aeroState = aeroState;
 
-        return {
-            dx: s.vx,
-            dy: s.vy,
-            dvx: fx / s.mass,
-            dvy: fy / s.mass,
-            dmass: -flowRate
-        };
+        const result = out || { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
+        result.dx = s.vx;
+        result.dy = s.vy;
+        result.dvx = fx / s.mass;
+        result.dvy = fy / s.mass;
+        result.dmass = -flowRate;
+
+        return result;
     }
 
     /**
@@ -293,43 +303,48 @@ export class Vessel implements IVessel {
     }
 
     /**
+     * RK4 evaluation helper using reusable objects
+     */
+    private _evaluateRK4(
+        baseState: PhysicsState,
+        dt: number,
+        dtStep: number,
+        d: Derivatives | null,
+        out: Derivatives
+    ): void {
+        this._tempState.x = baseState.x + (d ? d.dx * dtStep : 0);
+        this._tempState.y = baseState.y + (d ? d.dy * dtStep : 0);
+        this._tempState.vx = baseState.vx + (d ? d.dvx * dtStep : 0);
+        this._tempState.vy = baseState.vy + (d ? d.dvy * dtStep : 0);
+        this._tempState.mass = baseState.mass;
+
+        this.getDerivatives(this._tempState, 0, dt, out);
+    }
+
+    /**
      * RK4 integration step
      */
     protected updatePhysics(dt: number): void {
         if (this.crashed) return;
 
-        // Convert to meters for physics
-        const stateDict: PhysicsState = {
-            x: this.x / PIXELS_PER_METER,
-            y: this.y / PIXELS_PER_METER,
-            vx: this.vx,
-            vy: this.vy,
-            mass: this.mass
-        };
+        // Populate reusable state object (convert to meters)
+        this._rk4State.x = this.x / PIXELS_PER_METER;
+        this._rk4State.y = this.y / PIXELS_PER_METER;
+        this._rk4State.vx = this.vx;
+        this._rk4State.vy = this.vy;
+        this._rk4State.mass = this.mass;
 
-        // RK4 evaluation helper
-        const evaluate = (s: PhysicsState, t: number, dt: number, d: Derivatives | null): Derivatives => {
-            const tempState: PhysicsState = {
-                x: s.x + (d ? d.dx * dt : 0),
-                y: s.y + (d ? d.dy * dt : 0),
-                vx: s.vx + (d ? d.dvx * dt : 0),
-                vy: s.vy + (d ? d.dvy * dt : 0),
-                mass: s.mass
-            };
-            return this.getDerivatives(tempState, t, dt);
-        };
-
-        // RK4 integration
-        const k1 = evaluate(stateDict, 0, 0, null);
-        const k2 = evaluate(stateDict, 0, dt * 0.5, k1);
-        const k3 = evaluate(stateDict, 0, dt * 0.5, k2);
-        const k4 = evaluate(stateDict, 0, dt, k3);
+        // RK4 integration using private helper method
+        this._evaluateRK4(this._rk4State, dt, 0, null, this._k1);
+        this._evaluateRK4(this._rk4State, dt, dt * 0.5, this._k1, this._k2);
+        this._evaluateRK4(this._rk4State, dt, dt * 0.5, this._k2, this._k3);
+        this._evaluateRK4(this._rk4State, dt, dt, this._k3, this._k4);
 
         // Weighted average
-        const dxdt = (k1.dx + 2 * k2.dx + 2 * k3.dx + k4.dx) / 6;
-        const dydt = (k1.dy + 2 * k2.dy + 2 * k3.dy + k4.dy) / 6;
-        const dvxdt = (k1.dvx + 2 * k2.dvx + 2 * k3.dvx + k4.dvx) / 6;
-        const dvydt = (k1.dvy + 2 * k2.dvy + 2 * k3.dvy + k4.dvy) / 6;
+        const dxdt = (this._k1.dx + 2 * this._k2.dx + 2 * this._k3.dx + this._k4.dx) / 6;
+        const dydt = (this._k1.dy + 2 * this._k2.dy + 2 * this._k3.dy + this._k4.dy) / 6;
+        const dvxdt = (this._k1.dvx + 2 * this._k2.dvx + 2 * this._k3.dvx + this._k4.dvx) / 6;
+        const dvydt = (this._k1.dvy + 2 * this._k2.dvy + 2 * this._k3.dvy + this._k4.dvy) / 6;
 
         // Apply integration result
         this.vx += dvxdt * dt;
