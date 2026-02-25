@@ -118,6 +118,7 @@ export class Vessel implements IVessel {
     public heatShieldRemaining: number = 1.0; // Heat shield fraction (0-1)
     public isAblating: boolean = false; // Currently ablating
     public isThermalCritical: boolean = false; // Temperature critical
+    private lastThermalLogTime: number = -100; // Time of last thermal warning
 
     // Propulsion State Machine
     public propConfig: PropulsionConfig = FULLSTACK_PROP_CONFIG;
@@ -689,6 +690,26 @@ export class Vessel implements IVessel {
      * Draw the vessel (to be overridden by subclasses)
      */
     draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
+        if (this.crashed) return;
+
+        // Interpolate position and angle
+        const rX = this.prevX + (this.x - this.prevX) * alpha;
+        const rY = this.prevY + (this.y - this.prevY) * alpha;
+        const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
+
+        ctx.save();
+        ctx.translate(rX, rY - camY);
+        ctx.rotate(rAngle);
+
+        this.drawParts(ctx);
+
+        ctx.restore();
+    }
+
+    /**
+     * Draw specific vessel parts (to be overridden by subclasses)
+     */
+    protected drawParts(ctx: CanvasRenderingContext2D): void {
         // Base implementation does nothing
         // Subclasses implement specific rendering
     }
