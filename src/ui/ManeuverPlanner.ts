@@ -65,7 +65,7 @@ export class ManeuverPlanner {
                             <option value="hohmann">Hohmann Transfer</option>
                         </select>
 
-                        <div id="hohmann-inputs" class="maneuver-input-group" style="display: none;">
+                        <div id="hohmann-inputs" class="maneuver-input-group hidden">
                             <label class="maneuver-label">Target Altitude (km):</label>
                             <input type="number" id="target-alt-input" class="script-name-input maneuver-input"
                                 value="500">

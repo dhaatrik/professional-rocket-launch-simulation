@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self' blob:;">
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self' blob:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeltaV Lab</title>
     <link rel="stylesheet" href="style.css">
@@ -17,8 +17,7 @@
 
     <div id="splash-screen">
         <div class="content">
-            <h1>Delta-V Lab <span
-                    style="font-size: 0.4em; vertical-align: text-top; opacity: 0.6; font-weight: normal;">v3.1.0</span>
+            <h1>Delta-V Lab <span class="version-tag">v3.1.0</span>
             </h1>
             <p class="subtitle">Engineering-Grade Spaceflight Simulation</p>
 
@@ -35,24 +34,23 @@
             </div>
 
             <div class="splash-menu">
-                <div id="instruction-panel"
-                    style="background:rgba(0,0,0,0.5); padding:15px; border-radius:8px; margin-bottom:20px; text-align:left; max-width:400px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.2);">
-                    <h3 style="margin-top:0; color:#3498db; border-bottom:1px solid #3498db; padding-bottom:5px;">
+                <div id="instruction-panel">
+                    <h3 class="instruction-title">
                         FLIGHT MANUAL</h3>
-                    <ul style="padding-left:20px; color:#ddd; line-height:1.6;">
-                        <li><strong>Launch:</strong> Press <span style="color:#f1c40f">[SPACE]</span> to
+                    <ul class="instruction-list">
+                        <li><strong>Launch:</strong> Press <span class="text-warning">[SPACE]</span> to
                             ignite.</li>
-                        <li><strong>Throttle:</strong> <span style="color:#f1c40f">[SHIFT]</span> / <span
-                                style="color:#f1c40f">[CTRL]</span> or Touch Slider.</li>
-                        <li><strong>Steer:</strong> <span style="color:#f1c40f">[ARROWS]</span> or Virtual
+                        <li><strong>Throttle:</strong> <span class="text-warning">[SHIFT]</span> / <span
+                                class="text-warning">[CTRL]</span> or Touch Slider.</li>
+                        <li><strong>Steer:</strong> <span class="text-warning">[ARROWS]</span> or Virtual
                             Joystick.</li>
-                        <li><strong>Staging:</strong> Press <span style="color:#f1c40f">[S]</span> when fuel
+                        <li><strong>Staging:</strong> Press <span class="text-warning">[S]</span> when fuel
                             empty.</li>
-                        <li><strong>Map:</strong> Press <span style="color:#f1c40f">[M]</span> to view
+                        <li><strong>Map:</strong> Press <span class="text-warning">[M]</span> to view
                             Orbit.</li>
-                        <li><strong>SAS:</strong> <span style="color:#f1c40f">[T]</span> Stability, <span style="color:#f1c40f">[ []</span> Prograde, <span style="color:#f1c40f">[ ]]</span> Retrograde.</li>
+                        <li><strong>SAS:</strong> <span class="text-warning">[T]</span> Stability, <span class="text-warning">[ []</span> Prograde, <span class="text-warning">[ ]]</span> Retrograde.</li>
                     </ul>
-                    <div style="margin-top:10px; font-size:0.8rem; color:#aaa; font-style:italic;">
+                    <div class="instruction-tip">
                         Tip: Use gravity turn at 5km altitude (tilt 45&deg; East).
                     </div>
                 </div>
@@ -80,68 +78,67 @@
             </div>
             <div class="hud-module">
                 <div class="hud-label">AoA</div>
-                <div class="hud-value-large"><span id="hud-aoa" style="color: #2ecc71;">0.0°</span></div>
+                <div class="hud-value-large"><span id="hud-aoa" class="text-success">0.0°</span></div>
             </div>
             <div class="hud-module">
                 <div class="hud-label">STABILITY</div>
-                <div class="hud-value-large"><span id="hud-stability" style="color: #2ecc71;">30.0%</span></div>
+                <div class="hud-value-large"><span id="hud-stability" class="text-success">30.0%</span></div>
             </div>
             <div class="hud-module">
                 <div class="hud-label">SKIN TEMP</div>
-                <div class="hud-value-large"><span id="hud-skin-temp" style="color: #2ecc71;">20°C</span></div>
+                <div class="hud-value-large"><span id="hud-skin-temp" class="text-success">20°C</span></div>
             </div>
             <div class="hud-module">
                 <div class="hud-label">TPS</div>
-                <div class="hud-value-large"><span id="hud-tps-status" style="color: #95a5a6;">N/A</span></div>
+                <div class="hud-value-large"><span id="hud-tps-status" class="text-concrete">N/A</span></div>
             </div>
             <div class="hud-module">
                 <div class="hud-label">ENGINE</div>
-                <div class="hud-value-large"><span id="hud-engine-status" style="color: #95a5a6;">OFF</span></div>
+                <div class="hud-value-large"><span id="hud-engine-status" class="text-concrete">OFF</span></div>
             </div>
             <div class="hud-module">
                 <div class="hud-label">IGN</div>
-                <div class="hud-value-large"><span id="hud-igniters" style="color: #2ecc71;">3</span></div>
+                <div class="hud-value-large"><span id="hud-igniters" class="text-success">3</span></div>
             </div>
             <div class="hud-module environment">
                 <div class="hud-label">WIND</div>
-                <div class="hud-value-large"><span id="hud-wind-speed" style="color: #2ecc71;">0 m/s</span> <span
+                <div class="hud-value-large"><span id="hud-wind-speed" class="text-success">0 m/s</span> <span
                         id="hud-wind-dir" class="unit">N</span></div>
             </div>
             <div class="hud-module environment">
                 <div class="hud-label">LOCAL TIME</div>
-                <div class="hud-value-large"><span id="hud-time-of-day" style="color: #3498db;">12:00</span></div>
+                <div class="hud-value-large"><span id="hud-time-of-day" class="text-primary">12:00</span></div>
             </div>
             <div class="hud-module environment launch-status">
                 <div class="hud-label">LAUNCH</div>
-                <div class="hud-value-large"><span id="hud-launch-status" class="go-status"
-                        style="color: #2ecc71;">GO</span></div>
-                <div id="hud-maxq-warning" style="display: none; color: #e67e22; font-size: 0.7rem;"></div>
+                <div class="hud-value-large"><span id="hud-launch-status" class="go-status text-success">GO</span></div>
+                <div id="hud-maxq-warning"></div>
             </div>
             <div class="hud-module fts-module">
                 <div class="hud-label">FTS</div>
-                <div class="hud-value-large"><span id="hud-fts-state" style="color: #2ecc71;">SAFE</span></div>
+                <div class="hud-value-large"><span id="hud-fts-state" class="text-success">SAFE</span></div>
             </div>
         </div>
 
         <div id="hud-gauges">
             <div class="gauge-container">
                 <div class="gauge-bar-bg">
-                    <div id="gauge-fuel" class="gauge-bar-fill" style="height: 100%; background-color: #f1c40f;"></div>
+                    <div id="gauge-fuel" class="gauge-bar-fill bg-warning"></div>
                 </div>
                 <div class="gauge-label">FUEL</div>
             </div>
             <div class="gauge-container">
                 <div class="gauge-bar-bg">
-                    <div id="gauge-thrust" class="gauge-bar-fill" style="height: 0%; background-color: #e74c3c;"></div>
+                    <div id="gauge-thrust" class="gauge-bar-fill bg-danger"></div>
                 </div>
                 <div class="gauge-label">THRUST</div>
             </div>
         </div>
 
-        <div style="position: absolute; bottom: 160px; left: 20px; pointer-events: none;">
-            <canvas id="navball" width="140" height="140" style="background:transparent;"></canvas>
+        <div id="navball-container">
+            <canvas id="navball" width="140" height="140"></canvas>
         </div>
-        <div style="display:none">
+        <div id="graph-container">
             <canvas id="graph-canvas"></canvas>
         </div>
 
@@ -197,7 +194,7 @@
         <div class="tooltip-box">
             <h3>Welcome to Mission Control!</h3>
             <p>Ready for your first launch? Press <span class="key-hint">SPACE</span> to ignite the engines!</p>
-            <p style="font-size: 0.8rem; color: #888;">Use arrow keys to steer, SHIFT/CTRL for throttle.</p>
+            <p class="font-small text-muted">Use arrow keys to steer, SHIFT/CTRL for throttle.</p>
             <button id="tooltip-dismiss">GOT IT!</button>
         </div>
     </div>
@@ -231,10 +228,10 @@
     </div>
 
     <!-- Launch Checklist Panel -->
-    <div id="checklist-panel" style="display: none;"></div>
+    <div id="checklist-panel" class="hidden"></div>
 
     <!-- Fault Injection System Panel (Instructor) -->
-    <div id="fis-panel" style="display: none;"></div>
+    <div id="fis-panel" class="hidden"></div>
 
     <canvas id="canvas"></canvas>
 
