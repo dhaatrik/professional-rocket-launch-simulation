@@ -17,12 +17,7 @@ export class AssetLoader implements IAssetLoader {
     private images: Map<string, HTMLImageElement> = new Map();
 
     /** Asset definitions */
-    private readonly assets: AssetDefinition[] = [
-        { key: 'rocket_body', src: 'assets/rocket_body.png' },
-        { key: 'rocket_engine', src: 'assets/rocket_engine.png' },
-        { key: 'fairing', src: 'assets/payload_fairing.png' },
-        { key: 'flame', src: 'assets/flame_particle.png' }
-    ];
+    private readonly assets: AssetDefinition[] = [];
 
     /**
      * Load all assets asynchronously

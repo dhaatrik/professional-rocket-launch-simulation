@@ -73,6 +73,12 @@ describe('ManeuverPlanner Stats Security', () => {
         // Check structure (optional, but good to verify it's not just a big blob of text)
         const divs = statsDiv?.querySelectorAll('div');
         expect(divs?.length).toBe(4);
+
+        // Verify specific elements exist
+        expect(statsDiv?.querySelector('#planner-stat-apo')).not.toBeNull();
+        expect(statsDiv?.querySelector('#planner-stat-peri')).not.toBeNull();
+        expect(statsDiv?.querySelector('#planner-stat-period')).not.toBeNull();
+        expect(statsDiv?.querySelector('#planner-stat-ecc')).not.toBeNull();
     });
 
     it('should handle potential malicious input gracefully if types were compromised', () => {

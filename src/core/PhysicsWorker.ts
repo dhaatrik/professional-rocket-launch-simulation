@@ -8,7 +8,8 @@ import { FlightTerminationSystem } from '../safety/FlightTermination';
 import { FaultInjector } from '../safety/FaultInjector';
 import { FlightComputer } from '../guidance/FlightComputer';
 import { STAGING_CONFIG } from '../config/Constants';
-import { HEADER_SIZE, ENTITY_STRIDE, HeaderOffset, EntityOffset, EngineStateCode } from './PhysicsBuffer';
+import { HEADER_SIZE, ENTITY_STRIDE, HeaderOffset, EntityOffset, EngineStateCode, EntityType } from './PhysicsBuffer';
+import { state, setWindVelocity, setDensityMultiplier, updateDimensions } from './State';
 
 // State
 let entities: Vessel[] = [];
@@ -54,6 +55,7 @@ function init(config: any) {
 
     const width = config.width || 1920;
     groundY = config.groundY || 1000;
+    updateDimensions(config.width || 1920, config.height || 1080, groundY);
 
     // Initialize Shared Buffer View
     if (config.sharedBuffer) {
@@ -91,6 +93,9 @@ function step(inputs: any) {
     for (let stepIdx = 0; stepIdx < substeps; stepIdx++) {
         // 1. Update Environment
         environment.update(simDt);
+        const wind = environment.getWindAtAltitude(0);
+        setWindVelocity({ x: wind.x + environment.getCurrentGust().x, y: wind.y + environment.getCurrentGust().y });
+        setDensityMultiplier(environment.getDensityMultiplier());
 
         // 2. Apply Controls
         const v = entities[trackedIndex];
@@ -192,7 +197,7 @@ function performStaging() {
     const tracked = entities[trackedIndex];
     if (!tracked) return;
 
-    if (tracked instanceof FullStack) {
+    if (tracked.type === EntityType.FULLSTACK) {
         // Sep S1
         entities = entities.filter((e) => e !== tracked);
 
@@ -217,42 +222,43 @@ function performStaging() {
         trackedIndex = entities.length - 1;
 
         self.postMessage({ type: 'EVENT', payload: { name: 'STAGING_S1', x: tracked.x, y: tracked.y } });
-    } else if (tracked instanceof UpperStage) {
-        if (!tracked.fairingsDeployed) {
-            tracked.fairingsDeployed = true;
+    } else if (tracked.type === EntityType.UPPER_STAGE) {
+        const upper = tracked as UpperStage;
+        if (!upper.fairingsDeployed) {
+            upper.fairingsDeployed = true;
 
             const fL = new Fairing(
-                tracked.x - STAGING_CONFIG.FAIRING_OFFSET_X,
-                tracked.y + STAGING_CONFIG.FAIRING_OFFSET_Y,
-                tracked.vx - STAGING_CONFIG.FAIRING_VELOCITY_X,
-                tracked.vy,
+                upper.x - STAGING_CONFIG.FAIRING_OFFSET_X,
+                upper.y + STAGING_CONFIG.FAIRING_OFFSET_Y,
+                upper.vx - STAGING_CONFIG.FAIRING_VELOCITY_X,
+                upper.vy,
                 -1
             );
-            fL.angle = tracked.angle - STAGING_CONFIG.FAIRING_ANGLE_OFFSET;
+            fL.angle = upper.angle - STAGING_CONFIG.FAIRING_ANGLE_OFFSET;
             entities.push(fL);
 
             const fR = new Fairing(
-                tracked.x + STAGING_CONFIG.FAIRING_OFFSET_X,
-                tracked.y + STAGING_CONFIG.FAIRING_OFFSET_Y,
-                tracked.vx + STAGING_CONFIG.FAIRING_VELOCITY_X,
-                tracked.vy,
+                upper.x + STAGING_CONFIG.FAIRING_OFFSET_X,
+                upper.y + STAGING_CONFIG.FAIRING_OFFSET_Y,
+                upper.vx + STAGING_CONFIG.FAIRING_VELOCITY_X,
+                upper.vy,
                 1
             );
-            fR.angle = tracked.angle + STAGING_CONFIG.FAIRING_ANGLE_OFFSET;
+            fR.angle = upper.angle + STAGING_CONFIG.FAIRING_ANGLE_OFFSET;
             entities.push(fR);
 
             self.postMessage({ type: 'EVENT', payload: { name: 'FAIRING_SEP' } });
         } else {
-            tracked.active = false;
-            tracked.throttle = 0;
+            upper.active = false;
+            upper.throttle = 0;
 
             const payload = new Payload(
-                tracked.x,
-                tracked.y + STAGING_CONFIG.PAYLOAD_OFFSET_Y,
-                tracked.vx,
-                tracked.vy + STAGING_CONFIG.PAYLOAD_VELOCITY_Y
+                upper.x,
+                upper.y + STAGING_CONFIG.PAYLOAD_OFFSET_Y,
+                upper.vx,
+                upper.vy + STAGING_CONFIG.PAYLOAD_VELOCITY_Y
             );
-            payload.angle = tracked.angle;
+            payload.angle = upper.angle;
             entities.push(payload);
 
             trackedIndex = entities.length - 1;
@@ -320,9 +326,13 @@ function postState() {
             sharedView[base + EntityOffset.SKIN_TEMP] = e.skinTemp;
             sharedView[base + EntityOffset.HEAT_SHIELD] = e.heatShieldRemaining;
             sharedView[base + EntityOffset.ABLATING] = e.isAblating ? 1 : 0;
-            sharedView[base + EntityOffset.FAIRING_DEP] = e instanceof UpperStage && e.fairingsDeployed ? 1 : 0;
+            sharedView[base + EntityOffset.FAIRING_DEP] =
+                e.type === EntityType.UPPER_STAGE && (e as UpperStage).fairingsDeployed ? 1 : 0;
             sharedView[base + EntityOffset.MASS] = e.mass;
             sharedView[base + EntityOffset.APOGEE] = e.apogee;
+            sharedView[base + EntityOffset.AOA] = e.aoa;
+            sharedView[base + EntityOffset.STABILITY_MARGIN] = e.stabilityMargin;
+            sharedView[base + EntityOffset.IS_AERO_STABLE] = e.isAeroStable ? 1 : 0;
         }
     }
 

@@ -75,46 +75,149 @@ export class FullStack extends Vessel {
         this.drawPlasma(ctx);
         this.drawShockwave(ctx);
 
-        const rocketImg = state.assets?.get('rocket_body');
-        const engineImg = state.assets?.get('rocket_engine');
+        // === NOSE CONE (Ogive shape with highlight) ===
+        const noseGrad = ctx.createLinearGradient(-18, 0, 18, 0);
+        noseGrad.addColorStop(0, '#c0c5c9');
+        noseGrad.addColorStop(0.35, '#f5f6f7');
+        noseGrad.addColorStop(0.5, '#ffffff');
+        noseGrad.addColorStop(0.65, '#f0f1f2');
+        noseGrad.addColorStop(1, '#a0a5a9');
+        ctx.fillStyle = noseGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(-3, 8, -14, 30, -18, 55);
+        ctx.lineTo(18, 55);
+        ctx.bezierCurveTo(14, 30, 3, 8, 0, 0);
+        ctx.fill();
 
-        if (rocketImg && engineImg) {
-            // Draw engine (gimbaled)
-            ctx.save();
-            ctx.translate(0, 160);
-            ctx.rotate(this.gimbalAngle);
-            ctx.drawImage(engineImg, -15, -10, 30, 40);
-            ctx.restore();
+        // Nose tip accent
+        ctx.fillStyle = '#7f8c8d';
+        ctx.beginPath();
+        ctx.arc(0, 0, 2, 0, Math.PI * 2);
+        ctx.fill();
 
-            // Draw body
-            ctx.drawImage(rocketImg, -20, 0, 40, 160);
-        } else {
-            // Fallback procedural rendering
-            // Body (white with nose cone)
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(-20, 0, 40, 60);
-            ctx.beginPath();
-            ctx.moveTo(-20, 0);
-            ctx.quadraticCurveTo(0, -40, 20, 0);
-            ctx.fill();
+        // === PAYLOAD SECTION (with fairing seam) ===
+        const fairingGrad = ctx.createLinearGradient(-18, 0, 18, 0);
+        fairingGrad.addColorStop(0, '#d5d8dc');
+        fairingGrad.addColorStop(0.3, '#ecf0f1');
+        fairingGrad.addColorStop(0.5, '#ffffff');
+        fairingGrad.addColorStop(0.7, '#ecf0f1');
+        fairingGrad.addColorStop(1, '#bdc3c7');
+        ctx.fillStyle = fairingGrad;
+        ctx.fillRect(-18, 55, 36, 15);
 
-            // First stage (light gray)
-            ctx.fillStyle = '#eee';
-            ctx.fillRect(-20, 60, 40, 100);
+        // Fairing vertical seam line
+        ctx.strokeStyle = 'rgba(127, 140, 141, 0.4)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 10);
+        ctx.lineTo(0, 70);
+        ctx.stroke();
 
-            // Engine (gimbaled)
-            ctx.save();
-            ctx.translate(0, 160);
-            ctx.rotate(this.gimbalAngle);
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.moveTo(-10, 0);
-            ctx.lineTo(-15, 20);
-            ctx.lineTo(15, 20);
-            ctx.lineTo(10, 0);
-            ctx.fill();
-            ctx.restore();
-        }
+        // === INTERSTAGE RING ===
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(-19, 70, 38, 3);
+
+        // === UPPER STAGE TANK ===
+        const upperGrad = ctx.createLinearGradient(-18, 0, 18, 0);
+        upperGrad.addColorStop(0, '#bfc9ca');
+        upperGrad.addColorStop(0.35, '#ebedef');
+        upperGrad.addColorStop(0.5, '#f8f9f9');
+        upperGrad.addColorStop(0.65, '#ebedef');
+        upperGrad.addColorStop(1, '#aab7b8');
+        ctx.fillStyle = upperGrad;
+        ctx.fillRect(-18, 73, 36, 22);
+
+        // === STAGE SEPARATION RING ===
+        const sepGrad = ctx.createLinearGradient(-20, 0, 20, 0);
+        sepGrad.addColorStop(0, '#1a252f');
+        sepGrad.addColorStop(0.5, '#4a6274');
+        sepGrad.addColorStop(1, '#1a252f');
+        ctx.fillStyle = sepGrad;
+        ctx.fillRect(-20, 95, 40, 4);
+
+        // === BOOSTER TANK (first stage) ===
+        const boosterGrad = ctx.createLinearGradient(-18, 0, 18, 0);
+        boosterGrad.addColorStop(0, '#b0b8ba');
+        boosterGrad.addColorStop(0.3, '#dde1e3');
+        boosterGrad.addColorStop(0.5, '#f2f3f4');
+        boosterGrad.addColorStop(0.7, '#dde1e3');
+        boosterGrad.addColorStop(1, '#99a3a4');
+        ctx.fillStyle = boosterGrad;
+        ctx.fillRect(-18, 99, 36, 50);
+
+        // LOX/RP-1 demarcation line
+        ctx.strokeStyle = 'rgba(52, 73, 94, 0.3)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(-18, 125);
+        ctx.lineTo(18, 125);
+        ctx.stroke();
+
+        // === GRID FINS ===
+        ctx.save();
+        ctx.fillStyle = '#34495e';
+        // Left fin
+        ctx.fillRect(-24, 100, 6, 2);
+        ctx.strokeStyle = '#2c3e50';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-24, 100, 6, 12);
+        // Fin grid pattern
+        ctx.beginPath();
+        ctx.moveTo(-21, 100); ctx.lineTo(-21, 112);
+        ctx.moveTo(-24, 104); ctx.lineTo(-18, 104);
+        ctx.moveTo(-24, 108); ctx.lineTo(-18, 108);
+        ctx.stroke();
+        // Right fin
+        ctx.fillRect(18, 100, 6, 2);
+        ctx.strokeRect(18, 100, 6, 12);
+        ctx.beginPath();
+        ctx.moveTo(21, 100); ctx.lineTo(21, 112);
+        ctx.moveTo(18, 104); ctx.lineTo(24, 104);
+        ctx.moveTo(18, 108); ctx.lineTo(24, 108);
+        ctx.stroke();
+        ctx.restore();
+
+        // === BOOSTER SKIRT ===
+        ctx.fillStyle = '#2c3e50';
+        ctx.beginPath();
+        ctx.moveTo(-18, 149);
+        ctx.lineTo(-20, 155);
+        ctx.lineTo(20, 155);
+        ctx.lineTo(18, 149);
+        ctx.fill();
+
+        // === ENGINE CLUSTER (Gimbaled) ===
+        ctx.save();
+        ctx.translate(0, 155);
+        ctx.rotate(this.gimbalAngle);
+
+        // Engine mounting plate
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(-14, 0, 28, 3);
+
+        // Engine nozzle with metallic gradient
+        const engGrad = ctx.createLinearGradient(-12, 0, 12, 0);
+        engGrad.addColorStop(0, '#1a252f');
+        engGrad.addColorStop(0.3, '#566573');
+        engGrad.addColorStop(0.5, '#85929e');
+        engGrad.addColorStop(0.7, '#566573');
+        engGrad.addColorStop(1, '#1a252f');
+        ctx.fillStyle = engGrad;
+        ctx.beginPath();
+        ctx.moveTo(-8, 3);
+        ctx.bezierCurveTo(-10, 8, -14, 18, -16, 25);
+        ctx.lineTo(16, 25);
+        ctx.bezierCurveTo(14, 18, 10, 8, 8, 3);
+        ctx.fill();
+
+        // Nozzle interior glow hint
+        ctx.fillStyle = 'rgba(52, 73, 94, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(0, 25, 10, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
 
         ctx.restore();
     }
@@ -122,8 +225,8 @@ export class FullStack extends Vessel {
 
 /**
  * Booster - First stage after separation
- * Capable of propulsive landing with autopilot
- */
+* Capable of propulsive landing with autopilot
+*/
 export class Booster extends Vessel {
     public override readonly type = EntityType.BOOSTER;
 
@@ -221,7 +324,6 @@ export class Booster extends Vessel {
     draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
         if (this.crashed) return;
 
-        // Interpolate position and angle
         const rX = this.prevX + (this.x - this.prevX) * alpha;
         const rY = this.prevY + (this.y - this.prevY) * alpha;
         const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
@@ -232,41 +334,114 @@ export class Booster extends Vessel {
 
         this.drawPlasma(ctx);
 
-        const rocketImg = state.assets?.get('rocket_body');
-        const engineImg = state.assets?.get('rocket_engine');
+        // === BOOSTER BODY with 3D gradient ===
+        const bodyGrad = ctx.createLinearGradient(-18, 0, 18, 0);
+        bodyGrad.addColorStop(0, '#b0b8ba');
+        bodyGrad.addColorStop(0.3, '#dde1e3');
+        bodyGrad.addColorStop(0.5, '#f2f3f4');
+        bodyGrad.addColorStop(0.7, '#dde1e3');
+        bodyGrad.addColorStop(1, '#99a3a4');
+        ctx.fillStyle = bodyGrad;
+        ctx.fillRect(-18, 0, 36, 85);
 
-        if (rocketImg && engineImg) {
-            ctx.drawImage(rocketImg, -20, 0, 40, 100);
+        // Soot marks (re-entry charring)
+        const sootGrad = ctx.createLinearGradient(0, 0, 0, 85);
+        sootGrad.addColorStop(0, 'rgba(30, 30, 30, 0.3)');
+        sootGrad.addColorStop(0.4, 'rgba(30, 30, 30, 0.05)');
+        sootGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = sootGrad;
+        ctx.fillRect(-18, 0, 36, 85);
 
-            ctx.save();
-            ctx.translate(0, 100);
-            ctx.rotate(this.gimbalAngle);
-            ctx.drawImage(engineImg, -15, -10, 30, 40);
-            ctx.restore();
-        } else {
-            ctx.fillStyle = '#eee';
-            ctx.fillRect(-20, 0, 40, 100);
+        // LOX/RP-1 demarcation
+        ctx.strokeStyle = 'rgba(52, 73, 94, 0.3)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(-18, 40);
+        ctx.lineTo(18, 40);
+        ctx.stroke();
 
-            ctx.save();
-            ctx.translate(0, 100);
-            ctx.rotate(this.gimbalAngle);
-            ctx.fillStyle = '#222';
+        // === GRID FINS ===
+        ctx.save();
+        ctx.strokeStyle = '#2c3e50';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-24, 8, 6, 12);
+        ctx.strokeRect(18, 8, 6, 12);
+        ctx.beginPath();
+        ctx.moveTo(-21, 8); ctx.lineTo(-21, 20);
+        ctx.moveTo(-24, 12); ctx.lineTo(-18, 12);
+        ctx.moveTo(-24, 16); ctx.lineTo(-18, 16);
+        ctx.moveTo(21, 8); ctx.lineTo(21, 20);
+        ctx.moveTo(18, 12); ctx.lineTo(24, 12);
+        ctx.moveTo(18, 16); ctx.lineTo(24, 16);
+        ctx.stroke();
+        ctx.restore();
+
+        // === BOOSTER SKIRT ===
+        ctx.fillStyle = '#2c3e50';
+        ctx.beginPath();
+        ctx.moveTo(-18, 85);
+        ctx.lineTo(-20, 90);
+        ctx.lineTo(20, 90);
+        ctx.lineTo(18, 85);
+        ctx.fill();
+
+        // === LANDING LEGS ===
+        const alt = (state.groundY - this.y - this.h) / PIXELS_PER_METER;
+        if (alt < 200) {
+            const deploy = Math.min(1, (200 - alt) / 100);
+            const legSpread = deploy * 20;
+            const legLen = 15 + deploy * 10;
+            ctx.strokeStyle = '#1a1a2e';
+            ctx.lineWidth = 2;
+            // Left leg
             ctx.beginPath();
-            ctx.moveTo(-10, 0);
-            ctx.lineTo(-15, 20);
-            ctx.lineTo(15, 20);
-            ctx.lineTo(10, 0);
+            ctx.moveTo(-16, 88);
+            ctx.lineTo(-16 - legSpread, 88 + legLen);
+            ctx.stroke();
+            // Left foot pad
+            ctx.fillStyle = '#34495e';
+            ctx.beginPath();
+            ctx.arc(-16 - legSpread, 88 + legLen, 3, 0, Math.PI * 2);
             ctx.fill();
-            ctx.restore();
+            // Right leg
+            ctx.beginPath();
+            ctx.moveTo(16, 88);
+            ctx.lineTo(16 + legSpread, 88 + legLen);
+            ctx.stroke();
+            // Right foot pad
+            ctx.beginPath();
+            ctx.arc(16 + legSpread, 88 + legLen, 3, 0, Math.PI * 2);
+            ctx.fill();
         }
 
-        // Deploy landing legs when low altitude
-        if ((state.groundY - this.y - this.h) / PIXELS_PER_METER < 200) {
-            ctx.fillStyle = '#111';
-            ctx.fillRect(-40, 90, 20, 5);
-            ctx.fillRect(20, 90, 20, 5);
-        }
+        // === ENGINE (Gimbaled) ===
+        ctx.save();
+        ctx.translate(0, 90);
+        ctx.rotate(this.gimbalAngle);
 
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(-12, 0, 24, 3);
+
+        const engGrad = ctx.createLinearGradient(-10, 0, 10, 0);
+        engGrad.addColorStop(0, '#1a252f');
+        engGrad.addColorStop(0.3, '#566573');
+        engGrad.addColorStop(0.5, '#85929e');
+        engGrad.addColorStop(0.7, '#566573');
+        engGrad.addColorStop(1, '#1a252f');
+        ctx.fillStyle = engGrad;
+        ctx.beginPath();
+        ctx.moveTo(-7, 3);
+        ctx.bezierCurveTo(-9, 8, -12, 16, -14, 22);
+        ctx.lineTo(14, 22);
+        ctx.bezierCurveTo(12, 16, 9, 8, 7, 3);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(52, 73, 94, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(0, 22, 9, 2.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
         ctx.restore();
     }
 }
@@ -323,7 +498,6 @@ export class UpperStage extends Vessel {
     draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
         if (this.crashed) return;
 
-        // Interpolate position and angle
         const rX = this.prevX + (this.x - this.prevX) * alpha;
         const rY = this.prevY + (this.y - this.prevY) * alpha;
         const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
@@ -335,62 +509,89 @@ export class UpperStage extends Vessel {
         this.drawPlasma(ctx);
         this.drawShockwave(ctx);
 
-        const rocketImg = state.assets?.get('rocket_body');
-        const engineImg = state.assets?.get('rocket_engine');
-        const fairingImg = state.assets?.get('fairing');
-
-        if (rocketImg && engineImg) {
-            // Engine
-            ctx.save();
-            ctx.translate(0, 60);
-            ctx.drawImage(engineImg, -10, -5, 20, 25);
-            ctx.restore();
-
-            // Tank
-            ctx.drawImage(rocketImg, -20, 0, 40, 60);
-
-            // Fairing
-            if (!this.fairingsDeployed) {
-                if (fairingImg) {
-                    ctx.drawImage(fairingImg, -20, -40, 40, 40);
-                } else {
-                    ctx.fillStyle = '#fff';
-                    ctx.beginPath();
-                    ctx.moveTo(-20, 0);
-                    ctx.quadraticCurveTo(0, -40, 20, 0);
-                    ctx.fill();
-                }
-            } else {
-                // Exposed payload indicator
-                ctx.fillStyle = '#f1c40f';
-                ctx.fillRect(-10, -5, 20, 5);
-            }
-        } else {
-            // Engine
-            ctx.fillStyle = '#444';
+        // === FAIRING OR EXPOSED PAYLOAD ===
+        if (!this.fairingsDeployed) {
+            // Fairing nose cone
+            const fairGrad = ctx.createLinearGradient(-16, 0, 16, 0);
+            fairGrad.addColorStop(0, '#d5d8dc');
+            fairGrad.addColorStop(0.35, '#f2f3f4');
+            fairGrad.addColorStop(0.5, '#ffffff');
+            fairGrad.addColorStop(0.65, '#f2f3f4');
+            fairGrad.addColorStop(1, '#c0c5c9');
+            ctx.fillStyle = fairGrad;
             ctx.beginPath();
-            ctx.moveTo(-10, 60);
-            ctx.lineTo(10, 60);
-            ctx.lineTo(15, 75);
-            ctx.lineTo(-15, 75);
+            ctx.moveTo(0, -35);
+            ctx.bezierCurveTo(-3, -28, -14, -10, -16, 0);
+            ctx.lineTo(16, 0);
+            ctx.bezierCurveTo(14, -10, 3, -28, 0, -35);
             ctx.fill();
 
-            // Tank
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(-20, 0, 40, 60);
-
-            // Fairing or payload
-            if (!this.fairingsDeployed) {
-                ctx.beginPath();
-                ctx.moveTo(-20, 0);
-                ctx.quadraticCurveTo(0, -40, 20, 0);
-                ctx.fill();
-            } else {
-                ctx.fillStyle = '#f1c40f';
-                ctx.fillRect(-10, -5, 20, 5);
-            }
+            // Fairing seam
+            ctx.strokeStyle = 'rgba(127, 140, 141, 0.4)';
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(0, -35);
+            ctx.lineTo(0, 0);
+            ctx.stroke();
+        } else {
+            // Exposed payload
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(-8, -8, 16, 8);
+            // Mini solar panels
+            ctx.fillStyle = '#2980b9';
+            ctx.fillRect(-16, -6, 8, 4);
+            ctx.fillRect(8, -6, 8, 4);
         }
 
+        // === UPPER STAGE TANK ===
+        const tankGrad = ctx.createLinearGradient(-16, 0, 16, 0);
+        tankGrad.addColorStop(0, '#bfc9ca');
+        tankGrad.addColorStop(0.3, '#ebedef');
+        tankGrad.addColorStop(0.5, '#f8f9f9');
+        tankGrad.addColorStop(0.7, '#ebedef');
+        tankGrad.addColorStop(1, '#aab7b8');
+        ctx.fillStyle = tankGrad;
+        ctx.fillRect(-16, 0, 32, 50);
+
+        // Tank markings
+        ctx.strokeStyle = 'rgba(52, 73, 94, 0.2)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(-16, 20);
+        ctx.lineTo(16, 20);
+        ctx.stroke();
+
+        // === VACUUM ENGINE (Wider nozzle) ===
+        ctx.save();
+        ctx.translate(0, 50);
+        ctx.rotate(this.gimbalAngle);
+
+        // Engine bell (wider for vacuum optimization)
+        const vacEngGrad = ctx.createLinearGradient(-14, 0, 14, 0);
+        vacEngGrad.addColorStop(0, '#1a252f');
+        vacEngGrad.addColorStop(0.3, '#4a6274');
+        vacEngGrad.addColorStop(0.5, '#7f8c8d');
+        vacEngGrad.addColorStop(0.7, '#4a6274');
+        vacEngGrad.addColorStop(1, '#1a252f');
+        ctx.fillStyle = vacEngGrad;
+        ctx.beginPath();
+        ctx.moveTo(-6, 0);
+        ctx.bezierCurveTo(-8, 5, -16, 18, -18, 25);
+        ctx.lineTo(18, 25);
+        ctx.bezierCurveTo(16, 18, 8, 5, 6, 0);
+        ctx.fill();
+
+        // Nozzle extension rings (vacuum engine characteristic)
+        ctx.strokeStyle = 'rgba(127, 140, 141, 0.3)';
+        ctx.lineWidth = 0.5;
+        for (let r = 8; r <= 20; r += 4) {
+            ctx.beginPath();
+            ctx.moveTo(-6 - (r - 8) * 0.75, r);
+            ctx.lineTo(6 + (r - 8) * 0.75, r);
+            ctx.stroke();
+        }
+
+        ctx.restore();
         ctx.restore();
     }
 }
@@ -424,7 +625,6 @@ export class Payload extends Vessel {
     }
 
     draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
-        // Interpolate position and angle
         const rX = this.prevX + (this.x - this.prevX) * alpha;
         const rY = this.prevY + (this.y - this.prevY) * alpha;
         const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
@@ -433,14 +633,82 @@ export class Payload extends Vessel {
         ctx.translate(rX, rY - camY);
         ctx.rotate(rAngle);
 
-        // Satellite body
-        ctx.fillStyle = '#f1c40f';
+        // === SATELLITE BUS (Metallic body) ===
+        const busGrad = ctx.createLinearGradient(-10, -10, 10, 10);
+        busGrad.addColorStop(0, '#d4ac0d');
+        busGrad.addColorStop(0.5, '#f9e154');
+        busGrad.addColorStop(1, '#b7950b');
+        ctx.fillStyle = busGrad;
         ctx.fillRect(-10, -10, 20, 20);
 
-        // Solar panels
-        ctx.fillStyle = '#3498db';
-        ctx.fillRect(-40, -5, 30, 10);
-        ctx.fillRect(10, -5, 30, 10);
+        // Bus outline
+        ctx.strokeStyle = '#7d6608';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-10, -10, 20, 20);
+
+        // Antenna dish
+        ctx.fillStyle = '#ecf0f1';
+        ctx.beginPath();
+        ctx.arc(0, -12, 4, Math.PI, 0);
+        ctx.fill();
+        ctx.strokeStyle = '#95a5a6';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -12);
+        ctx.lineTo(0, -16);
+        ctx.stroke();
+
+        // === SOLAR PANELS (with cell grid) ===
+        // Left panel
+        const panelGradL = ctx.createLinearGradient(-40, 0, -10, 0);
+        panelGradL.addColorStop(0, '#1a5276');
+        panelGradL.addColorStop(0.5, '#2e86c1');
+        panelGradL.addColorStop(1, '#1a5276');
+        ctx.fillStyle = panelGradL;
+        ctx.fillRect(-40, -5, 28, 10);
+        // Panel frame
+        ctx.strokeStyle = '#566573';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(-40, -5, 28, 10);
+        // Cell grid lines
+        ctx.strokeStyle = 'rgba(26, 82, 118, 0.4)';
+        for (let i = -33; i < -10; i += 7) {
+            ctx.beginPath();
+            ctx.moveTo(i, -5);
+            ctx.lineTo(i, 5);
+            ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.moveTo(-40, 0);
+        ctx.lineTo(-12, 0);
+        ctx.stroke();
+
+        // Right panel
+        const panelGradR = ctx.createLinearGradient(12, 0, 40, 0);
+        panelGradR.addColorStop(0, '#1a5276');
+        panelGradR.addColorStop(0.5, '#2e86c1');
+        panelGradR.addColorStop(1, '#1a5276');
+        ctx.fillStyle = panelGradR;
+        ctx.fillRect(12, -5, 28, 10);
+        ctx.strokeStyle = '#566573';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(12, -5, 28, 10);
+        ctx.strokeStyle = 'rgba(26, 82, 118, 0.4)';
+        for (let i = 19; i < 40; i += 7) {
+            ctx.beginPath();
+            ctx.moveTo(i, -5);
+            ctx.lineTo(i, 5);
+            ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.moveTo(12, 0);
+        ctx.lineTo(40, 0);
+        ctx.stroke();
+
+        // Panel hinges
+        ctx.fillStyle = '#34495e';
+        ctx.fillRect(-12, -2, 2, 4);
+        ctx.fillRect(10, -2, 2, 4);
 
         ctx.restore();
     }
@@ -466,7 +734,6 @@ export class Fairing extends Vessel {
     }
 
     draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
-        // Interpolate position and angle
         const rX = this.prevX + (this.x - this.prevX) * alpha;
         const rY = this.prevY + (this.y - this.prevY) * alpha;
         const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
@@ -477,18 +744,37 @@ export class Fairing extends Vessel {
 
         this.drawPlasma(ctx);
 
-        ctx.fillStyle = '#fff';
+        // === FAIRING HALF with 3D gradient ===
+        const s = this.side;
+        const fairGrad = ctx.createLinearGradient(0, 0, s * 20, 0);
+        fairGrad.addColorStop(0, '#f2f3f4');
+        fairGrad.addColorStop(0.6, '#ebedef');
+        fairGrad.addColorStop(1, '#d5d8dc');
+        ctx.fillStyle = fairGrad;
         ctx.beginPath();
-        if (this.side === -1) {
-            ctx.moveTo(0, 0);
-            ctx.lineTo(-20, 0);
-            ctx.quadraticCurveTo(0, -40, 0, 0);
-        } else {
-            ctx.moveTo(0, 0);
-            ctx.lineTo(20, 0);
-            ctx.quadraticCurveTo(0, -40, 0, 0);
-        }
+        ctx.moveTo(0, 0);
+        ctx.lineTo(s * 18, 0);
+        ctx.bezierCurveTo(s * 16, -12, s * 8, -32, 0, -40);
+        ctx.closePath();
         ctx.fill();
+
+        // Edge highlight
+        ctx.strokeStyle = 'rgba(127, 140, 141, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -40);
+        ctx.stroke();
+
+        // Structural ribs
+        ctx.strokeStyle = 'rgba(52, 73, 94, 0.2)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(s * 5, -30);
+        ctx.lineTo(s * 10, 0);
+        ctx.moveTo(s * 10, -18);
+        ctx.lineTo(s * 15, 0);
+        ctx.stroke();
 
         ctx.restore();
     }

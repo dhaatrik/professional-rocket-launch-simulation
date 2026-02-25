@@ -47,7 +47,10 @@ export enum EntityOffset {
     FAIRING_DEP = 18, // Fairings deployed (0 or 1)
     MASS = 19, // Current Mass (kg)
     APOGEE = 20, // Apogee (m)
-    ID = 21 // Unique ID (numeric part)
+    ID = 21, // Unique ID (numeric part)
+    AOA = 22, // Angle of Attack (radians)
+    STABILITY_MARGIN = 23, // Stability margin (0-1)
+    IS_AERO_STABLE = 24 // Aerodynamically stable (0 or 1)
 }
 
 // Entity Types

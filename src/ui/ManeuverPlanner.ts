@@ -11,8 +11,7 @@ import {
     calculateCircularizationFromElements,
     calculateHohmannTransfer,
     KeplerianElements,
-    ManeuverPlan,
-    MU
+    ManeuverPlan
 } from '../physics/OrbitalMechanics';
 import { vec2, IVessel } from '../types';
 import { PIXELS_PER_METER, R_EARTH } from '../config/Constants';
@@ -51,7 +50,10 @@ export class ManeuverPlanner {
                     <div class="maneuver-section">
                         <h3>Current Orbit</h3>
                         <div id="planner-orbit-stats" class="stats-grid">
-                            Loading...
+                            <div><strong>Apoapsis:</strong> <span id="planner-stat-apo">--</span> km</div>
+                            <div><strong>Periapsis:</strong> <span id="planner-stat-peri">--</span> km</div>
+                            <div><strong>Period:</strong> <span id="planner-stat-period">--</span> min</div>
+                            <div><strong>Eccentricity:</strong> <span id="planner-stat-ecc">--</span></div>
                         </div>
                     </div>
 
@@ -170,18 +172,6 @@ export class ManeuverPlanner {
     }
 
     /**
-     * Helper to create stat element
-     */
-    private createStat(label: string, value: string, unit: string = ''): HTMLElement {
-        const div = document.createElement('div');
-        const strong = document.createElement('strong');
-        strong.textContent = label + ':';
-        div.appendChild(strong);
-        div.appendChild(document.createTextNode(` ${value}${unit ? ' ' + unit : ''}`));
-        return div;
-    }
-
-    /**
      * Update current orbit statistics display
      */
     private updateOrbitStats(): KeplerianElements | null {
@@ -233,16 +223,17 @@ export class ManeuverPlanner {
 
         const elements = this.getCurrentOrbitalElements(vessel);
 
-        const statsDiv = document.getElementById('planner-orbit-stats');
-        if (statsDiv) {
-            // Security: Use DOM methods instead of innerHTML to prevent XSS
-            statsDiv.textContent = ''; // Clear existing content
+        const apoEl = document.getElementById('planner-stat-apo');
+        if (apoEl) apoEl.textContent = (elements.apoapsis / 1000).toFixed(1);
 
-            statsDiv.appendChild(this.createStat('Apoapsis', (elements.apoapsis / 1000).toFixed(1), 'km'));
-            statsDiv.appendChild(this.createStat('Periapsis', (elements.periapsis / 1000).toFixed(1), 'km'));
-            statsDiv.appendChild(this.createStat('Period', (elements.period / 60).toFixed(1), 'min'));
-            statsDiv.appendChild(this.createStat('Eccentricity', elements.eccentricity.toFixed(3)));
-        }
+        const periEl = document.getElementById('planner-stat-peri');
+        if (periEl) periEl.textContent = (elements.periapsis / 1000).toFixed(1);
+
+        const periodEl = document.getElementById('planner-stat-period');
+        if (periodEl) periodEl.textContent = (elements.period / 60).toFixed(1);
+
+        const eccEl = document.getElementById('planner-stat-ecc');
+        if (eccEl) eccEl.textContent = elements.eccentricity.toFixed(3);
 
         return elements;
     }

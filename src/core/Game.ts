@@ -94,7 +94,7 @@ export class Game {
     // Command state (User Input)
     public commandThrottle: number = 0;
     public stagingCommand: boolean = false;
-    private readonly ZOOM: number = 2.5;
+    private readonly ZOOM: number = 1.2;
 
     // Mission state
     private missionState: MissionState = {
@@ -197,6 +197,7 @@ export class Game {
         this.input = new InputManager();
         this.audio = new AudioEngine();
         this.assets = new AssetLoader();
+        setAssetLoader(this.assets);
         this.navball = new Navball();
         this.telemetry = new TelemetrySystem();
         this.missionLog = new MissionLog();
@@ -485,14 +486,20 @@ export class Game {
         window.mainStack = this.mainStack;
 
         // Update Environment (View)
-        // Worker sends environment state?
+        // Worker sends wind/density via buffer; other env fields come from main-thread EnvironmentSystem
+        this.environment.update(dt * this.timeScale);
         const envState = this.physics.getEnvironmentState();
         if (envState) {
+            // Merge environment data not available in the shared buffer
+            const localEnv = this.environment.getState(0);
+            envState.timeOfDay = localEnv.timeOfDay;
+            envState.isLaunchSafe = localEnv.isLaunchSafe;
+            envState.maxQWindWarning = localEnv.maxQWindWarning;
+
             setWindVelocity(envState.windVelocity);
             setDensityMultiplier(envState.densityMultiplier);
             this.lastEnvState = envState;
         } else {
-            this.environment.update(dt * this.timeScale); // Fallback
             this.lastEnvState = this.environment.getState(0);
         }
 
@@ -778,8 +785,7 @@ export class Game {
         this.ctx.restore();
 
         // 2. Draw Wind Vectors
-        // Optimized: Batch drawing operations by color and use manual coordinate calculation
-        // to avoid expensive canvas translate/rotate calls in the loop.
+        // Optimized: Batched drawing by color to reduce draw calls and state changes
         this.ctx.save();
         const step = 200; // pixels
         const startY = Math.floor(camY / step) * step;
@@ -787,69 +793,90 @@ export class Game {
         const screenX = 50 / this.ZOOM; // Draw on left side (scaled)
         const visibleBottom = camY + this.height / this.ZOOM;
 
-        // Set common text styles once
-        this.ctx.font = `${10 / this.ZOOM}px monospace`;
+        // Batches for each color category (stores vertices)
+        // Format: [x1, y1, x2, y2, ...]
+        const lowWind: number[] = [];    // White (< 10 m/s)
+        const medWind: number[] = [];    // Yellow (10-30 m/s)
+        const highWind: number[] = [];   // Red (> 30 m/s)
 
-        // Pass 1: Draw arrow shapes batched by color
-        for (let i = 0; i < WIND_COLORS.length; i++) {
-            const color = WIND_COLORS[i]!;
-            let started = false;
+        // Text batch: [speed, x, y]
+        const windText: { text: string; x: number; y: number }[] = [];
 
-            for (let y = startY; y < visibleBottom; y += step) {
-                const alt = (this.groundY - y) / PIXELS_PER_METER;
-                if (alt < 0) continue;
-
-                this.environment.getWindPolar(alt, tempWind);
-                const { speed, direction } = tempWind;
-                if (speed <= 1) continue;
-
-                // Color based on speed
-                let arrowColor: string;
-                if (speed < 10) arrowColor = WIND_COLORS[0]!;
-                else if (speed < 30) arrowColor = WIND_COLORS[1]!;
-                else arrowColor = WIND_COLORS[2]!;
-
-                if (arrowColor !== color) continue;
-
-                if (!started) {
-                    this.ctx.fillStyle = color;
-                    this.ctx.beginPath();
-                    started = true;
-                }
-
-                // Note: Wind vector points WHERE wind is going.
-                // direction is where wind comes FROM, so we add PI to point where it goes.
-                const angle = direction + Math.PI;
-                const cos = Math.cos(angle);
-                const sin = Math.sin(angle);
-                const len = Math.min(50, speed * 2);
-                const len5 = len - 5;
-
-                // Manual transform: x' = x + px*cos - py*sin, y' = y + px*sin + py*cos
-                // Arrow shape local points: (0,-2), (len5,-2), (len5,-5), (len,0), (len5,5), (len5,2), (0,2)
-                this.ctx.moveTo(screenX + 2 * sin, y - 2 * cos);
-                this.ctx.lineTo(screenX + len5 * cos + 2 * sin, y + len5 * sin - 2 * cos);
-                this.ctx.lineTo(screenX + len5 * cos + 5 * sin, y + len5 * sin - 5 * cos);
-                this.ctx.lineTo(screenX + len * cos, y + len * sin);
-                this.ctx.lineTo(screenX + len5 * cos - 5 * sin, y + len5 * sin + 5 * cos);
-                this.ctx.lineTo(screenX + len5 * cos - 2 * sin, y + len5 * sin + 2 * cos);
-                this.ctx.lineTo(screenX - 2 * sin, y + 2 * cos);
-            }
-
-            if (started) {
-                this.ctx.fill();
-            }
-        }
-
-        // Pass 2: Draw text labels (avoids fillStyle swapping during arrow drawing)
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        for (let y = startY; y < visibleBottom; y += step) {
+        for (let y = startY; y < camY + this.height / this.ZOOM; y += step) {
             const alt = (this.groundY - y) / PIXELS_PER_METER;
             if (alt < 0) continue;
 
             this.environment.getWindPolar(alt, tempWind);
-            if (tempWind.speed > 1) {
-                this.ctx.fillText(`${tempWind.speed.toFixed(0)} m/s`, screenX + 10, y + 15);
+            const { speed, direction } = tempWind;
+
+            if (speed > 1) {
+                const screenY = y;
+                const screenX = 50 / this.ZOOM;
+
+                // Pre-calculate rotation
+                const angle = direction + Math.PI;
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+
+                // Arrow shape vertices (relative to origin)
+                const len = Math.min(50, speed * 2);
+                const vertices = [
+                    0, -2,
+                    len - 5, -2,
+                    len - 5, -5,
+                    len, 0,
+                    len - 5, 5,
+                    len - 5, 2,
+                    0, 2
+                ];
+
+                // Transform vertices
+                for (let i = 0; i < vertices.length; i += 2) {
+                    const vx = vertices[i];
+                    const vy = vertices[i + 1];
+                    // Rotate and translate
+                    const tx = vx * c - vy * s + screenX;
+                    const ty = vx * s + vy * c + screenY;
+
+                    // Add to appropriate batch
+                    if (speed < 10) lowWind.push(tx, ty);
+                    else if (speed < 30) medWind.push(tx, ty);
+                    else highWind.push(tx, ty);
+                }
+
+                // Add text info (offset by 10, 15 relative to arrow center)
+                windText.push({
+                    text: `${speed.toFixed(0)} m/s`,
+                    x: screenX + 10,
+                    y: screenY + 15
+                });
+            }
+        }
+
+        // Render batches
+        const drawBatch = (points: number[], color: string) => {
+            if (points.length === 0) return;
+            this.ctx.fillStyle = color;
+            this.ctx.beginPath();
+            for (let i = 0; i < points.length; i += 14) { // 7 vertices * 2 coords
+                this.ctx.moveTo(points[i], points[i + 1]);
+                for (let j = 2; j < 14; j += 2) {
+                    this.ctx.lineTo(points[i + j], points[i + j + 1]);
+                }
+            }
+            this.ctx.fill();
+        };
+
+        drawBatch(lowWind, 'rgba(255, 255, 255, 0.3)');
+        drawBatch(medWind, 'rgba(255, 255, 0, 0.5)');
+        drawBatch(highWind, 'rgba(255, 0, 0, 0.6)');
+
+        // Draw text
+        if (windText.length > 0) {
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            this.ctx.font = `${10 / this.ZOOM}px monospace`;
+            for (const t of windText) {
+                this.ctx.fillText(t.text, t.x, t.y);
             }
         }
 
@@ -1020,7 +1047,7 @@ export class Game {
 
             // Smoothly update cameraY (altitude tracking)
             // We want RocketY - CamY to be constant-ish
-            const targetCamY = trackedY - (this.height * 0.7) / this.ZOOM;
+            const targetCamY = trackedY - (this.height * 0.5) / this.ZOOM;
 
             // Clamp camera: Don't show below ground too much
             // Ground is at this.groundY.
@@ -1029,7 +1056,7 @@ export class Game {
 
             // Interpolate
             const diff = targetCamY - this.cameraY;
-            this.cameraY += diff * 0.1;
+            this.cameraY = targetCamY;
 
             // Hard clamp to not show under-ground void
             // Actually, allowed for crash debris, but let's keep it reasonable

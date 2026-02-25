@@ -211,6 +211,9 @@ export class PhysicsProxy {
                 view.skinTemp = this.sharedView[base + EntityOffset.SKIN_TEMP] || 0;
                 view.heatShieldRemaining = this.sharedView[base + EntityOffset.HEAT_SHIELD] || 0;
                 view.isAblating = this.sharedView[base + EntityOffset.ABLATING] === 1;
+                view.aoa = this.sharedView[base + EntityOffset.AOA] || 0;
+                view.stabilityMargin = this.sharedView[base + EntityOffset.STABILITY_MARGIN] || 0;
+                view.isAeroStable = this.sharedView[base + EntityOffset.IS_AERO_STABLE] === 1;
 
                 if (typeCode === EntityType.UPPER_STAGE) {
                     (view as any).fairingsDeployed = this.sharedView[base + EntityOffset.FAIRING_DEP] === 1;

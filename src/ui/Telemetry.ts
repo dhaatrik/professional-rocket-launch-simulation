@@ -6,6 +6,7 @@
  */
 
 import type { TelemetryDataPoint } from '../types/index.ts';
+import { MonotonicMaxQueue } from '../utils/MonotonicQueue';
 
 export class TelemetrySystem {
     /** Canvas element */
@@ -31,8 +32,8 @@ export class TelemetrySystem {
     private maxVel: number = 100;
 
     /** Monotonic queues for O(1) max retrieval */
-    private maxAltDeque: number[] = [];
-    private maxVelDeque: number[] = [];
+    private maxAltQueue = new MonotonicMaxQueue();
+    private maxVelQueue = new MonotonicMaxQueue();
 
     constructor() {
         this.canvas = document.getElementById('graph-canvas') as HTMLCanvasElement | null;
@@ -49,17 +50,9 @@ export class TelemetrySystem {
     update(time: number, alt: number, vel: number): void {
         // Throttle sampling
         if (time - this.lastSample > this.sampleInterval) {
-            // Update monotonic queues for altitude
-            while (this.maxAltDeque.length > 0 && this.maxAltDeque[this.maxAltDeque.length - 1]! < alt) {
-                this.maxAltDeque.pop();
-            }
-            this.maxAltDeque.push(alt);
-
-            // Update monotonic queues for velocity
-            while (this.maxVelDeque.length > 0 && this.maxVelDeque[this.maxVelDeque.length - 1]! < vel) {
-                this.maxVelDeque.pop();
-            }
-            this.maxVelDeque.push(vel);
+            // Update monotonic queues
+            this.maxAltQueue.push(alt);
+            this.maxVelQueue.push(vel);
 
             this.data.push({ t: time, alt, vel });
 
@@ -68,19 +61,15 @@ export class TelemetrySystem {
                 const removed = this.data.shift();
 
                 if (removed) {
-                    if (removed.alt === this.maxAltDeque[0]) {
-                        this.maxAltDeque.shift();
-                    }
-                    if (removed.vel === this.maxVelDeque[0]) {
-                        this.maxVelDeque.shift();
-                    }
+                    this.maxAltQueue.pop(removed.alt);
+                    this.maxVelQueue.pop(removed.vel);
                 }
             }
 
             // Update cached max values
             // Use 100 as minimum scale
-            this.maxAlt = Math.max(100, this.maxAltDeque[0] ?? 0);
-            this.maxVel = Math.max(100, this.maxVelDeque[0] ?? 0);
+            this.maxAlt = Math.max(100, this.maxAltQueue.max ?? 0);
+            this.maxVel = Math.max(100, this.maxVelQueue.max ?? 0);
 
             this.lastSample = time;
         }
@@ -141,8 +130,8 @@ export class TelemetrySystem {
      */
     clear(): void {
         this.data = [];
-        this.maxAltDeque = [];
-        this.maxVelDeque = [];
+        this.maxAltQueue.clear();
+        this.maxVelQueue.clear();
         this.lastSample = 0;
         this.maxAlt = 100;
         this.maxVel = 100;
