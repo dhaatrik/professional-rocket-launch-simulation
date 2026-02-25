@@ -136,6 +136,9 @@ export class Vessel implements IVessel {
     public orbitPath: OrbitalElements[] | null = null;
     public lastOrbitUpdate: number = 0;
 
+    // Logging state
+    private instabilityWarningLogged: boolean = false;
+
     /**
      * Create a new vessel
      *
@@ -444,6 +447,11 @@ export class Vessel implements IVessel {
     private checkAerodynamicStress(velocity: number, altitude: number): void {
         // Use the aerodynamic state if available for advanced damage calculation
         if (this.aeroState) {
+            // Reset warning flag when stable
+            if (this.isAeroStable) {
+                this.instabilityWarningLogged = false;
+            }
+
             const damageRate = calculateAerodynamicDamageRate(this.aeroState, this.q);
 
             if (damageRate > 0) {
@@ -456,11 +464,12 @@ export class Vessel implements IVessel {
                 }
 
                 // Log instability warning once when stability margin goes negative
-                if (!this.isAeroStable && this.q > 5000 && state.missionLog) {
+                if (!this.isAeroStable && this.q > 5000 && state.missionLog && !this.instabilityWarningLogged) {
                     state.missionLog.log(
                         `STABILITY WARNING: AoA=${((Math.abs(this.aoa) * 180) / Math.PI).toFixed(1)}° Margin=${(this.stabilityMargin * 100).toFixed(1)}%`,
                         'warn'
                     );
+                    this.instabilityWarningLogged = true;
                 }
             }
         } else {
