@@ -49,6 +49,8 @@ import { PhysicsProxy } from './PhysicsProxy';
 import { TelemetryTransmitter } from '../telemetry/TelemetryTransmitter';
 import { ParticleSystem } from '../physics/ParticleSystem';
 
+const WIND_COLORS = ['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 0, 0.5)', 'rgba(255, 0, 0, 0.6)'];
+
 export class Game {
     // Canvas and rendering
     private canvas: HTMLCanvasElement;
@@ -776,58 +778,81 @@ export class Game {
         this.ctx.restore();
 
         // 2. Draw Wind Vectors
-        // Draw every 100 pixels vertically
+        // Optimized: Batch drawing operations by color and use manual coordinate calculation
+        // to avoid expensive canvas translate/rotate calls in the loop.
         this.ctx.save();
         const step = 200; // pixels
         const startY = Math.floor(camY / step) * step;
         const tempWind = { speed: 0, direction: 0 };
+        const screenX = 50 / this.ZOOM; // Draw on left side (scaled)
+        const visibleBottom = camY + this.height / this.ZOOM;
 
-        for (let y = startY; y < camY + this.height / this.ZOOM; y += step) {
-            const alt = (this.groundY - y) / PIXELS_PER_METER;
-            if (alt < 0) continue;
+        // Set common text styles once
+        this.ctx.font = `${10 / this.ZOOM}px monospace`;
 
-            // Optimized: Use polar coordinates directly to avoid trig and object allocation
-            this.environment.getWindPolar(alt, tempWind);
-            const { speed, direction } = tempWind;
+        // Pass 1: Draw arrow shapes batched by color
+        for (let i = 0; i < WIND_COLORS.length; i++) {
+            const color = WIND_COLORS[i]!;
+            let started = false;
 
-            if (speed > 1) {
-                const screenY = y;
-                const screenX = 50 / this.ZOOM; // Draw on left side (scaled)
+            for (let y = startY; y < visibleBottom; y += step) {
+                const alt = (this.groundY - y) / PIXELS_PER_METER;
+                if (alt < 0) continue;
 
-                // Draw arrow
-                this.ctx.translate(screenX, screenY);
+                this.environment.getWindPolar(alt, tempWind);
+                const { speed, direction } = tempWind;
+                if (speed <= 1) continue;
+
+                // Color based on speed
+                let arrowColor: string;
+                if (speed < 10) arrowColor = WIND_COLORS[0]!;
+                else if (speed < 30) arrowColor = WIND_COLORS[1]!;
+                else arrowColor = WIND_COLORS[2]!;
+
+                if (arrowColor !== color) continue;
+
+                if (!started) {
+                    this.ctx.fillStyle = color;
+                    this.ctx.beginPath();
+                    started = true;
+                }
+
                 // Note: Wind vector points WHERE wind is going.
                 // direction is where wind comes FROM, so we add PI to point where it goes.
                 const angle = direction + Math.PI;
-
-                this.ctx.rotate(angle);
-
-                // Color based on speed
-                if (speed < 10) this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                else if (speed < 30) this.ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                else this.ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
-
-                // Arrow shape
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
                 const len = Math.min(50, speed * 2);
-                this.ctx.beginPath();
-                this.ctx.moveTo(0, -2);
-                this.ctx.lineTo(len - 5, -2);
-                this.ctx.lineTo(len - 5, -5);
-                this.ctx.lineTo(len, 0);
-                this.ctx.lineTo(len - 5, 5);
-                this.ctx.lineTo(len - 5, 2);
-                this.ctx.lineTo(0, 2);
+                const len5 = len - 5;
+
+                // Manual transform: x' = x + px*cos - py*sin, y' = y + px*sin + py*cos
+                // Arrow shape local points: (0,-2), (len5,-2), (len5,-5), (len,0), (len5,5), (len5,2), (0,2)
+                this.ctx.moveTo(screenX + 2 * sin, y - 2 * cos);
+                this.ctx.lineTo(screenX + len5 * cos + 2 * sin, y + len5 * sin - 2 * cos);
+                this.ctx.lineTo(screenX + len5 * cos + 5 * sin, y + len5 * sin - 5 * cos);
+                this.ctx.lineTo(screenX + len * cos, y + len * sin);
+                this.ctx.lineTo(screenX + len5 * cos - 5 * sin, y + len5 * sin + 5 * cos);
+                this.ctx.lineTo(screenX + len5 * cos - 2 * sin, y + len5 * sin + 2 * cos);
+                this.ctx.lineTo(screenX - 2 * sin, y + 2 * cos);
+            }
+
+            if (started) {
                 this.ctx.fill();
-
-                // Text
-                this.ctx.rotate(-angle); // Reset rotation for text
-                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                this.ctx.font = `${10 / this.ZOOM}px monospace`;
-                this.ctx.fillText(`${speed.toFixed(0)} m/s`, 10, 15);
-
-                this.ctx.translate(-screenX, -screenY);
             }
         }
+
+        // Pass 2: Draw text labels (avoids fillStyle swapping during arrow drawing)
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        for (let y = startY; y < visibleBottom; y += step) {
+            const alt = (this.groundY - y) / PIXELS_PER_METER;
+            if (alt < 0) continue;
+
+            this.environment.getWindPolar(alt, tempWind);
+            if (tempWind.speed > 1) {
+                this.ctx.fillText(`${tempWind.speed.toFixed(0)} m/s`, screenX + 10, y + 15);
+            }
+        }
+
         this.ctx.restore();
     }
 
