@@ -15,7 +15,7 @@ describe('Strict CSP Security Headers', () => {
             expect(match).not.toBeNull();
 
             if (match) {
-                const csp = match[1];
+                const csp = match[1]!;
 
                 // Check style-src
                 // It should contain "style-src 'self'" but NOT "'unsafe-inline'"

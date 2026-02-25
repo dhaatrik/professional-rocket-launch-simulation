@@ -40,7 +40,7 @@ describe('Performance Benchmark: Type Check vs instanceof (Mixed Array)', () => 
         let countType = 0;
         for (let j = 0; j < iterations; j++) {
             for (let i = 0; i < count; i++) {
-                const e = entities[i];
+                const e = entities[i]!;
                 const t = e.type;
                 if (t === EntityType.FULLSTACK) countType++;
                 else if (t === EntityType.UPPER_STAGE) countType++;

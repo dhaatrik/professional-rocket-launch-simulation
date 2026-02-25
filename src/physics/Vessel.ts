@@ -118,7 +118,7 @@ export class Vessel implements IVessel {
     public heatShieldRemaining: number = 1.0; // Heat shield fraction (0-1)
     public isAblating: boolean = false; // Currently ablating
     public isThermalCritical: boolean = false; // Temperature critical
-    private lastThermalLogTime: number = -10; // Last time thermal warning was logged (allow immediate logging)
+    public lastThermalLogTime: number = -10; // Last time thermal warning was logged (allow immediate logging)
 
     // Propulsion State Machine
     public propConfig: PropulsionConfig = FULLSTACK_PROP_CONFIG;
@@ -136,8 +136,6 @@ export class Vessel implements IVessel {
     public orbitPath: OrbitalElements[] | null = null;
     public lastOrbitUpdate: number = 0;
 
-    // Logging state
-    public lastThermalLogTime: number = -100; // Allow immediate logging
     public instabilityWarningLogged: boolean = false;
 
     // Reusable objects for RK4 to avoid garbage collection

@@ -112,7 +112,7 @@ describe('VehicleFactory', () => {
             const spec = createVehicleSpec(blueprint);
 
             expect(spec.stages).toHaveLength(1);
-            const stageProps = spec.stages[0];
+            const stageProps = spec.stages[0]!;
 
             expect(stageProps.dryMass).toBe(MOCK_ENGINE.mass + MOCK_TANK.mass);
             expect(stageProps.fuelCapacity).toBe(MOCK_TANK.fuelCapacity);
@@ -140,16 +140,16 @@ describe('VehicleFactory', () => {
             expect(spec.stages).toHaveLength(2);
 
             // Stage 0 (Bottom)
-            expect(spec.stages[0].dryMass).toBe(MOCK_ENGINE.mass);
-            expect(spec.stages[0].height).toBe(MOCK_ENGINE.height);
+            expect(spec.stages[0]!.dryMass).toBe(MOCK_ENGINE.mass);
+            expect(spec.stages[0]!.height).toBe(MOCK_ENGINE.height);
 
             // Stage 1 (Top)
             // Decoupler adds 50kg mass and 5px height (hardcoded in VehicleFactory)
             const decouplerMass = 50;
             const decouplerHeight = 5;
-            expect(spec.stages[1].dryMass).toBe(MOCK_AVIONICS.mass + decouplerMass);
-            expect(spec.stages[1].height).toBe(MOCK_AVIONICS.height + decouplerHeight);
-            expect(spec.stages[1].hasSAS).toBe(true);
+            expect(spec.stages[1]!.dryMass).toBe(MOCK_AVIONICS.mass + decouplerMass);
+            expect(spec.stages[1]!.height).toBe(MOCK_AVIONICS.height + decouplerHeight);
+            expect(spec.stages[1]!.hasSAS).toBe(true);
         });
 
         it('should calculate average ISP for multiple engines', () => {
@@ -167,7 +167,7 @@ describe('VehicleFactory', () => {
             const blueprint = createMockBlueprint([stage0]);
             const spec = createVehicleSpec(blueprint);
 
-            const stageProps = spec.stages[0];
+            const stageProps = spec.stages[0]!;
             expect(stageProps.thrust).toBe(3000);
             expect(stageProps.ispVac).toBe(350); // (300 + 400) / 2
             expect(stageProps.ispSL).toBe(250);  // (200 + 300) / 2
@@ -202,12 +202,12 @@ describe('VehicleFactory', () => {
             const blueprint = createMockBlueprint([stage0]);
             const spec = createVehicleSpec(blueprint);
 
-            expect(spec.stages[0].hasSAS).toBe(true);
-            expect(spec.stages[0].hasFairing).toBe(true);
+            expect(spec.stages[0]!.hasSAS).toBe(true);
+            expect(spec.stages[0]!.hasFairing).toBe(true);
         });
 
         it('should handle zero thrust stages correctly', () => {
-             const stage0: VehicleStage = {
+            const stage0: VehicleStage = {
                 stageNumber: 0,
                 hasDecoupler: false,
                 parts: [createInstance(MOCK_TANK, 0)]
@@ -215,14 +215,14 @@ describe('VehicleFactory', () => {
             const blueprint = createMockBlueprint([stage0]);
             const spec = createVehicleSpec(blueprint);
 
-            const stageProps = spec.stages[0];
+            const stageProps = spec.stages[0]!;
             expect(stageProps.thrust).toBe(0);
             expect(stageProps.ispVac).toBe(0);
             expect(stageProps.ispSL).toBe(0);
         });
 
         it('should calculate total height correctly', () => {
-             const stage0: VehicleStage = {
+            const stage0: VehicleStage = {
                 stageNumber: 0,
                 hasDecoupler: false,
                 parts: [createInstance(MOCK_TANK, 0)] // Height 40

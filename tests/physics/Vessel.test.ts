@@ -9,7 +9,7 @@ class TestVessel extends Vessel {
     constructor(x: number, y: number) {
         super(x, y);
     }
-    draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {}
+    draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void { }
 }
 
 // Mock ThermalProtection module
@@ -95,7 +95,7 @@ describe('Vessel Thermal Integration', () => {
         expect(ThermalProtection.updateThermalState).toHaveBeenCalled();
 
         // specific args check: config, current state, velocity, altitude, aoa, dt
-        const args = vi.mocked(ThermalProtection.updateThermalState).mock.calls[0];
+        const args = vi.mocked(ThermalProtection.updateThermalState).mock.calls[0]!;
         expect(args[0]).toBe(vessel.tpsConfig);
         // args[1] is previous state
         expect(args[5]).toBe(dt);
@@ -145,20 +145,20 @@ describe('Vessel Thermal Integration', () => {
         (vessel as any).updatePhysics(0.1);
 
         expect(vessel.isThermalCritical).toBe(true);
-        expect(state.missionLog.log).toHaveBeenCalledWith(
+        expect(state.missionLog!.log).toHaveBeenCalledWith(
             expect.stringContaining('THERMAL WARNING'),
             'warn'
         );
 
         // Verify throttle: call again immediately
-        state.missionLog.log.mockClear();
+        mockMissionLog.log.mockClear();
         (vessel as any).updatePhysics(0.1);
-        expect(state.missionLog.log).not.toHaveBeenCalled();
+        expect(state.missionLog!.log).not.toHaveBeenCalled();
 
         // Advance time and call again
         state.missionTime += 3.0;
         (vessel as any).updatePhysics(0.1);
-        expect(state.missionLog.log).toHaveBeenCalled();
+        expect(state.missionLog!.log).toHaveBeenCalled();
     });
 
     it('should explode on structural failure due to thermal overload', () => {
@@ -182,7 +182,7 @@ describe('Vessel Thermal Integration', () => {
 
         expect(vessel.health).toBeLessThanOrEqual(0);
         expect(explodeSpy).toHaveBeenCalled();
-        expect(state.missionLog.log).toHaveBeenCalledWith(
+        expect(state.missionLog!.log).toHaveBeenCalledWith(
             'STRUCTURAL FAILURE: THERMAL OVERLOAD',
             'warn'
         );

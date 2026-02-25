@@ -27,9 +27,8 @@ const mockCanvas = {
     addEventListener: vi.fn(),
 };
 
-// Mock HTMLElement factory
-const createMockElement = (id) => {
-    const el = {
+const createMockElement = (id: string) => {
+    const el: any = {
         id,
         style: { display: 'none', color: '', height: '' },
         textContent: '',
@@ -45,7 +44,7 @@ const createMockElement = (id) => {
     return el;
 };
 
-const mockElements = {};
+const mockElements: Record<string, any> = {};
 
 vi.stubGlobal('document', {
     getElementById: vi.fn((id) => {
@@ -83,8 +82,8 @@ class MockAudioContext {
 }
 vi.stubGlobal('AudioContext', MockAudioContext);
 vi.stubGlobal('Worker', class {
-    addEventListener() {}
-    postMessage() {}
+    addEventListener() { }
+    postMessage() { }
 });
 
 describe('Game HUD Comprehensive Tests', () => {
@@ -154,7 +153,7 @@ describe('Game HUD Comprehensive Tests', () => {
     });
 
     it('should update TPS HUD correctly', () => {
-         const trackedEntity = {
+        const trackedEntity = {
             y: 5000,
             h: 50,
             vx: 0,

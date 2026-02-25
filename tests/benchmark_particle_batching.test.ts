@@ -40,7 +40,7 @@ describe('Particle Batching Performance', () => {
         const types: ParticleType[] = ['smoke', 'fire', 'spark', 'debris'];
 
         for (let i = 0; i < 2000; i++) {
-            const type = types[i % 4];
+            const type = types[i % 4] as ParticleType;
             const p = Particle.create(0, 0, type, 0, 0);
             // Randomize life to ensure they fall into different buckets
             p.life = Math.random();

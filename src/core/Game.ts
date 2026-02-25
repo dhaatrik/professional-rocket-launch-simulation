@@ -854,7 +854,7 @@ export class Game {
             this.ctx.beginPath();
             for (let i = 0; i < points.length; i += 14) {
                 // 7 vertices * 2 coords
-                this.ctx.moveTo(points[i], points[i + 1]);
+                this.ctx.moveTo(points[i]!, points[i + 1]!);
                 for (let j = 2; j < 14; j += 2) {
                     this.ctx.lineTo(points[i + j]!, points[i + j + 1]!);
                 }
