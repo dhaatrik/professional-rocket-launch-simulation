@@ -4,7 +4,7 @@
 import { FullStack, Booster, UpperStage, Fairing, Payload } from '../physics/RocketComponents';
 import { Vessel } from '../physics/Vessel';
 import { EnvironmentSystem } from '../physics/Environment';
-import { FlightTerminationSystem } from '../safety/FlightTermination';
+import { FlightTerminationSystem, FTSStatus } from '../safety/FlightTermination';
 import { FaultInjector } from '../safety/FaultInjector';
 import { FlightComputer } from '../guidance/FlightComputer';
 import { STAGING_CONFIG } from '../config/Constants';
@@ -28,6 +28,31 @@ let sharedView: Float64Array | null = null;
 
 // Debounce state for staging
 let prevStageInput = false;
+
+// Reusable state objects to prevent allocation
+const ftsStatus: FTSStatus = {
+    state: 'SAFE',
+    armed: false,
+    violation: 'NONE',
+    violationMessage: '',
+    warningTimer: 0,
+    armTimer: 0,
+    corridorFraction: 0
+};
+const fcStatus = {
+    status: 'FC: ---',
+    command: ''
+};
+const statePayload = {
+    missionTime: 0,
+    trackedIndex: 0,
+    fts: ftsStatus,
+    fc: fcStatus
+};
+const stateMessage = {
+    type: 'STATE',
+    payload: statePayload
+};
 
 // Constants
 const FIXED_DT = 0.02;
@@ -337,16 +362,16 @@ function postState() {
     }
 
     // Post simplified state for main thread sync trigger and FTS/FC status
-    self.postMessage({
-        type: 'STATE',
-        payload: {
-            missionTime,
-            trackedIndex,
-            fts: fts.getStatus(),
-            fc: {
-                status: flightComputer ? flightComputer.getStatusString() : 'FC: ---',
-                command: flightComputer ? flightComputer.getActiveCommandText() : ''
-            }
-        }
-    });
+    statePayload.missionTime = missionTime;
+    statePayload.trackedIndex = trackedIndex;
+
+    // Update FTS status in place
+    fts.writeStatus(ftsStatus);
+
+    // Update FC status in place
+    fcStatus.status = flightComputer ? flightComputer.getStatusString() : 'FC: ---';
+    fcStatus.command = flightComputer ? flightComputer.getActiveCommandText() : '';
+
+    // Send the reused object (cloned by postMessage)
+    self.postMessage(stateMessage);
 }

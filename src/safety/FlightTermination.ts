@@ -98,6 +98,19 @@ export class FlightTerminationSystem {
         };
     }
 
+    /**
+     * Update an existing FTSStatus object in place to avoid allocation
+     */
+    writeStatus(out: FTSStatus): void {
+        out.state = this._state;
+        out.armed = this._armed;
+        out.violation = this._violation;
+        out.violationMessage = this._violationMessage;
+        out.warningTimer = this._warningTimer;
+        out.armTimer = this._armTimer;
+        out.corridorFraction = this._corridorFraction;
+    }
+
     /** Set launch site X position for corridor calculations */
     setLaunchPosition(x: number): void {
         this._launchX = x;
