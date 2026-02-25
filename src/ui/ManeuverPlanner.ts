@@ -15,6 +15,7 @@ import {
 } from '../physics/OrbitalMechanics';
 import { vec2, IVessel } from '../types';
 import { PIXELS_PER_METER, R_EARTH } from '../config/Constants';
+import { createElement } from './DOMUtils';
 
 export class ManeuverPlanner {
     private game: Game;
@@ -39,58 +40,122 @@ export class ManeuverPlanner {
         modal.id = 'maneuver-planner-modal';
         modal.className = 'script-editor-modal'; // Reuse script editor styling for consistency
         modal.style.display = 'none'; // Hidden by default
-        modal.innerHTML = `
-            <div class="script-editor-content maneuver-planner-content" role="dialog" aria-modal="true" aria-labelledby="planner-title">
-                <div class="script-editor-header">
-                    <h2 id="planner-title">Orbital Maneuver Planner</h2>
-                    <button id="planner-close-btn" class="script-close-btn" aria-label="Close Maneuver Planner">×</button>
-                </div>
-                
-                <div class="script-editor-body maneuver-planner-body">
-                    <div class="maneuver-section">
-                        <h3>Current Orbit</h3>
-                        <div id="planner-orbit-stats" class="stats-grid">
-                            <div><strong>Apoapsis:</strong> <span id="planner-stat-apo">--</span> km</div>
-                            <div><strong>Periapsis:</strong> <span id="planner-stat-peri">--</span> km</div>
-                            <div><strong>Period:</strong> <span id="planner-stat-period">--</span> min</div>
-                            <div><strong>Eccentricity:</strong> <span id="planner-stat-ecc">--</span></div>
-                        </div>
-                    </div>
 
-                    <div class="maneuver-section">
-                        <h3>Select Maneuver</h3>
-                        <select id="maneuver-type-select" class="script-select maneuver-select">
-                            <option value="circularize-apo">Circularize at Apoapsis</option>
-                            <option value="circularize-peri">Circularize at Periapsis</option>
-                            <option value="hohmann">Hohmann Transfer</option>
-                        </select>
-
-                        <div id="hohmann-inputs" class="maneuver-input-group" style="display: none;">
-                            <label class="maneuver-label">Target Altitude (km):</label>
-                            <input type="number" id="target-alt-input" class="script-name-input maneuver-input"
-                                value="500">
-                        </div>
-                    </div>
-
-                    <div class="maneuver-section">
-                        <h3>Maneuver Plan</h3>
-                        <div id="planner-results" class="maneuver-results" aria-live="polite">
-                            Select a maneuver to calculate...
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="script-editor-footer">
-                    <button id="planner-refresh-btn" class="script-btn">Refresh</button>
-                    <!-- Future: Load to flight computer -->
-                    <!-- <button id="planner-program-btn" class="script-btn script-btn-primary">Program Flight Computer</button> -->
-                </div>
-            </div>
-        `;
+        modal.appendChild(this.buildModalStructure());
 
         document.body.appendChild(modal);
         this.modal = modal;
         this.contentDiv = document.getElementById('planner-results');
+    }
+
+    private buildModalStructure(): HTMLElement {
+        return createElement(
+            'div',
+            {
+                className: 'script-editor-content maneuver-planner-content',
+                role: 'dialog',
+                'aria-modal': 'true',
+                'aria-labelledby': 'planner-title'
+            },
+            [
+                createElement('div', { className: 'script-editor-header' }, [
+                    createElement('h2', { id: 'planner-title', textContent: 'Orbital Maneuver Planner' }),
+                    createElement('button', {
+                        id: 'planner-close-btn',
+                        className: 'script-close-btn',
+                        'aria-label': 'Close Maneuver Planner',
+                        textContent: '×'
+                    })
+                ]),
+                createElement('div', { className: 'script-editor-body maneuver-planner-body' }, [
+                    createElement('div', { className: 'maneuver-section' }, [
+                        createElement('h3', { textContent: 'Current Orbit' }),
+                        createElement('div', { id: 'planner-orbit-stats', className: 'stats-grid' }, [
+                            createElement('div', {}, [
+                                createElement('strong', { textContent: 'Apoapsis:' }),
+                                ' ',
+                                createElement('span', { id: 'planner-stat-apo', textContent: '--' }),
+                                ' km'
+                            ]),
+                            createElement('div', {}, [
+                                createElement('strong', { textContent: 'Periapsis:' }),
+                                ' ',
+                                createElement('span', { id: 'planner-stat-peri', textContent: '--' }),
+                                ' km'
+                            ]),
+                            createElement('div', {}, [
+                                createElement('strong', { textContent: 'Period:' }),
+                                ' ',
+                                createElement('span', { id: 'planner-stat-period', textContent: '--' }),
+                                ' min'
+                            ]),
+                            createElement('div', {}, [
+                                createElement('strong', { textContent: 'Eccentricity:' }),
+                                ' ',
+                                createElement('span', { id: 'planner-stat-ecc', textContent: '--' })
+                            ])
+                        ])
+                    ]),
+                    createElement('div', { className: 'maneuver-section' }, [
+                        createElement('h3', { textContent: 'Select Maneuver' }),
+                        createElement(
+                            'select',
+                            { id: 'maneuver-type-select', className: 'script-select maneuver-select' },
+                            [
+                                createElement('option', {
+                                    value: 'circularize-apo',
+                                    textContent: 'Circularize at Apoapsis'
+                                }),
+                                createElement('option', {
+                                    value: 'circularize-peri',
+                                    textContent: 'Circularize at Periapsis'
+                                }),
+                                createElement('option', { value: 'hohmann', textContent: 'Hohmann Transfer' })
+                            ]
+                        ),
+                        createElement(
+                            'div',
+                            {
+                                id: 'hohmann-inputs',
+                                className: 'maneuver-input-group',
+                                style: { display: 'none' }
+                            },
+                            [
+                                createElement('label', {
+                                    className: 'maneuver-label',
+                                    textContent: 'Target Altitude (km):'
+                                }),
+                                createElement('input', {
+                                    type: 'number',
+                                    id: 'target-alt-input',
+                                    className: 'script-name-input maneuver-input',
+                                    value: '500'
+                                })
+                            ]
+                        )
+                    ]),
+                    createElement('div', { className: 'maneuver-section' }, [
+                        createElement('h3', { textContent: 'Maneuver Plan' }),
+                        createElement(
+                            'div',
+                            {
+                                id: 'planner-results',
+                                className: 'maneuver-results',
+                                'aria-live': 'polite',
+                                textContent: 'Select a maneuver to calculate...'
+                            }
+                        )
+                    ])
+                ]),
+                createElement('div', { className: 'script-editor-footer' }, [
+                    createElement('button', {
+                        id: 'planner-refresh-btn',
+                        className: 'script-btn',
+                        textContent: 'Refresh'
+                    })
+                ])
+            ]
+        );
     }
 
     /**
