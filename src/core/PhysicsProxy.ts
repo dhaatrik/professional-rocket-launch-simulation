@@ -228,7 +228,8 @@ export class PhysicsProxy {
 
     public getInterpolationAlpha(): number {
         if (this.currentPhysicsTime === this.previousPhysicsTime) return 1.0;
-        const alpha = (this.localRenderTime - this.previousPhysicsTime) / (this.currentPhysicsTime - this.previousPhysicsTime);
+        const alpha =
+            (this.localRenderTime - this.previousPhysicsTime) / (this.currentPhysicsTime - this.previousPhysicsTime);
         return Math.max(0, Math.min(1, alpha));
     }
 

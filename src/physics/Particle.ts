@@ -293,22 +293,26 @@ export class Particle implements IParticle {
                 // Map index back to type behavior
                 // 0: smoke, 1: fire, 2: spark, 3: debris
                 switch (i) {
-                    case 0: { // smoke
+                    case 0: {
+                        // smoke
                         // Smoke color is constant 200, alpha is constant 0.5
                         const c = Math.floor(sample.color);
                         ctx.fillStyle = `rgba(${c},${c},${c},${sample.alpha * life})`;
                         break;
                     }
-                    case 1: { // fire
+                    case 1: {
+                        // fire
                         const g = Math.floor(255 * life);
                         ctx.fillStyle = `rgba(255,${g},0,${life})`;
                         break;
                     }
-                    case 2: { // spark
+                    case 2: {
+                        // spark
                         ctx.fillStyle = `rgba(255, 200, 150, ${life})`;
                         break;
                     }
-                    case 3: { // debris
+                    case 3: {
+                        // debris
                         ctx.fillStyle = `rgba(100,100,100,${life})`;
                         break;
                     }
