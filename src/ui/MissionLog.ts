@@ -17,6 +17,9 @@ export class MissionLog implements IMissionLog {
     /** Maximum entries to display */
     private readonly maxEntries: number = 10;
 
+    /** Maximum entries to keep in memory */
+    private readonly maxHistory: number = 100;
+
     constructor() {
         this.el = document.getElementById('log-list') as HTMLUListElement | null;
     }
@@ -46,6 +49,9 @@ export class MissionLog implements IMissionLog {
 
         // Store event
         this.events.push({ time, msg: message, type });
+        if (this.events.length > this.maxHistory) {
+            this.events.shift();
+        }
 
         // Update DOM
         if (this.el) {
