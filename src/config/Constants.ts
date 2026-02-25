@@ -215,3 +215,9 @@ export const VISUAL_CORRIDOR_TARGET_ALTITUDE = 50000;
 
 /** Step size for drawing the visual corridor lines (meters) */
 export const VISUAL_CORRIDOR_DRAW_STEP = 1000;
+
+/** Colors for wind vector visualization (Low, Medium, High) */
+export const WIND_COLORS = ['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 0, 0.5)', 'rgba(255, 0, 0, 0.6)'];
+
+/** Step size for drawing wind vectors (pixels) */
+export const WIND_DRAW_STEP = 200;

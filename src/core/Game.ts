@@ -14,7 +14,9 @@ import {
     VISUAL_CORRIDOR_WIDTH_BASE,
     VISUAL_CORRIDOR_WIDTH_EXPANSION,
     VISUAL_CORRIDOR_TARGET_ALTITUDE,
-    VISUAL_CORRIDOR_DRAW_STEP
+    VISUAL_CORRIDOR_DRAW_STEP,
+    WIND_COLORS,
+    WIND_DRAW_STEP
 } from '../config/Constants';
 import { MU } from '../physics/OrbitalMechanics';
 import {
@@ -48,8 +50,6 @@ import { Vessel } from '../physics/Vessel';
 import { PhysicsProxy } from './PhysicsProxy';
 import { TelemetryTransmitter } from '../telemetry/TelemetryTransmitter';
 import { ParticleSystem } from '../physics/ParticleSystem';
-
-const WIND_COLORS = ['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 0, 0.5)', 'rgba(255, 0, 0, 0.6)'];
 
 export class Game {
     // Canvas and rendering
@@ -746,14 +746,9 @@ export class Game {
     }
 
     /**
-     * Draw environmental visuals (wind, corridors)
+     * Draw the Safe Flight Corridor (Launch corridor)
      */
-    private drawEnvironment(camY: number): void {
-        const startAlt = Math.max(0, (this.groundY - (camY + this.height / this.ZOOM)) / PIXELS_PER_METER);
-        const endAlt = (this.groundY - camY) / PIXELS_PER_METER;
-
-        // 1. Draw Safe Flight Corridor (Launch corridor)
-        // Simple funnel: +/- 500m at pad, expanding to +/- 5km at 50km
+    private drawSafeFlightCorridor(startAlt: number, endAlt: number): void {
         this.ctx.save();
         this.ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
         this.ctx.lineWidth = 2 / this.ZOOM; // Maintain line width
@@ -783,15 +778,18 @@ export class Game {
         }
         this.ctx.stroke();
         this.ctx.restore();
+    }
 
-        // 2. Draw Wind Vectors
-        // Optimized: Batched drawing by color to reduce draw calls and state changes
+    /**
+     * Draw Wind Vectors
+     * Batched drawing by color to reduce draw calls and state changes
+     */
+    private drawWindVectors(camY: number): void {
         this.ctx.save();
-        const step = 200; // pixels
+        const step = WIND_DRAW_STEP; // pixels
         const startY = Math.floor(camY / step) * step;
         const tempWind = { speed: 0, direction: 0 };
         const screenX = 50 / this.ZOOM; // Draw on left side (scaled)
-        const visibleBottom = camY + this.height / this.ZOOM;
 
         // Batches for each color category (stores vertices)
         // Format: [x1, y1, x2, y2, ...]
@@ -811,7 +809,6 @@ export class Game {
 
             if (speed > 1) {
                 const screenY = y;
-                const screenX = 50 / this.ZOOM;
 
                 // Pre-calculate rotation
                 const angle = direction + Math.PI;
@@ -824,8 +821,8 @@ export class Game {
 
                 // Transform vertices
                 for (let i = 0; i < vertices.length; i += 2) {
-                    const vx = vertices[i];
-                    const vy = vertices[i + 1];
+                    const vx = vertices[i]!;
+                    const vy = vertices[i + 1]!;
                     // Rotate and translate
                     const tx = vx * c - vy * s + screenX;
                     const ty = vx * s + vy * c + screenY;
@@ -852,17 +849,17 @@ export class Game {
             this.ctx.beginPath();
             for (let i = 0; i < points.length; i += 14) {
                 // 7 vertices * 2 coords
-                this.ctx.moveTo(points[i], points[i + 1]);
+                this.ctx.moveTo(points[i]!, points[i + 1]!);
                 for (let j = 2; j < 14; j += 2) {
-                    this.ctx.lineTo(points[i + j], points[i + j + 1]);
+                    this.ctx.lineTo(points[i + j]!, points[i + j + 1]!);
                 }
             }
             this.ctx.fill();
         };
 
-        drawBatch(lowWind, 'rgba(255, 255, 255, 0.3)');
-        drawBatch(medWind, 'rgba(255, 255, 0, 0.5)');
-        drawBatch(highWind, 'rgba(255, 0, 0, 0.6)');
+        drawBatch(lowWind, WIND_COLORS[0]!);
+        drawBatch(medWind, WIND_COLORS[1]!);
+        drawBatch(highWind, WIND_COLORS[2]!);
 
         // Draw text
         if (windText.length > 0) {
@@ -874,6 +871,20 @@ export class Game {
         }
 
         this.ctx.restore();
+    }
+
+    /**
+     * Draw environmental visuals (wind, corridors)
+     */
+    private drawEnvironment(camY: number): void {
+        const startAlt = Math.max(0, (this.groundY - (camY + this.height / this.ZOOM)) / PIXELS_PER_METER);
+        const endAlt = (this.groundY - camY) / PIXELS_PER_METER;
+
+        // 1. Draw Safe Flight Corridor (Launch corridor)
+        this.drawSafeFlightCorridor(startAlt, endAlt);
+
+        // 2. Draw Wind Vectors
+        this.drawWindVectors(camY);
     }
 
     /**
