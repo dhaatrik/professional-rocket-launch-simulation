@@ -200,26 +200,6 @@ export function getMachNumber(velocity: number): number {
     return velocity / SPEED_OF_SOUND;
 }
 
-/**
- * Get transonic drag multiplier based on Mach number
- * Drag increases significantly near Mach 1 (transonic regime)
- *
- * @param mach - Mach number
- * @returns Drag multiplier (1.0 to 2.5)
- */
-export function getTransonicDragMultiplier(mach: number): number {
-    // Baseline drag: 1.0 Subsonic, 1.5 Supersonic
-    // Smooth transition using sigmoid-like function
-    const baseline = mach < 1.0 ? 1.0 : 1.5 - 0.5 * Math.exp(-(mach - 1.0) * 5.0);
-
-    // Transonic drag rise (Wave drag)
-    // Gaussian peak centered at Mach 1.1, width ~0.15
-    // Peak intensity adds ~1.2 to the multiplier
-    const divergence = 1.2 * Math.exp(-Math.pow((mach - 1.1) / 0.15, 2));
-
-    return baseline + divergence;
-}
-
 // ============================================================================
 // Visualization Constants
 // ============================================================================

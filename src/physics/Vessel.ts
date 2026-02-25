@@ -22,7 +22,6 @@ import {
     R_EARTH,
     getGravity,
     getDynamicPressure,
-    getTransonicDragMultiplier,
     getMachNumber,
     DT
 } from '../config/Constants';
@@ -136,6 +135,10 @@ export class Vessel implements IVessel {
     public orbitPath: OrbitalElements[] | null = null;
     public lastOrbitUpdate: number = 0;
 
+    // Logging state
+    public lastThermalLogTime: number = -100; // Allow immediate logging
+    public instabilityWarningLogged: boolean = false;
+
     // Reusable objects for RK4 to avoid garbage collection
     private _rk4State: PhysicsState = { x: 0, y: 0, vx: 0, vy: 0, mass: 0 };
     private _tempState: PhysicsState = { x: 0, y: 0, vx: 0, vy: 0, mass: 0 };
@@ -199,11 +202,6 @@ export class Vessel implements IVessel {
         // Calculate aerodynamic forces using relative velocity (lift and drag)
         const aeroForces = calculateAerodynamicForces(this.aeroConfig, aeroState, safeAlt, v, relVx, relVy, mach);
 
-        // Apply aerodynamic forces (now including transonic effects)
-        // const machMult = getTransonicDragMultiplier(mach); // Removed: handled in Aerodynamics.ts
-        const adjustedDragX = aeroForces.forceX; // * machMult;
-        const adjustedDragY = aeroForces.forceY; // * machMult;
-
         // Gravity (inverse square law)
         const realRad = safeAlt + R_EARTH;
         const g = getGravity(safeAlt);
@@ -217,8 +215,8 @@ export class Vessel implements IVessel {
         fy -= f_cent;
 
         // Add aerodynamic forces (lift and drag combined)
-        fx += adjustedDragX;
-        fy += adjustedDragY;
+        fx += aeroForces.forceX;
+        fy += aeroForces.forceY;
 
         // Thrust (uses propulsion state machine for realistic spool-up)
         let flowRate = 0;
