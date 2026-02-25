@@ -2,7 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const ROOT_DIR = path.join(process.cwd(), 'public');
 
 const MIME_TYPES = {
@@ -22,7 +22,7 @@ const SECURITY_HEADERS = {
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
-    'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
+    'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
     'Strict-Transport-Security': 'max-age=63072000; includeSubDomains'
 };
 
@@ -66,9 +66,49 @@ setInterval(() => {
     }
 }, RATE_LIMIT_WINDOW_MS);
 
+function getClientIp(req) {
+    const remoteAddress = req.socket.remoteAddress;
+    const trustedProxies = (process.env.TRUSTED_PROXIES || '').split(',').map(ip => ip.trim()).filter(Boolean);
+
+    const normalizeIp = (ip) => (ip || '').replace(/^::ffff:/, '');
+    const normalizedRemote = normalizeIp(remoteAddress);
+
+    const isTrusted = trustedProxies.some(proxy => normalizeIp(proxy) === normalizedRemote);
+
+    if (!isTrusted) {
+        return normalizedRemote;
+    }
+
+    const xff = req.headers['x-forwarded-for'];
+    if (!xff) {
+        return normalizedRemote;
+    }
+
+    const ips = xff.split(',').map(ip => ip.trim());
+
+    let clientIp = normalizedRemote;
+    let foundUntrusted = false;
+
+    for (let i = ips.length - 1; i >= 0; i--) {
+        const ip = normalizeIp(ips[i]);
+        if (trustedProxies.some(proxy => normalizeIp(proxy) === ip)) {
+            continue;
+        }
+        clientIp = ip;
+        foundUntrusted = true;
+        break;
+    }
+
+    if (!foundUntrusted && ips.length > 0) {
+        clientIp = normalizeIp(ips[0]);
+    }
+
+    return clientIp;
+}
+
 http.createServer((req, res) => {
     // Rate Limiting Check
-    const clientIp = (process.env.NODE_ENV === 'test' && req.headers['x-forwarded-for']) || req.socket.remoteAddress;
+    const clientIp = getClientIp(req);
     const now = Date.now();
 
     let requestData = requestCounts.get(clientIp);
@@ -105,6 +145,17 @@ http.createServer((req, res) => {
         console.log(`${req.method} ${JSON.stringify(safeUrl.pathname)}`);
 
         let pathname = decodeURIComponent(safeUrl.pathname);
+
+        // Security: Prevent Null Byte Injection
+        if (pathname.includes('\0')) {
+            console.warn(`[WARN] Blocked null byte injection attempt: ${safeUrl.pathname}`);
+            res.writeHead(400, {
+                'Content-Type': 'text/plain',
+                ...SECURITY_HEADERS
+            });
+            res.end('Bad Request');
+            return;
+        }
 
         // Security: Block access to sensitive files and directories
         const rootPath = pathname.split('/').filter(Boolean)[0]; // robustly extract first segment

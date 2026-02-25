@@ -283,7 +283,8 @@ export class VABEditor {
                 html += `
                     <div class="vab-part-preview" 
                          data-instance="${this.escapeHTML(inst.instanceId)}"
-                         style="height: ${inst.part.height}px; width: ${inst.part.width}px;">
+                         data-height="${inst.part.height}"
+                         data-width="${inst.part.width}">
                         <span class="part-label">${this.escapeHTML(inst.part.name)}</span>
                         <button class="remove-part"
                                 data-stage="${i}"

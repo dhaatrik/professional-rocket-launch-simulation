@@ -15,6 +15,7 @@ import {
 } from '../physics/OrbitalMechanics';
 import { vec2, IVessel } from '../types';
 import { PIXELS_PER_METER, R_EARTH } from '../config/Constants';
+import { createElement } from './DOMUtils';
 
 export class ManeuverPlanner {
     private game: Game;
@@ -65,7 +66,7 @@ export class ManeuverPlanner {
                             <option value="hohmann">Hohmann Transfer</option>
                         </select>
 
-                        <div id="hohmann-inputs" class="maneuver-input-group" style="display: none;">
+                        <div id="hohmann-inputs" class="maneuver-input-group hidden">
                             <label class="maneuver-label">Target Altitude (km):</label>
                             <input type="number" id="target-alt-input" class="script-name-input maneuver-input"
                                 value="500">
@@ -82,8 +83,6 @@ export class ManeuverPlanner {
                 
                 <div class="script-editor-footer">
                     <button id="planner-refresh-btn" class="script-btn">Refresh</button>
-                    <!-- Future: Load to flight computer -->
-                    <!-- <button id="planner-program-btn" class="script-btn script-btn-primary">Program Flight Computer</button> -->
                 </div>
             </div>
         `;
@@ -91,6 +90,116 @@ export class ManeuverPlanner {
         document.body.appendChild(modal);
         this.modal = modal;
         this.contentDiv = document.getElementById('planner-results');
+    }
+
+    private buildModalStructure(): HTMLElement {
+        return createElement(
+            'div',
+            {
+                className: 'script-editor-content maneuver-planner-content',
+                role: 'dialog',
+                'aria-modal': 'true',
+                'aria-labelledby': 'planner-title'
+            },
+            [
+                createElement('div', { className: 'script-editor-header' }, [
+                    createElement('h2', { id: 'planner-title', textContent: 'Orbital Maneuver Planner' }),
+                    createElement('button', {
+                        id: 'planner-close-btn',
+                        className: 'script-close-btn',
+                        'aria-label': 'Close Maneuver Planner',
+                        textContent: '×'
+                    })
+                ]),
+                createElement('div', { className: 'script-editor-body maneuver-planner-body' }, [
+                    createElement('div', { className: 'maneuver-section' }, [
+                        createElement('h3', { textContent: 'Current Orbit' }),
+                        createElement('div', { id: 'planner-orbit-stats', className: 'stats-grid' }, [
+                            createElement('div', {}, [
+                                createElement('strong', { textContent: 'Apoapsis:' }),
+                                ' ',
+                                createElement('span', { id: 'planner-stat-apo', textContent: '--' }),
+                                ' km'
+                            ]),
+                            createElement('div', {}, [
+                                createElement('strong', { textContent: 'Periapsis:' }),
+                                ' ',
+                                createElement('span', { id: 'planner-stat-peri', textContent: '--' }),
+                                ' km'
+                            ]),
+                            createElement('div', {}, [
+                                createElement('strong', { textContent: 'Period:' }),
+                                ' ',
+                                createElement('span', { id: 'planner-stat-period', textContent: '--' }),
+                                ' min'
+                            ]),
+                            createElement('div', {}, [
+                                createElement('strong', { textContent: 'Eccentricity:' }),
+                                ' ',
+                                createElement('span', { id: 'planner-stat-ecc', textContent: '--' })
+                            ])
+                        ])
+                    ]),
+                    createElement('div', { className: 'maneuver-section' }, [
+                        createElement('h3', { textContent: 'Select Maneuver' }),
+                        createElement(
+                            'select',
+                            { id: 'maneuver-type-select', className: 'script-select maneuver-select' },
+                            [
+                                createElement('option', {
+                                    value: 'circularize-apo',
+                                    textContent: 'Circularize at Apoapsis'
+                                }),
+                                createElement('option', {
+                                    value: 'circularize-peri',
+                                    textContent: 'Circularize at Periapsis'
+                                }),
+                                createElement('option', { value: 'hohmann', textContent: 'Hohmann Transfer' })
+                            ]
+                        ),
+                        createElement(
+                            'div',
+                            {
+                                id: 'hohmann-inputs',
+                                className: 'maneuver-input-group',
+                                style: { display: 'none' }
+                            },
+                            [
+                                createElement('label', {
+                                    className: 'maneuver-label',
+                                    textContent: 'Target Altitude (km):'
+                                }),
+                                createElement('input', {
+                                    type: 'number',
+                                    id: 'target-alt-input',
+                                    className: 'script-name-input maneuver-input',
+                                    value: '500'
+                                })
+                            ]
+                        )
+                    ]),
+                    createElement('div', { className: 'maneuver-section' }, [
+                        createElement('h3', { textContent: 'Maneuver Plan' }),
+                        createElement(
+                            'div',
+                            {
+                                id: 'planner-results',
+                                className: 'maneuver-results',
+                                'aria-live': 'polite',
+                                textContent: 'Select a maneuver to calculate...'
+                            }
+                        )
+                    ])
+                ]),
+                createElement('div', { className: 'script-editor-footer' }, [
+                    createElement('button', {
+                        id: 'planner-refresh-btn',
+                        className: 'script-btn',
+                        textContent: 'Refresh'
+                    })
+                ])
+            ]
+        );
     }
 
     /**
@@ -300,85 +409,98 @@ export class ManeuverPlanner {
             }
         } catch (e: any) {
             resultDiv.innerHTML = '';
-            const errorSpan = document.createElement('span');
-            errorSpan.className = 'maneuver-error';
-            errorSpan.textContent = `Error: ${e.message}`;
-            resultDiv.appendChild(errorSpan);
+            this.createElement('span', resultDiv, {
+                className: 'maneuver-error',
+                text: `Error: ${e.message}`,
+            });
         }
     }
 
     private renderManeuverPlan(plan: ManeuverPlan, container: HTMLElement): void {
-        const strong = document.createElement('strong');
-        strong.textContent = plan.description;
-        container.appendChild(strong);
+        this.createElement('strong', container, { text: plan.description });
 
-        container.appendChild(document.createElement('br'));
+        this.createElement('br', container);
 
-        const hr = document.createElement('hr');
-        hr.className = 'maneuver-separator';
-        container.appendChild(hr);
+        this.createElement('hr', container, { className: 'maneuver-separator' });
 
-        const targetDiv = document.createElement('div');
-        targetDiv.textContent = `Target Orbit: ${(plan.targetOrbit.apoapsis / 1000).toFixed(0)} x ${(plan.targetOrbit.periapsis / 1000).toFixed(0)} km`;
-        container.appendChild(targetDiv);
+        this.createElement('div', container, {
+            text: `Target Orbit: ${(plan.targetOrbit.apoapsis / 1000).toFixed(0)} x ${(plan.targetOrbit.periapsis / 1000).toFixed(0)} km`,
+        });
 
-        const dvDiv = document.createElement('div');
-        dvDiv.className = 'maneuver-dv-container';
-        const dvSpan = document.createElement('span');
-        dvSpan.className = 'maneuver-dv-value';
-        dvSpan.textContent = `ΔV: ${plan.deltaV.toFixed(1)} m/s`;
-        dvDiv.appendChild(dvSpan);
-        container.appendChild(dvDiv);
+        const dvDiv = this.createElement('div', container, {
+            className: 'maneuver-dv-container',
+        });
+        this.createElement('span', dvDiv, {
+            className: 'maneuver-dv-value',
+            text: `ΔV: ${plan.deltaV.toFixed(1)} m/s`,
+        });
 
-        const burnDiv = document.createElement('div');
-        burnDiv.textContent = `Burn Duration: ${plan.burnTime.toFixed(1)} s`;
-        container.appendChild(burnDiv);
+        this.createElement('div', container, {
+            text: `Burn Duration: ${plan.burnTime.toFixed(1)} s`,
+        });
 
-        const waitDiv = document.createElement('div');
-        waitDiv.className = 'maneuver-wait-text';
-        waitDiv.textContent = `Wait for ${plan.description.includes('Apoapsis') ? 'Apoapsis' : 'Periapsis'} to execute.`;
-        container.appendChild(waitDiv);
+        this.createElement('div', container, {
+            className: 'maneuver-wait-text',
+            text: `Wait for ${plan.description.includes('Apoapsis') ? 'Apoapsis' : 'Periapsis'} to execute.`,
+        });
     }
 
-    private renderHohmannPlan(hResult: any, targetAltKm: number, container: HTMLElement): void {
-        const strong = document.createElement('strong');
-        strong.textContent = `Hohmann Transfer to ${targetAltKm} km`;
-        container.appendChild(strong);
+    private renderHohmannPlan(
+        hResult: any,
+        targetAltKm: number,
+        container: HTMLElement
+    ): void {
+        this.createElement('strong', container, {
+            text: `Hohmann Transfer to ${targetAltKm} km`,
+        });
 
-        container.appendChild(document.createElement('br'));
+        this.createElement('br', container);
 
-        const hr = document.createElement('hr');
-        hr.className = 'maneuver-separator';
-        container.appendChild(hr);
+        this.createElement('hr', container, { className: 'maneuver-separator' });
 
-        const timeDiv = document.createElement('div');
-        timeDiv.textContent = `Transfer Time: ${(hResult.transferTime / 60).toFixed(1)} min`;
-        container.appendChild(timeDiv);
+        this.createElement('div', container, {
+            text: `Transfer Time: ${(hResult.transferTime / 60).toFixed(1)} min`,
+        });
 
-        const burn1Header = document.createElement('div');
-        burn1Header.className = 'maneuver-burn-header';
-        burn1Header.textContent = 'Burn 1 (Departure):';
-        container.appendChild(burn1Header);
+        this.createElement('div', container, {
+            className: 'maneuver-burn-header',
+            text: 'Burn 1 (Departure):',
+        });
 
-        const dv1Div = document.createElement('div');
-        dv1Div.textContent = `ΔV: ${hResult.deltaV1.toFixed(1)} m/s`;
-        container.appendChild(dv1Div);
+        this.createElement('div', container, {
+            text: `ΔV: ${hResult.deltaV1.toFixed(1)} m/s`,
+        });
 
-        const dur1Div = document.createElement('div');
-        dur1Div.textContent = `Duration: ${hResult.burnTime1.toFixed(1)} s`;
-        container.appendChild(dur1Div);
+        this.createElement('div', container, {
+            text: `Duration: ${hResult.burnTime1.toFixed(1)} s`,
+        });
 
-        const burn2Header = document.createElement('div');
-        burn2Header.className = 'maneuver-burn-header';
-        burn2Header.textContent = 'Burn 2 (Arrival):';
-        container.appendChild(burn2Header);
+        this.createElement('div', container, {
+            className: 'maneuver-burn-header',
+            text: 'Burn 2 (Arrival):',
+        });
 
-        const dv2Div = document.createElement('div');
-        dv2Div.textContent = `ΔV: ${hResult.deltaV2.toFixed(1)} m/s`;
-        container.appendChild(dv2Div);
+        this.createElement('div', container, {
+            text: `ΔV: ${hResult.deltaV2.toFixed(1)} m/s`,
+        });
 
-        const totalDvDiv = document.createElement('div');
-        totalDvDiv.textContent = `Total ΔV: ${(hResult.deltaV1 + hResult.deltaV2).toFixed(1)} m/s`;
-        container.appendChild(totalDvDiv);
+        this.createElement('div', container, {
+            text: `Total ΔV: ${(hResult.deltaV1 + hResult.deltaV2).toFixed(1)} m/s`,
+        });
+    }
+
+    /**
+     * Helper to create and append DOM elements
+     */
+    private createElement(
+        tag: string,
+        parent: HTMLElement,
+        options: { text?: string; className?: string } = {}
+    ): HTMLElement {
+        const el = document.createElement(tag);
+        if (options.className) el.className = options.className;
+        if (options.text) el.textContent = options.text;
+        parent.appendChild(el);
+        return el;
     }
 }

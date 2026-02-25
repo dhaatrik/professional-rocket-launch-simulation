@@ -22,7 +22,6 @@ import {
     R_EARTH,
     getGravity,
     getDynamicPressure,
-    getTransonicDragMultiplier,
     getMachNumber,
     DT
 } from '../config/Constants';
@@ -119,6 +118,7 @@ export class Vessel implements IVessel {
     public heatShieldRemaining: number = 1.0; // Heat shield fraction (0-1)
     public isAblating: boolean = false; // Currently ablating
     public isThermalCritical: boolean = false; // Temperature critical
+    private lastThermalLogTime: number = -10; // Last time thermal warning was logged (allow immediate logging)
 
     // Propulsion State Machine
     public propConfig: PropulsionConfig = FULLSTACK_PROP_CONFIG;
@@ -135,6 +135,18 @@ export class Vessel implements IVessel {
     // Orbit prediction cache
     public orbitPath: OrbitalElements[] | null = null;
     public lastOrbitUpdate: number = 0;
+
+    // Logging state
+    public lastThermalLogTime: number = -100; // Allow immediate logging
+    public instabilityWarningLogged: boolean = false;
+
+    // Reusable objects for RK4 to avoid garbage collection
+    private _rk4State: PhysicsState = { x: 0, y: 0, vx: 0, vy: 0, mass: 0 };
+    private _tempState: PhysicsState = { x: 0, y: 0, vx: 0, vy: 0, mass: 0 };
+    private _k1: Derivatives = { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
+    private _k2: Derivatives = { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
+    private _k3: Derivatives = { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
+    private _k4: Derivatives = { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
 
     /**
      * Create a new vessel
@@ -156,9 +168,10 @@ export class Vessel implements IVessel {
      * @param s - Current state
      * @param t - Current time (unused, for interface)
      * @param dt - Time step
+     * @param out - Optional output object to avoid allocation
      * @returns Derivatives for integration
      */
-    protected getDerivatives(s: PhysicsState, t: number, dt: number): Derivatives {
+    protected getDerivatives(s: PhysicsState, t: number, dt: number, out?: Derivatives): Derivatives {
         const altitude = (state.groundY - s.y * PIXELS_PER_METER - this.h) / PIXELS_PER_METER;
         const safeAlt = Math.max(0, altitude);
 
@@ -190,11 +203,6 @@ export class Vessel implements IVessel {
         // Calculate aerodynamic forces using relative velocity (lift and drag)
         const aeroForces = calculateAerodynamicForces(this.aeroConfig, aeroState, safeAlt, v, relVx, relVy, mach);
 
-        // Apply aerodynamic forces (now including transonic effects)
-        // const machMult = getTransonicDragMultiplier(mach); // Removed: handled in Aerodynamics.ts
-        const adjustedDragX = aeroForces.forceX; // * machMult;
-        const adjustedDragY = aeroForces.forceY; // * machMult;
-
         // Gravity (inverse square law)
         const realRad = safeAlt + R_EARTH;
         const g = getGravity(safeAlt);
@@ -208,8 +216,8 @@ export class Vessel implements IVessel {
         fy -= f_cent;
 
         // Add aerodynamic forces (lift and drag combined)
-        fx += adjustedDragX;
-        fy += adjustedDragY;
+        fx += aeroForces.forceX;
+        fy += aeroForces.forceY;
 
         // Thrust (uses propulsion state machine for realistic spool-up)
         let flowRate = 0;
@@ -235,13 +243,14 @@ export class Vessel implements IVessel {
         this.dragForce = aeroForces.drag;
         this.aeroState = aeroState;
 
-        return {
-            dx: s.vx,
-            dy: s.vy,
-            dvx: fx / s.mass,
-            dvy: fy / s.mass,
-            dmass: -flowRate
-        };
+        const result = out || { dx: 0, dy: 0, dvx: 0, dvy: 0, dmass: 0 };
+        result.dx = s.vx;
+        result.dy = s.vy;
+        result.dvx = fx / s.mass;
+        result.dvy = fy / s.mass;
+        result.dmass = -flowRate;
+
+        return result;
     }
 
     /**
@@ -293,43 +302,48 @@ export class Vessel implements IVessel {
     }
 
     /**
+     * RK4 evaluation helper using reusable objects
+     */
+    private _evaluateRK4(
+        baseState: PhysicsState,
+        dt: number,
+        dtStep: number,
+        d: Derivatives | null,
+        out: Derivatives
+    ): void {
+        this._tempState.x = baseState.x + (d ? d.dx * dtStep : 0);
+        this._tempState.y = baseState.y + (d ? d.dy * dtStep : 0);
+        this._tempState.vx = baseState.vx + (d ? d.dvx * dtStep : 0);
+        this._tempState.vy = baseState.vy + (d ? d.dvy * dtStep : 0);
+        this._tempState.mass = baseState.mass;
+
+        this.getDerivatives(this._tempState, 0, dt, out);
+    }
+
+    /**
      * RK4 integration step
      */
     protected updatePhysics(dt: number): void {
         if (this.crashed) return;
 
-        // Convert to meters for physics
-        const stateDict: PhysicsState = {
-            x: this.x / PIXELS_PER_METER,
-            y: this.y / PIXELS_PER_METER,
-            vx: this.vx,
-            vy: this.vy,
-            mass: this.mass
-        };
+        // Populate reusable state object (convert to meters)
+        this._rk4State.x = this.x / PIXELS_PER_METER;
+        this._rk4State.y = this.y / PIXELS_PER_METER;
+        this._rk4State.vx = this.vx;
+        this._rk4State.vy = this.vy;
+        this._rk4State.mass = this.mass;
 
-        // RK4 evaluation helper
-        const evaluate = (s: PhysicsState, t: number, dt: number, d: Derivatives | null): Derivatives => {
-            const tempState: PhysicsState = {
-                x: s.x + (d ? d.dx * dt : 0),
-                y: s.y + (d ? d.dy * dt : 0),
-                vx: s.vx + (d ? d.dvx * dt : 0),
-                vy: s.vy + (d ? d.dvy * dt : 0),
-                mass: s.mass
-            };
-            return this.getDerivatives(tempState, t, dt);
-        };
-
-        // RK4 integration
-        const k1 = evaluate(stateDict, 0, 0, null);
-        const k2 = evaluate(stateDict, 0, dt * 0.5, k1);
-        const k3 = evaluate(stateDict, 0, dt * 0.5, k2);
-        const k4 = evaluate(stateDict, 0, dt, k3);
+        // RK4 integration using private helper method
+        this._evaluateRK4(this._rk4State, dt, 0, null, this._k1);
+        this._evaluateRK4(this._rk4State, dt, dt * 0.5, this._k1, this._k2);
+        this._evaluateRK4(this._rk4State, dt, dt * 0.5, this._k2, this._k3);
+        this._evaluateRK4(this._rk4State, dt, dt, this._k3, this._k4);
 
         // Weighted average
-        const dxdt = (k1.dx + 2 * k2.dx + 2 * k3.dx + k4.dx) / 6;
-        const dydt = (k1.dy + 2 * k2.dy + 2 * k3.dy + k4.dy) / 6;
-        const dvxdt = (k1.dvx + 2 * k2.dvx + 2 * k3.dvx + k4.dvx) / 6;
-        const dvydt = (k1.dvy + 2 * k2.dvy + 2 * k3.dvy + k4.dvy) / 6;
+        const dxdt = (this._k1.dx + 2 * this._k2.dx + 2 * this._k3.dx + this._k4.dx) / 6;
+        const dydt = (this._k1.dy + 2 * this._k2.dy + 2 * this._k3.dy + this._k4.dy) / 6;
+        const dvxdt = (this._k1.dvx + 2 * this._k2.dvx + 2 * this._k3.dvx + this._k4.dvx) / 6;
+        const dvydt = (this._k1.dvy + 2 * this._k2.dvy + 2 * this._k3.dvy + this._k4.dvy) / 6;
 
         // Apply integration result
         this.vx += dvxdt * dt;
@@ -391,7 +405,10 @@ export class Vessel implements IVessel {
 
             // Log thermal warning
             if (this.isThermalCritical && state.missionLog) {
-                state.missionLog.log(`THERMAL WARNING: Skin temp ${Math.round(this.skinTemp - 273)}°C`, 'warn');
+                if (state.missionTime - this.lastThermalLogTime > 2.0) {
+                    state.missionLog.log(`THERMAL WARNING: Skin temp ${Math.round(this.skinTemp - 273)}°C`, 'warn');
+                    this.lastThermalLogTime = state.missionTime;
+                }
             }
         }
 
@@ -444,6 +461,11 @@ export class Vessel implements IVessel {
     private checkAerodynamicStress(velocity: number, altitude: number): void {
         // Use the aerodynamic state if available for advanced damage calculation
         if (this.aeroState) {
+            // Reset warning flag when stable
+            if (this.isAeroStable) {
+                this.instabilityWarningLogged = false;
+            }
+
             const damageRate = calculateAerodynamicDamageRate(this.aeroState, this.q);
 
             if (damageRate > 0) {
@@ -456,11 +478,12 @@ export class Vessel implements IVessel {
                 }
 
                 // Log instability warning once when stability margin goes negative
-                if (!this.isAeroStable && this.q > 5000 && state.missionLog) {
+                if (!this.isAeroStable && this.q > 5000 && state.missionLog && !this.instabilityWarningLogged) {
                     state.missionLog.log(
                         `STABILITY WARNING: AoA=${((Math.abs(this.aoa) * 180) / Math.PI).toFixed(1)}° Margin=${(this.stabilityMargin * 100).toFixed(1)}%`,
                         'warn'
                     );
+                    this.instabilityWarningLogged = true;
                 }
             }
         } else {
@@ -667,6 +690,26 @@ export class Vessel implements IVessel {
      * Draw the vessel (to be overridden by subclasses)
      */
     draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
+        if (this.crashed) return;
+
+        // Interpolate position and angle
+        const rX = this.prevX + (this.x - this.prevX) * alpha;
+        const rY = this.prevY + (this.y - this.prevY) * alpha;
+        const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
+
+        ctx.save();
+        ctx.translate(rX, rY - camY);
+        ctx.rotate(rAngle);
+
+        this.drawParts(ctx);
+
+        ctx.restore();
+    }
+
+    /**
+     * Draw specific vessel parts (to be overridden by subclasses)
+     */
+    protected drawParts(ctx: CanvasRenderingContext2D): void {
         // Base implementation does nothing
         // Subclasses implement specific rendering
     }

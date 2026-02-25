@@ -4,212 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self';">
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delta-V Analysis - Debriefing Room</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #0f172a;
-            color: #ececec;
-            font-family: 'Inter', system-ui, sans-serif;
-            display: grid;
-            grid-template-rows: 60px 1fr 200px;
-            /* Header, Main View, Timeline */
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Header */
-        header {
-            background: #1e293b;
-            border-bottom: 1px solid #334155;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            justify-content: space-between;
-        }
-
-        h1 {
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 0;
-        }
-
-        .badge {
-            background: #3b82f6;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-        }
-
-        .toolbar {
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            background: #334155;
-            border: 1px solid #475569;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        button:hover {
-            background: #475569;
-        }
-
-        button.primary {
-            background: #2563eb;
-            border-color: #1d4ed8;
-        }
-
-        /* Main View */
-        main {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            /* 3D View / Map, Charts */
-            gap: 1px;
-            background: #334155;
-            /* Grid line color */
-        }
-
-        #view-panel {
-            background: #020617;
-            position: relative;
-        }
-
-        #charts-panel {
-            background: #0f172a;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            border-left: 1px solid #334155;
-        }
-
-        .chart-container {
-            height: 150px;
-            border-bottom: 1px solid #334155;
-            padding: 10px;
-            position: relative;
-        }
-
-        .chart-title {
-            position: absolute;
-            top: 5px;
-            left: 10px;
-            font-size: 0.75rem;
-            color: #94a3b8;
-            pointer-events: none;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        /* Timeline Footer */
-        footer {
-            background: #1e293b;
-            border-top: 1px solid #334155;
-            padding: 10px 20px;
-            display: grid;
-            grid-template-rows: auto auto;
-            gap: 10px;
-        }
-
-        #scrubber-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        /* Custom Slider */
-        input[type=range] {
-            width: 100%;
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            margin-top: -6px;
-            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
-        }
-
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            background: #475569;
-            border-radius: 2px;
-        }
-
-        .playback-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .control-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            padding: 0;
-            line-height: 0;
-        }
-
-        /* Upload Overlay */
-        #upload-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-
-        .upload-box {
-            border: 2px dashed #475569;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-            color: #94a3b8;
-            transition: all 0.2s;
-        }
-
-        .upload-box.dragover {
-            border-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.1);
-            color: #e2e8f0;
-        }
-
-        input[type=file] {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="analysis.css">
 </head>
 
 <body>
@@ -227,8 +25,7 @@
             <!-- 3D/Map View Canvas -->
             <canvas id="visualizer-canvas"></canvas>
 
-            <div
-                style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); padding:10px; border-radius:4px; font-family:monospace;">
+            <div class="status-overlay">
                 <div>T+ <span id="disp-time">00:00</span></div>
                 <div>ALT: <span id="disp-alt">0</span> m</div>
                 <div>VEL: <span id="disp-vel">0</span> m/s</div>
@@ -257,9 +54,9 @@
 
     <footer>
         <div id="scrubber-container">
-            <span style="font-family:monospace; color:#94a3b8; font-size:0.8rem;">00:00</span>
+            <span class="time-label">00:00</span>
             <input type="range" id="time-scrubber" min="0" max="100" value="0" step="0.1">
-            <span id="duration-label" style="font-family:monospace; color:#94a3b8; font-size:0.8rem;">10:00</span>
+            <span id="duration-label" class="time-label">10:00</span>
         </div>
         <div class="playback-controls">
             <button class="control-btn" id="btn-prev">⏮</button>

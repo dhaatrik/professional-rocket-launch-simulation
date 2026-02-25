@@ -2215,3 +2215,101 @@ button.primary:hover {
 .maneuver-error {
     color: var(--color-danger);
 }
+
+/* ========================================
+   UTILITY & EXTRACTED STYLES
+   ======================================== */
+.hidden { display: none; }
+.block { display: block; }
+.flex { display: flex; }
+
+/* Text Colors */
+.text-warning { color: var(--color-warning); }
+.text-success { color: var(--color-success); }
+.text-primary { color: var(--color-primary); }
+.text-orange { color: #e67e22; }
+.text-muted { color: var(--color-text-muted); }
+.text-dim { color: var(--color-text-dim); }
+
+/* Backgrounds */
+.bg-dark-overlay { background: rgba(0,0,0,0.5); }
+.bg-transparent { background: transparent; }
+
+/* Positioning */
+.absolute-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.no-pointer-events { pointer-events: none; }
+
+/* Specific Component Styles extracted from index.html */
+
+.version-tag {
+    font-size: 0.4em;
+    vertical-align: text-top;
+    opacity: 0.6;
+    font-weight: normal;
+}
+
+#instruction-panel {
+    background: rgba(0,0,0,0.5);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: left;
+    max-width: 400px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.instruction-title {
+    margin-top: 0;
+    color: #3498db;
+    border-bottom: 1px solid #3498db;
+    padding-bottom: 5px;
+}
+
+.instruction-list {
+    padding-left: 20px;
+    color: #ddd;
+    line-height: 1.6;
+}
+
+.instruction-tip {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #aaa;
+    font-style: italic;
+}
+
+#hud-maxq-warning {
+    display: none;
+    color: #e67e22;
+    font-size: 0.7rem;
+}
+
+#navball-container {
+    position: absolute;
+    bottom: 160px;
+    left: 20px;
+    pointer-events: none;
+}
+
+#navball {
+    background: transparent;
+}
+
+#graph-container {
+    display: none;
+}
+
+.bg-warning { background-color: var(--color-warning); }
+.bg-danger { background-color: var(--color-danger); }
+.text-concrete { color: #95a5a6; }
+.font-small { font-size: 0.8rem; }
+
+#gauge-fuel { height: 100%; }
+#gauge-thrust { height: 0%; }
