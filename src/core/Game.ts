@@ -49,6 +49,8 @@ import { PhysicsProxy } from './PhysicsProxy';
 import { TelemetryTransmitter } from '../telemetry/TelemetryTransmitter';
 import { ParticleSystem } from '../physics/ParticleSystem';
 
+const WIND_COLORS = ['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 0, 0.5)', 'rgba(255, 0, 0, 0.6)'];
+
 export class Game {
     // Canvas and rendering
     private canvas: HTMLCanvasElement;
@@ -788,6 +790,8 @@ export class Game {
         const step = 200; // pixels
         const startY = Math.floor(camY / step) * step;
         const tempWind = { speed: 0, direction: 0 };
+        const screenX = 50 / this.ZOOM; // Draw on left side (scaled)
+        const visibleBottom = camY + this.height / this.ZOOM;
 
         // Batches for each color category (stores vertices)
         // Format: [x1, y1, x2, y2, ...]
