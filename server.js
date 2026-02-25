@@ -32,6 +32,30 @@ const MAX_REQUESTS_PER_WINDOW = 200;
 const MAX_TRACKED_IPS = 5000;
 const requestCounts = new Map(); // ip -> { count, startTime }
 
+// Security: Blocklist of sensitive files and directories
+const BLOCKED_RESOURCES = new Set([
+    'server.js',
+    'package.json',
+    'package-lock.json',
+    'pnpm-lock.yaml',
+    '.env',
+    '.git',
+    '.github',
+    '.gitignore',
+    '.prettierrc',
+    'eslint.config.js',
+    'tsconfig.json',
+    'vitest.config.ts',
+    'src',
+    'tests',
+    'verification',
+    'node_modules',
+    '.Jules',
+    'README.md',
+    'LICENSE',
+    'AGENTS.md'
+]);
+
 // Garbage collection for rate limit map
 setInterval(() => {
     const now = Date.now();
@@ -81,6 +105,18 @@ http.createServer((req, res) => {
         console.log(`${req.method} ${JSON.stringify(safeUrl.pathname)}`);
 
         let pathname = decodeURIComponent(safeUrl.pathname);
+
+        // Security: Block access to sensitive files and directories
+        const rootPath = pathname.split('/').filter(Boolean)[0]; // robustly extract first segment
+        if (rootPath && BLOCKED_RESOURCES.has(rootPath)) {
+            console.warn(`[WARN] Blocked access to sensitive resource: ${pathname}`);
+            res.writeHead(403, {
+                'Content-Type': 'text/plain',
+                ...SECURITY_HEADERS
+            });
+            res.end('Forbidden');
+            return;
+        }
 
         if (pathname === '/') {
             pathname = '/index.html';
