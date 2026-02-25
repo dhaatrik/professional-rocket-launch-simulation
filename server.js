@@ -2,7 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const ROOT_DIR = path.join(process.cwd(), 'public');
 
 const MIME_TYPES = {
@@ -66,9 +66,49 @@ setInterval(() => {
     }
 }, RATE_LIMIT_WINDOW_MS);
 
+function getClientIp(req) {
+    const remoteAddress = req.socket.remoteAddress;
+    const trustedProxies = (process.env.TRUSTED_PROXIES || '').split(',').map(ip => ip.trim()).filter(Boolean);
+
+    const normalizeIp = (ip) => (ip || '').replace(/^::ffff:/, '');
+    const normalizedRemote = normalizeIp(remoteAddress);
+
+    const isTrusted = trustedProxies.some(proxy => normalizeIp(proxy) === normalizedRemote);
+
+    if (!isTrusted) {
+        return normalizedRemote;
+    }
+
+    const xff = req.headers['x-forwarded-for'];
+    if (!xff) {
+        return normalizedRemote;
+    }
+
+    const ips = xff.split(',').map(ip => ip.trim());
+
+    let clientIp = normalizedRemote;
+    let foundUntrusted = false;
+
+    for (let i = ips.length - 1; i >= 0; i--) {
+        const ip = normalizeIp(ips[i]);
+        if (trustedProxies.some(proxy => normalizeIp(proxy) === ip)) {
+            continue;
+        }
+        clientIp = ip;
+        foundUntrusted = true;
+        break;
+    }
+
+    if (!foundUntrusted && ips.length > 0) {
+        clientIp = normalizeIp(ips[0]);
+    }
+
+    return clientIp;
+}
+
 http.createServer((req, res) => {
     // Rate Limiting Check
-    const clientIp = (process.env.NODE_ENV === 'test' && req.headers['x-forwarded-for']) || req.socket.remoteAddress;
+    const clientIp = getClientIp(req);
     const now = Date.now();
 
     let requestData = requestCounts.get(clientIp);
