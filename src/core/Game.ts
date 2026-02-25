@@ -510,9 +510,6 @@ export class Game {
         if (this.trackedEntity) {
             const alt = (this.groundY - this.trackedEntity.y - this.trackedEntity.h) / PIXELS_PER_METER;
 
-            // Update FTS HUD
-            //  const ftsStatus = this.physics.getFTSStatus();
-
             // Audio update
             const vel = Math.sqrt(this.trackedEntity.vx ** 2 + this.trackedEntity.vy ** 2);
             const rho = getAtmosphericDensity(alt);
