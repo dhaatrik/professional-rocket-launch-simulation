@@ -60,18 +60,7 @@ export class FullStack extends Vessel {
         this.ignitersRemaining = FULLSTACK_PROP_CONFIG.igniterCount;
     }
 
-    draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
-        if (this.crashed) return;
-
-        // Interpolate position and angle
-        const rX = this.prevX + (this.x - this.prevX) * alpha;
-        const rY = this.prevY + (this.y - this.prevY) * alpha;
-        const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
-
-        ctx.save();
-        ctx.translate(rX, rY - camY);
-        ctx.rotate(rAngle);
-
+    protected override drawParts(ctx: CanvasRenderingContext2D): void {
         this.drawPlasma(ctx);
         this.drawShockwave(ctx);
 
@@ -224,8 +213,6 @@ export class FullStack extends Vessel {
         ctx.fill();
 
         ctx.restore();
-
-        ctx.restore();
     }
 }
 
@@ -327,17 +314,7 @@ export class Booster extends Vessel {
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
-        if (this.crashed) return;
-
-        const rX = this.prevX + (this.x - this.prevX) * alpha;
-        const rY = this.prevY + (this.y - this.prevY) * alpha;
-        const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
-
-        ctx.save();
-        ctx.translate(rX, rY - camY);
-        ctx.rotate(rAngle);
-
+    protected override drawParts(ctx: CanvasRenderingContext2D): void {
         this.drawPlasma(ctx);
 
         // === BOOSTER BODY with 3D gradient ===
@@ -454,7 +431,6 @@ export class Booster extends Vessel {
         ctx.fill();
 
         ctx.restore();
-        ctx.restore();
     }
 }
 
@@ -507,17 +483,7 @@ export class UpperStage extends Vessel {
         };
     }
 
-    draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
-        if (this.crashed) return;
-
-        const rX = this.prevX + (this.x - this.prevX) * alpha;
-        const rY = this.prevY + (this.y - this.prevY) * alpha;
-        const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
-
-        ctx.save();
-        ctx.translate(rX, rY - camY);
-        ctx.rotate(rAngle);
-
+    protected override drawParts(ctx: CanvasRenderingContext2D): void {
         this.drawPlasma(ctx);
         this.drawShockwave(ctx);
 
@@ -604,7 +570,6 @@ export class UpperStage extends Vessel {
         }
 
         ctx.restore();
-        ctx.restore();
     }
 }
 
@@ -636,15 +601,7 @@ export class Payload extends Vessel {
         this.ignitersRemaining = 0;
     }
 
-    draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
-        const rX = this.prevX + (this.x - this.prevX) * alpha;
-        const rY = this.prevY + (this.y - this.prevY) * alpha;
-        const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
-
-        ctx.save();
-        ctx.translate(rX, rY - camY);
-        ctx.rotate(rAngle);
-
+    protected override drawParts(ctx: CanvasRenderingContext2D): void {
         // === SATELLITE BUS (Metallic body) ===
         const busGrad = ctx.createLinearGradient(-10, -10, 10, 10);
         busGrad.addColorStop(0, '#d4ac0d');
@@ -721,8 +678,6 @@ export class Payload extends Vessel {
         ctx.fillStyle = '#34495e';
         ctx.fillRect(-12, -2, 2, 4);
         ctx.fillRect(10, -2, 2, 4);
-
-        ctx.restore();
     }
 }
 
@@ -745,15 +700,7 @@ export class Fairing extends Vessel {
         this.cd = 2.0; // High drag
     }
 
-    draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {
-        const rX = this.prevX + (this.x - this.prevX) * alpha;
-        const rY = this.prevY + (this.y - this.prevY) * alpha;
-        const rAngle = this.prevAngle + (this.angle - this.prevAngle) * alpha;
-
-        ctx.save();
-        ctx.translate(rX, rY - camY);
-        ctx.rotate(rAngle);
-
+    protected override drawParts(ctx: CanvasRenderingContext2D): void {
         this.drawPlasma(ctx);
 
         // === FAIRING HALF with 3D gradient ===
@@ -787,7 +734,5 @@ export class Fairing extends Vessel {
         ctx.moveTo(s * 10, -18);
         ctx.lineTo(s * 15, 0);
         ctx.stroke();
-
-        ctx.restore();
     }
 }
