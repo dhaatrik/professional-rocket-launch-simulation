@@ -136,15 +136,12 @@ export class ManeuverPlanner {
                     ]),
                     createElement('div', { className: 'maneuver-section' }, [
                         createElement('h3', { textContent: 'Maneuver Plan' }),
-                        createElement(
-                            'div',
-                            {
-                                id: 'planner-results',
-                                className: 'maneuver-results',
-                                'aria-live': 'polite',
-                                textContent: 'Select a maneuver to calculate...'
-                            }
-                        )
+                        createElement('div', {
+                            id: 'planner-results',
+                            className: 'maneuver-results',
+                            'aria-live': 'polite',
+                            textContent: 'Select a maneuver to calculate...'
+                        })
                     ])
                 ]),
                 createElement('div', { className: 'script-editor-footer' }, [
@@ -367,7 +364,7 @@ export class ManeuverPlanner {
             resultDiv.innerHTML = '';
             this.createElement('span', resultDiv, {
                 className: 'maneuver-error',
-                text: `Error: ${e.message}`,
+                text: `Error: ${e.message}`
             });
         }
     }
@@ -380,34 +377,30 @@ export class ManeuverPlanner {
         this.createElement('hr', container, { className: 'maneuver-separator' });
 
         this.createElement('div', container, {
-            text: `Target Orbit: ${(plan.targetOrbit.apoapsis / 1000).toFixed(0)} x ${(plan.targetOrbit.periapsis / 1000).toFixed(0)} km`,
+            text: `Target Orbit: ${(plan.targetOrbit.apoapsis / 1000).toFixed(0)} x ${(plan.targetOrbit.periapsis / 1000).toFixed(0)} km`
         });
 
         const dvDiv = this.createElement('div', container, {
-            className: 'maneuver-dv-container',
+            className: 'maneuver-dv-container'
         });
         this.createElement('span', dvDiv, {
             className: 'maneuver-dv-value',
-            text: `ΔV: ${plan.deltaV.toFixed(1)} m/s`,
+            text: `ΔV: ${plan.deltaV.toFixed(1)} m/s`
         });
 
         this.createElement('div', container, {
-            text: `Burn Duration: ${plan.burnTime.toFixed(1)} s`,
+            text: `Burn Duration: ${plan.burnTime.toFixed(1)} s`
         });
 
         this.createElement('div', container, {
             className: 'maneuver-wait-text',
-            text: `Wait for ${plan.description.includes('Apoapsis') ? 'Apoapsis' : 'Periapsis'} to execute.`,
+            text: `Wait for ${plan.description.includes('Apoapsis') ? 'Apoapsis' : 'Periapsis'} to execute.`
         });
     }
 
-    private renderHohmannPlan(
-        hResult: any,
-        targetAltKm: number,
-        container: HTMLElement
-    ): void {
+    private renderHohmannPlan(hResult: any, targetAltKm: number, container: HTMLElement): void {
         this.createElement('strong', container, {
-            text: `Hohmann Transfer to ${targetAltKm} km`,
+            text: `Hohmann Transfer to ${targetAltKm} km`
         });
 
         this.createElement('br', container);
@@ -415,33 +408,33 @@ export class ManeuverPlanner {
         this.createElement('hr', container, { className: 'maneuver-separator' });
 
         this.createElement('div', container, {
-            text: `Transfer Time: ${(hResult.transferTime / 60).toFixed(1)} min`,
+            text: `Transfer Time: ${(hResult.transferTime / 60).toFixed(1)} min`
         });
 
         this.createElement('div', container, {
             className: 'maneuver-burn-header',
-            text: 'Burn 1 (Departure):',
+            text: 'Burn 1 (Departure):'
         });
 
         this.createElement('div', container, {
-            text: `ΔV: ${hResult.deltaV1.toFixed(1)} m/s`,
+            text: `ΔV: ${hResult.deltaV1.toFixed(1)} m/s`
         });
 
         this.createElement('div', container, {
-            text: `Duration: ${hResult.burnTime1.toFixed(1)} s`,
+            text: `Duration: ${hResult.burnTime1.toFixed(1)} s`
         });
 
         this.createElement('div', container, {
             className: 'maneuver-burn-header',
-            text: 'Burn 2 (Arrival):',
+            text: 'Burn 2 (Arrival):'
         });
 
         this.createElement('div', container, {
-            text: `ΔV: ${hResult.deltaV2.toFixed(1)} m/s`,
+            text: `ΔV: ${hResult.deltaV2.toFixed(1)} m/s`
         });
 
         this.createElement('div', container, {
-            text: `Total ΔV: ${(hResult.deltaV1 + hResult.deltaV2).toFixed(1)} m/s`,
+            text: `Total ΔV: ${(hResult.deltaV1 + hResult.deltaV2).toFixed(1)} m/s`
         });
     }
 
