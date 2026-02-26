@@ -176,6 +176,14 @@ export class Game {
     private hudIgniters: HTMLElement | null = null;
     private hudFtsState: HTMLElement | null = null;
 
+    // Pre-allocated buffers for wind rendering to avoid GC
+    private _windLowBatch: number[] = [];
+    private _windMedBatch: number[] = [];
+    private _windHighBatch: number[] = [];
+    private _windTextStrings: string[] = [];
+    private _windTextX: number[] = [];
+    private _windTextY: number[] = [];
+
     private physics: PhysicsProxy;
 
     constructor() {
@@ -798,12 +806,14 @@ export class Game {
 
         // Batches for each color category (stores vertices)
         // Format: [x1, y1, x2, y2, ...]
-        const lowWind: number[] = []; // White (< 10 m/s)
-        const medWind: number[] = []; // Yellow (10-30 m/s)
-        const highWind: number[] = []; // Red (> 30 m/s)
+        this._windLowBatch.length = 0;
+        this._windMedBatch.length = 0;
+        this._windHighBatch.length = 0;
 
-        // Text batch: [speed, x, y]
-        const windText: { text: string; x: number; y: number }[] = [];
+        // Text batch: [speed, x, y] (SoA)
+        this._windTextStrings.length = 0;
+        this._windTextX.length = 0;
+        this._windTextY.length = 0;
 
         for (let y = startY; y < camY + this.height / this.ZOOM; y += step) {
             const alt = (this.groundY - y) / PIXELS_PER_METER;
@@ -833,17 +843,15 @@ export class Game {
                     const ty = vx * s + vy * c + screenY;
 
                     // Add to appropriate batch
-                    if (speed < 10) lowWind.push(tx, ty);
-                    else if (speed < 30) medWind.push(tx, ty);
-                    else highWind.push(tx, ty);
+                    if (speed < 10) this._windLowBatch.push(tx, ty);
+                    else if (speed < 30) this._windMedBatch.push(tx, ty);
+                    else this._windHighBatch.push(tx, ty);
                 }
 
                 // Add text info (offset by 10, 15 relative to arrow center)
-                windText.push({
-                    text: `${speed.toFixed(0)} m/s`,
-                    x: screenX + 10,
-                    y: screenY + 15
-                });
+                this._windTextStrings.push(`${speed.toFixed(0)} m/s`);
+                this._windTextX.push(screenX + 10);
+                this._windTextY.push(screenY + 15);
             }
         }
 
@@ -862,16 +870,17 @@ export class Game {
             this.ctx.fill();
         };
 
-        drawBatch(lowWind, WIND_COLORS[0]!);
-        drawBatch(medWind, WIND_COLORS[1]!);
-        drawBatch(highWind, WIND_COLORS[2]!);
+        drawBatch(this._windLowBatch, WIND_COLORS[0]!);
+        drawBatch(this._windMedBatch, WIND_COLORS[1]!);
+        drawBatch(this._windHighBatch, WIND_COLORS[2]!);
 
         // Draw text
-        if (windText.length > 0) {
+        if (this._windTextStrings.length > 0) {
             this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             this.ctx.font = `${10 / this.ZOOM}px monospace`;
-            for (const t of windText) {
-                this.ctx.fillText(t.text, t.x, t.y);
+            const len = this._windTextStrings.length;
+            for (let i = 0; i < len; i++) {
+                this.ctx.fillText(this._windTextStrings[i]!, this._windTextX[i]!, this._windTextY[i]!);
             }
         }
 
