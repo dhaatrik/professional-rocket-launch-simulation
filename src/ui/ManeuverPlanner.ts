@@ -40,52 +40,8 @@ export class ManeuverPlanner {
         modal.id = 'maneuver-planner-modal';
         modal.className = 'script-editor-modal'; // Reuse script editor styling for consistency
         modal.style.display = 'none'; // Hidden by default
-        modal.innerHTML = `
-            <div class="script-editor-content maneuver-planner-content" role="dialog" aria-modal="true" aria-labelledby="planner-title">
-                <div class="script-editor-header">
-                    <h2 id="planner-title">Orbital Maneuver Planner</h2>
-                    <button id="planner-close-btn" class="script-close-btn" aria-label="Close Maneuver Planner">×</button>
-                </div>
-                
-                <div class="script-editor-body maneuver-planner-body">
-                    <div class="maneuver-section">
-                        <h3>Current Orbit</h3>
-                        <div id="planner-orbit-stats" class="stats-grid">
-                            <div><strong>Apoapsis:</strong> <span id="planner-stat-apo">--</span> km</div>
-                            <div><strong>Periapsis:</strong> <span id="planner-stat-peri">--</span> km</div>
-                            <div><strong>Period:</strong> <span id="planner-stat-period">--</span> min</div>
-                            <div><strong>Eccentricity:</strong> <span id="planner-stat-ecc">--</span></div>
-                        </div>
-                    </div>
 
-                    <div class="maneuver-section">
-                        <h3>Select Maneuver</h3>
-                        <select id="maneuver-type-select" class="script-select maneuver-select">
-                            <option value="circularize-apo">Circularize at Apoapsis</option>
-                            <option value="circularize-peri">Circularize at Periapsis</option>
-                            <option value="hohmann">Hohmann Transfer</option>
-                        </select>
-
-                        <div id="hohmann-inputs" class="maneuver-input-group hidden">
-                            <label class="maneuver-label">Target Altitude (km):</label>
-                            <input type="number" id="target-alt-input" class="script-name-input maneuver-input"
-                                value="500">
-                        </div>
-                    </div>
-
-                    <div class="maneuver-section">
-                        <h3>Maneuver Plan</h3>
-                        <div id="planner-results" class="maneuver-results" aria-live="polite">
-                            Select a maneuver to calculate...
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="script-editor-footer">
-                    <button id="planner-refresh-btn" class="script-btn">Refresh</button>
-                </div>
-            </div>
-        `;
+        modal.appendChild(this.buildModalStructure());
 
         document.body.appendChild(modal);
         this.modal = modal;
