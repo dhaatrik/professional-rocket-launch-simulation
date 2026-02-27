@@ -5,3 +5,7 @@
 ## 2026-02-14 - InnerHTML Updates vs Accessibility
 **Learning:** Frequent UI updates using `innerHTML` (as seen in `ManeuverPlanner`) destroy the DOM and cause loss of focus/context for screen readers, especially in "live" dashboards.
 **Action:** Prefer creating static HTML structures once and updating dynamic values via `textContent` or `innerText` on specific elements (IDs/Classes) to maintain DOM stability and accessibility.
+
+## 2026-02-15 - Accessible Error Validation
+**Learning:** Custom form validation in `ScriptEditor` displayed errors in plain `div`s, failing to alert screen reader users of issues. This pattern likely exists elsewhere.
+**Action:** Ensure all dynamic validation messages use `role="alert"` or `aria-live` and are programmatically linked to their input fields via `aria-describedby` and `aria-invalid`.

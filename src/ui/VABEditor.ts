@@ -381,36 +381,36 @@ export class VABEditor {
         const dvClass = stats.totalDeltaV > 9000 ? 'good' : stats.totalDeltaV > 5000 ? 'warning' : 'bad';
 
         return `
-            <div class="vab-stat">
+            <div class="vab-stat" title="Mass of the fully fueled vehicle">
                 <div class="vab-stat-label">Total Mass</div>
                 <div class="vab-stat-value">${(stats.wetMass / 1000).toFixed(1)}</div>
                 <div class="vab-stat-unit">tons</div>
             </div>
-            <div class="vab-stat">
+            <div class="vab-stat" title="Total change in velocity. Approx 9,400 m/s required for Low Earth Orbit.">
                 <div class="vab-stat-label">Total ΔV</div>
                 <div class="vab-stat-value ${dvClass}">${stats.totalDeltaV.toFixed(0)}</div>
                 <div class="vab-stat-unit">m/s</div>
             </div>
-            <div class="vab-stat">
+            <div class="vab-stat" title="Thrust-to-Weight Ratio. Must be > 1.0 to liftoff. Ideal is 1.3-1.5.">
                 <div class="vab-stat-label">TWR (Stage 1)</div>
                 <div class="vab-stat-value ${twrClass}">${twr.toFixed(2)}</div>
                 <div class="vab-stat-unit">ratio</div>
             </div>
-            <div class="vab-stat">
+            <div class="vab-stat" title="Number of stages in the vehicle stack">
                 <div class="vab-stat-label">Stages</div>
                 <div class="vab-stat-value">${this.blueprint.stages.length}</div>
                 <div class="vab-stat-unit">count</div>
             </div>
-            <div class="vab-stat">
+            <div class="vab-stat" title="Total construction cost">
                 <div class="vab-stat-label">Total Cost</div>
                 <div class="vab-stat-value">${stats.totalCost.toLocaleString()}</div>
                 <div class="vab-stat-unit">credits</div>
             </div>
             <div class="vab-stat">
-                <div class="vab-stat-indicator ${stats.hasAvionics ? 'ok' : 'warn'}">
+                <div class="vab-stat-indicator ${stats.hasAvionics ? 'ok' : 'warn'}" title="Flight computer guidance. Required for control.">
                     ${stats.hasAvionics ? '[OK]' : '[MISSING]'} Avionics
                 </div>
-                <div class="vab-stat-indicator ${stats.hasFairing ? 'ok' : 'warn'}">
+                <div class="vab-stat-indicator ${stats.hasFairing ? 'ok' : 'warn'}" title="Protects payload from aerodynamic stress during ascent.">
                     ${stats.hasFairing ? '[OK]' : '[MISSING]'} Fairing
                 </div>
             </div>

@@ -40,3 +40,17 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(
 
     return element;
 }
+
+/**
+ * Escapes HTML special characters to prevent XSS.
+ * @param text The unsafe text to escape
+ * @returns The escaped HTML safe string
+ */
+export function escapeHTML(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}

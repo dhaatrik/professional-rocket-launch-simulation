@@ -1,0 +1,3 @@
+## 2024-05-24 - Zero-Allocation Physics Loop
+**Learning:** `forEach` and object literals `{}` inside hot loops (like physics integration running at 60-100Hz per entity) create unnecessary garbage collection pressure. While V8 optimizes `forEach`, the closure allocation adds up when running 1000s of times per frame (e.g., during time warp).
+**Action:** Replace `forEach` with standard `for` loops in critical paths. Use `Object.freeze({})` for reused, empty, read-only configuration objects passed to update methods. Implement object pooling or reuse buffers (like `_newFailures` array) for methods that return collections frequently to avoid array allocation per call.

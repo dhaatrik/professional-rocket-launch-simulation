@@ -85,4 +85,24 @@ describe('VABEditor Accessibility', () => {
         expect(noStages).not.toBeNull();
         expect(noStages?.textContent).toContain('🚀');
     });
+
+    it('should have helpful tooltips on stats', () => {
+        const onLaunch = vi.fn();
+        const editor = new VABEditor('vab-container', onLaunch);
+        (editor as any).render();
+
+        const stats = container.querySelectorAll('.vab-stat');
+        expect(stats.length).toBeGreaterThan(0);
+
+        // Check a few critical stats for titles
+        const dvStat = Array.from(stats).find(el => el.textContent?.includes('Total ΔV'));
+        expect(dvStat?.getAttribute('title')).toContain('change in velocity');
+
+        const twrStat = Array.from(stats).find(el => el.textContent?.includes('TWR'));
+        expect(twrStat?.getAttribute('title')).toContain('Thrust-to-Weight Ratio');
+
+        // Check indicators
+        const avionics = container.querySelector('.vab-stat-indicator');
+        expect(avionics?.getAttribute('title')).toBeTruthy();
+    });
 });
