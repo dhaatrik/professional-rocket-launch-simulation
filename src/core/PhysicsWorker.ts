@@ -56,6 +56,7 @@ const stateMessage = {
 
 // Constants
 const FIXED_DT = 0.02;
+const EMPTY_KEYS = Object.freeze({});
 
 self.onmessage = (e: MessageEvent) => {
     const { type, payload } = e.data;
@@ -168,16 +169,20 @@ function step(inputs: any) {
         }
 
         // 3. Physics Integration
-        entities.forEach((e) => {
-            e.applyPhysics(simDt, {});
-        });
+        for (let i = 0; i < entities.length; i++) {
+            const e = entities[i];
+            if (e) {
+                e.applyPhysics(simDt, EMPTY_KEYS);
+            }
+        }
 
         // 4. Fault Injector
-        entities.forEach((vessel) => {
-            if (vessel.reliability) {
+        for (let i = 0; i < entities.length; i++) {
+            const vessel = entities[i];
+            if (vessel && vessel.reliability) {
                 faultInjector.update(vessel, vessel.reliability, groundY, simDt);
             }
-        });
+        }
 
         missionTime += simDt;
     }

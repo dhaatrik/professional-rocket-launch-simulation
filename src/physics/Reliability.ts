@@ -45,6 +45,9 @@ export class ReliabilitySystem {
     // Active failures
     public activeFailures: FailureType[] = [];
 
+    // Internal reuse buffer for new failures
+    private _newFailures: FailureType[] = [];
+
     // Track duration of transient failures (time remaining in seconds)
     private transientFailures: Map<FailureType, number> = new Map();
 
@@ -74,13 +77,16 @@ export class ReliabilitySystem {
     update(dt: number, stressLevel: number = 1.0): FailureType[] {
         this.age += dt;
 
+        // Reset reusable buffer
+        this._newFailures.length = 0;
+
         // Accumulate fatigue (stress * time)
         // High-G maneuvers increase fatigue faster
         if (stressLevel > 1.2) {
             this.stressAccumulator += (stressLevel - 1.0) * dt;
         }
 
-        const newFailures: FailureType[] = [];
+        const newFailures = this._newFailures;
 
         // 1. Engine Reliability (Bathtub Curve)
         // Hazard function h(t) = lambda
