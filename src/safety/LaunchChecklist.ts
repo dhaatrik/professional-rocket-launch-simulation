@@ -7,6 +7,7 @@
  */
 
 import { state } from '../core/State';
+import { escapeHTML } from '../ui/DOMUtils';
 
 // ============================================================================
 // Types
@@ -218,18 +219,18 @@ export class LaunchChecklist {
             const statusClass = item.status === 'go' ? 'go' : item.status === 'no-go' ? 'no-go' : 'pending';
             html += `
                 <div class="checklist-row ${statusClass}">
-                    <div class="checklist-station">${item.station}</div>
-                    <div class="checklist-label">${item.label}</div>
-                    <div class="checklist-buttons" role="group" aria-label="${item.station} Status">
+                    <div class="checklist-station">${escapeHTML(item.station)}</div>
+                    <div class="checklist-label">${escapeHTML(item.label)}</div>
+                    <div class="checklist-buttons" role="group" aria-label="${escapeHTML(item.station)} Status">
                         <button class="cl-btn cl-go ${item.status === 'go' ? 'active' : ''}" 
                                 data-item="${item.id}"
                                 data-action="go"
-                                aria-label="Set ${item.station} to GO"
+                                aria-label="Set ${escapeHTML(item.station)} to GO"
                                 aria-pressed="${item.status === 'go'}">GO</button>
                         <button class="cl-btn cl-nogo ${item.status === 'no-go' ? 'active' : ''}" 
                                 data-item="${item.id}"
                                 data-action="no-go"
-                                aria-label="Set ${item.station} to NO GO"
+                                aria-label="Set ${escapeHTML(item.station)} to NO GO"
                                 aria-pressed="${item.status === 'no-go'}">NO GO</button>
                     </div>
                 </div>
