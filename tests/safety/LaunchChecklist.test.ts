@@ -2,17 +2,52 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LaunchChecklist } from '../../src/safety/LaunchChecklist';
 
 // Mock DOM
-const mockElement = {
-    classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() },
-    innerHTML: '',
-    style: {},
-    appendChild: vi.fn(),
-    querySelector: vi.fn(() => null),
-    querySelectorAll: vi.fn(() => [])
-};
+class MockElement {
+    tagName: string;
+    innerHTML = '';
+    textContent = '';
+    className = '';
+    id = '';
+    style = {};
+    attributes: Record<string, string> = {};
+    children: MockElement[] = [];
+    classList = {
+        add: vi.fn(),
+        remove: vi.fn(),
+        toggle: vi.fn(),
+        contains: vi.fn(() => false)
+    };
+
+    constructor(tagName: string) {
+        this.tagName = tagName;
+    }
+
+    setAttribute(name: string, value: string) {
+        this.attributes[name] = value;
+    }
+
+    appendChild(child: MockElement) {
+        this.children.push(child);
+        this.innerHTML += child.tagName; // Rough approximation for tests
+    }
+
+    querySelector() {
+        return null;
+    }
+
+    querySelectorAll() {
+        return [];
+    }
+
+    dispatchEvent() {}
+    addEventListener() {}
+    removeEventListener() {}
+}
+
 const mockDoc = {
-    getElementById: vi.fn(() => mockElement),
-    createElement: vi.fn(() => mockElement)
+    getElementById: vi.fn(() => new MockElement('div')),
+    createElement: vi.fn((tagName) => new MockElement(tagName)),
+    createTextNode: vi.fn((text) => text)
 };
 vi.stubGlobal('document', mockDoc);
 

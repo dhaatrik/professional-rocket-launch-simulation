@@ -9,6 +9,7 @@ import { ReliabilitySystem, FailureType } from '../physics/Reliability';
 import { IVessel } from '../types';
 import { PIXELS_PER_METER } from '../config/Constants';
 import { state } from '../core/State';
+import { createElement } from '../ui/DOMUtils';
 
 // ============================================================================
 // Types
@@ -260,52 +261,49 @@ export class FaultInjector {
             structure: '🏗️ STRUCTURE'
         };
 
-        let html = `
-            <div class="fis-inner">
-                <div class="fis-header">
-                    <h3>🎯 FAULT INJECTION SYSTEM</h3>
-                    <span class="fis-badge">INSTRUCTOR ONLY</span>
-                    <button class="fis-close" id="fis-close-btn">✕</button>
-                </div>
-                <div class="fis-hint">Click once to ARM, click again to INJECT</div>
-        `;
+        this.containerEl.innerHTML = '';
 
-        for (const cat of categories) {
+        const categoryEls = categories.map(cat => {
             const faults = FAULT_CATALOG.filter((f) => f.category === cat);
-            html += `
-                <div class="fis-category">
-                    <div class="fis-category-label">${categoryLabels[cat]}</div>
-                    <div class="fis-fault-grid">
-            `;
-
-            for (const fault of faults) {
+            const faultEls = faults.map(fault => {
                 const active = this.activeFaults.find((f) => f.definition.id === fault.id);
                 const statusClass =
                     active?.status === 'injected' ? 'injected' : active?.status === 'armed' ? 'armed' : '';
                 const statusLabel =
                     active?.status === 'injected' ? '⚡ ACTIVE' : active?.status === 'armed' ? '🔴 ARMED' : '';
 
-                html += `
-                    <button class="fis-fault-btn ${statusClass}" 
-                            data-fault="${fault.id}"
-                            title="${fault.description}">
-                        <span class="fis-fault-name">${fault.label}</span>
-                        ${statusLabel ? `<span class="fis-fault-status">${statusLabel}</span>` : ''}
-                    </button>
-                `;
-            }
+                const buttonChildren = [
+                    createElement('span', { className: 'fis-fault-name', textContent: fault.label })
+                ];
 
-            html += `
-                    </div>
-                </div>
-            `;
-        }
+                if (statusLabel) {
+                    buttonChildren.push(createElement('span', { className: 'fis-fault-status', textContent: statusLabel }));
+                }
 
-        html += `
-            </div>
-        `;
+                return createElement('button', {
+                    className: `fis-fault-btn ${statusClass}`,
+                    'data-fault': fault.id,
+                    title: fault.description
+                }, buttonChildren);
+            });
 
-        this.containerEl.innerHTML = html;
+            return createElement('div', { className: 'fis-category' }, [
+                createElement('div', { className: 'fis-category-label', textContent: categoryLabels[cat] }),
+                createElement('div', { className: 'fis-fault-grid' }, faultEls)
+            ]);
+        });
+
+        const fisInner = createElement('div', { className: 'fis-inner' }, [
+            createElement('div', { className: 'fis-header' }, [
+                createElement('h3', { textContent: '🎯 FAULT INJECTION SYSTEM' }),
+                createElement('span', { className: 'fis-badge', textContent: 'INSTRUCTOR ONLY' }),
+                createElement('button', { className: 'fis-close', id: 'fis-close-btn', textContent: '✕' })
+            ]),
+            createElement('div', { className: 'fis-hint', textContent: 'Click once to ARM, click again to INJECT' }),
+            ...categoryEls
+        ]);
+
+        this.containerEl.appendChild(fisInner);
 
         // Wire button events
         this.containerEl.querySelectorAll('.fis-fault-btn').forEach((btn) => {

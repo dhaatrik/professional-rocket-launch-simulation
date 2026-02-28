@@ -4,15 +4,54 @@ import { ReliabilitySystem } from '../../src/physics/Reliability';
 import type { IVessel } from '../../src/types/index';
 
 // Mock DOM
-vi.stubGlobal('document', {
-    getElementById: () => ({
-        style: {}, classList: { toggle: vi.fn() }, innerHTML: '', appendChild: vi.fn(),
-        querySelectorAll: () => [], querySelector: () => null
-    }),
-    createElement: () => ({
-        addEventListener: vi.fn(), classList: { add: vi.fn() }, appendChild: vi.fn()
-    })
-});
+class MockElement {
+    tagName: string;
+    innerHTML = '';
+    textContent = '';
+    className = '';
+    id = '';
+    style = {};
+    attributes: Record<string, string> = {};
+    children: MockElement[] = [];
+    classList = {
+        add: vi.fn(),
+        remove: vi.fn(),
+        toggle: vi.fn(),
+        contains: vi.fn(() => false)
+    };
+
+    constructor(tagName: string) {
+        this.tagName = tagName;
+    }
+
+    setAttribute(name: string, value: string) {
+        this.attributes[name] = value;
+    }
+
+    appendChild(child: MockElement) {
+        this.children.push(child);
+        this.innerHTML += child.tagName; // Rough approximation for tests
+    }
+
+    querySelector() {
+        return null;
+    }
+
+    querySelectorAll() {
+        return [];
+    }
+
+    dispatchEvent() {}
+    addEventListener() {}
+    removeEventListener() {}
+}
+
+const mockDoc = {
+    getElementById: vi.fn(() => new MockElement('div')),
+    createElement: vi.fn((tagName) => new MockElement(tagName)),
+    createTextNode: vi.fn((text) => text)
+};
+vi.stubGlobal('document', mockDoc);
 
 interface IReliableVessel extends IVessel {
     reliability: ReliabilitySystem;

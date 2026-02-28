@@ -7,7 +7,7 @@
  */
 
 import { state } from '../core/State';
-import { escapeHTML } from '../ui/DOMUtils';
+import { createElement } from '../ui/DOMUtils';
 
 // ============================================================================
 // Types
@@ -205,49 +205,50 @@ export class LaunchChecklist {
         const counts = this.getCompletionCount();
         const allGo = this.isReadyForLaunch();
 
-        let html = `
-            <div class="checklist-inner">
-                <div class="checklist-header">
-                    <h3>📋 LAUNCH READINESS POLL</h3>
-                    <span class="checklist-count">${counts.go}/${counts.total} GO</span>
-                    <button class="checklist-close" id="checklist-close-btn" aria-label="Close Launch Checklist">✕</button>
-                </div>
-                <div class="checklist-items">
-        `;
+        this.containerEl.innerHTML = '';
 
-        for (const item of this.items) {
+        const checklistItems = this.items.map(item => {
             const statusClass = item.status === 'go' ? 'go' : item.status === 'no-go' ? 'no-go' : 'pending';
-            html += `
-                <div class="checklist-row ${statusClass}">
-                    <div class="checklist-station">${escapeHTML(item.station)}</div>
-                    <div class="checklist-label">${escapeHTML(item.label)}</div>
-                    <div class="checklist-buttons" role="group" aria-label="${escapeHTML(item.station)} Status">
-                        <button class="cl-btn cl-go ${item.status === 'go' ? 'active' : ''}" 
-                                data-item="${item.id}"
-                                data-action="go"
-                                aria-label="Set ${escapeHTML(item.station)} to GO"
-                                aria-pressed="${item.status === 'go'}">GO</button>
-                        <button class="cl-btn cl-nogo ${item.status === 'no-go' ? 'active' : ''}" 
-                                data-item="${item.id}"
-                                data-action="no-go"
-                                aria-label="Set ${escapeHTML(item.station)} to NO GO"
-                                aria-pressed="${item.status === 'no-go'}">NO GO</button>
-                    </div>
-                </div>
-            `;
-        }
 
-        html += `
-                </div>
-                <div class="checklist-footer">
-                    <div class="checklist-verdict ${allGo ? 'all-go' : 'not-ready'}" aria-live="polite">
-                        ${allGo ? '✅ ALL STATIONS GO — LAUNCH AUTHORIZED' : '⏳ AWAITING ALL STATIONS'}
-                    </div>
-                </div>
-            </div>
-        `;
+            return createElement('div', { className: `checklist-row ${statusClass}` }, [
+                createElement('div', { className: 'checklist-station', textContent: item.station }),
+                createElement('div', { className: 'checklist-label', textContent: item.label }),
+                createElement('div', { className: 'checklist-buttons', role: 'group', 'aria-label': `${item.station} Status` }, [
+                    createElement('button', {
+                        className: `cl-btn cl-go ${item.status === 'go' ? 'active' : ''}`,
+                        'data-item': item.id,
+                        'data-action': 'go',
+                        'aria-label': `Set ${item.station} to GO`,
+                        'aria-pressed': item.status === 'go'
+                    }, ['GO']),
+                    createElement('button', {
+                        className: `cl-btn cl-nogo ${item.status === 'no-go' ? 'active' : ''}`,
+                        'data-item': item.id,
+                        'data-action': 'no-go',
+                        'aria-label': `Set ${item.station} to NO GO`,
+                        'aria-pressed': item.status === 'no-go'
+                    }, ['NO GO'])
+                ])
+            ]);
+        });
 
-        this.containerEl.innerHTML = html;
+        const checklistInner = createElement('div', { className: 'checklist-inner' }, [
+            createElement('div', { className: 'checklist-header' }, [
+                createElement('h3', { textContent: '📋 LAUNCH READINESS POLL' }),
+                createElement('span', { className: 'checklist-count', textContent: `${counts.go}/${counts.total} GO` }),
+                createElement('button', { className: 'checklist-close', id: 'checklist-close-btn', 'aria-label': 'Close Launch Checklist', textContent: '✕' })
+            ]),
+            createElement('div', { className: 'checklist-items' }, checklistItems),
+            createElement('div', { className: 'checklist-footer' }, [
+                createElement('div', {
+                    className: `checklist-verdict ${allGo ? 'all-go' : 'not-ready'}`,
+                    'aria-live': 'polite',
+                    textContent: allGo ? '✅ ALL STATIONS GO — LAUNCH AUTHORIZED' : '⏳ AWAITING ALL STATIONS'
+                })
+            ])
+        ]);
+
+        this.containerEl.appendChild(checklistInner);
 
         // Wire up button events
         this.containerEl.querySelectorAll('.cl-btn').forEach((btn) => {
