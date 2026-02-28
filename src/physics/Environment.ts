@@ -123,6 +123,9 @@ export class EnvironmentSystem {
     private currentGust: Vector2D = vec2(0, 0);
     private gustUpdateTimer: number = 0;
 
+    // Pre-allocated objects to prevent garbage collection in hot paths
+    private _windPolarResult = { speed: 0, direction: 0 };
+
     constructor(config: EnvironmentConfig = DEFAULT_ENVIRONMENT_CONFIG) {
         this.config = { ...config };
         // Ensure layers are sorted for optimization
@@ -245,12 +248,22 @@ export class EnvironmentSystem {
      * @param altitude - Altitude in meters
      * @returns Wind velocity vector (m/s)
      */
-    getWindAtAltitude(altitude: number): Vector2D {
-        const { speed, direction } = this.getWindPolar(altitude);
+    getWindAtAltitude(altitude: number, out?: Vector2D): Vector2D {
+        this.getWindPolar(altitude, this._windPolarResult);
+        const { speed, direction } = this._windPolarResult;
 
         // Convert to velocity vector
         // Wind direction is where wind comes FROM, so we negate for force direction
-        return vec2(-Math.cos(direction) * speed, -Math.sin(direction) * speed);
+        const vx = -Math.cos(direction) * speed;
+        const vy = -Math.sin(direction) * speed;
+
+        if (out) {
+            out.x = vx;
+            out.y = vy;
+            return out;
+        }
+
+        return vec2(vx, vy);
     }
 
     /**
@@ -298,7 +311,7 @@ export class EnvironmentSystem {
      * @param altitude - Check altitude (usually 0 for surface)
      */
     isLaunchSafe(altitude: number = 0): boolean {
-        const surfaceWind = this.getWindAtAltitude(altitude);
+        const surfaceWind = this.getWindAtAltitude(altitude, { x: 0, y: 0 });
         const gustMag = Vec2.magnitude(this.currentGust);
         const totalWindSpeed = Vec2.magnitude(surfaceWind) + gustMag;
         return totalWindSpeed < this.config.launchWindLimit;
@@ -309,8 +322,8 @@ export class EnvironmentSystem {
      */
     hasMaxQWindWarning(): boolean {
         // Check wind speed at typical Max-Q altitudes (10-14km)
-        const wind10k = Vec2.magnitude(this.getWindAtAltitude(10000));
-        const wind14k = Vec2.magnitude(this.getWindAtAltitude(14000));
+        const wind10k = Vec2.magnitude(this.getWindAtAltitude(10000, { x: 0, y: 0 }));
+        const wind14k = Vec2.magnitude(this.getWindAtAltitude(14000, { x: 0, y: 0 }));
         // Warning if wind exceeds 30 m/s at Max-Q altitude
         return wind10k > 30 || wind14k > 30;
     }
@@ -320,8 +333,10 @@ export class EnvironmentSystem {
      * @param altitude - Altitude in meters
      */
     getState(altitude: number): EnvironmentState {
-        const baseWind = this.getWindAtAltitude(altitude);
-        const surfaceWind = this.getWindAtAltitude(0);
+        // Since we need to return this state and baseWind/surfaceWind are distinct,
+        // we can allocate here as it's not a hot loop (only called on HUD updates).
+        const baseWind = this.getWindAtAltitude(altitude, { x: 0, y: 0 });
+        const surfaceWind = this.getWindAtAltitude(0, { x: 0, y: 0 });
         const surfaceSpeed = Vec2.magnitude(surfaceWind);
 
         // Gusts diminish with altitude (more stable upper atmosphere)
