@@ -934,8 +934,9 @@ export class Game {
         this.ctx.fill();
 
         // Draw vessels and orbits
-        this.entities.forEach((e) => {
-            if (e.crashed) return;
+        for (let j = 0; j < this.entities.length; j++) {
+            const e = this.entities[j];
+            if (!e || e.crashed) continue;
 
             const alt = (this.groundY - e.y - e.h) / PIXELS_PER_METER;
             const r = R_EARTH + alt;
@@ -955,7 +956,9 @@ export class Game {
             if (e.orbitPath) {
                 this.ctx.strokeStyle = this.ctx.fillStyle;
                 this.ctx.beginPath();
-                e.orbitPath.forEach((p, i) => {
+                for (let i = 0; i < e.orbitPath.length; i++) {
+                    const p = e.orbitPath[i];
+                    if (!p) continue;
                     // Optimized: Use pre-calculated relative coordinates if available
                     const px = cx + (p.relX ?? Math.sin(p.phi) * p.r) * scale;
                     const py = cy + (p.relY ?? -Math.cos(p.phi) * p.r) * scale;
@@ -964,10 +967,10 @@ export class Game {
                     } else {
                         this.ctx.lineTo(px, py);
                     }
-                });
+                }
                 this.ctx.stroke();
             }
-        });
+        }
 
         // Label
         this.ctx.fillStyle = 'white';
@@ -1096,7 +1099,12 @@ export class Game {
         Particle.drawParticles(this.ctx, state.particles as Particle[]);
 
         // Entities
-        this.entities.forEach((e) => e.draw(this.ctx, 0, alpha));
+        for (let i = 0; i < this.entities.length; i++) {
+            const e = this.entities[i];
+            if (e) {
+                e.draw(this.ctx, 0, alpha);
+            }
+        }
 
         // Draw environmental overlays
         this.drawEnvironment(this.cameraY);
