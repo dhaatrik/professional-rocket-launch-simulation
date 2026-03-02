@@ -17,7 +17,6 @@ export class ScriptEditor {
     private errorDisplay: HTMLElement | null = null;
     private saveSelect: HTMLSelectElement | null = null;
     private game: Game;
-    private onScriptLoaded: ((script: MissionScript) => void) | null = null; // Legacy callback, maybe unused now
 
     constructor(game: Game) {
         this.game = game;
@@ -30,17 +29,6 @@ export class ScriptEditor {
                 if (e.success) {
                     this.showSuccess(`Loaded to Flight Computer! Press G to activate.`);
 
-                    // Allow UI to update if needed
-                    if (this.onScriptLoaded) {
-                        // We don't have the parsed script object here easily unless we parse it again
-                        // or just ignore this callback if it's not critical.
-                        // The original used `this.flightComputer.state.script`.
-                        // For now, we can skip passing the script object or parse locally.
-                        const val = this.textarea?.value || '';
-                        const res = parseMissionScript(val, 'Loaded Script');
-                        if (res.script) this.onScriptLoaded(res.script);
-                    }
-
                     // Auto-close
                     setTimeout(() => {
                         this.hide();
@@ -50,13 +38,6 @@ export class ScriptEditor {
                 }
             }
         });
-    }
-
-    /**
-     * Set callback for when a script is loaded
-     */
-    setOnScriptLoaded(callback: (script: MissionScript) => void): void {
-        this.onScriptLoaded = callback;
     }
 
     /**
