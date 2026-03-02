@@ -191,8 +191,8 @@
 
     <!-- IMPROVEMENT #7: Onboarding Tooltip Overlay -->
     <div id="tooltip-overlay" class="tooltip-overlay">
-        <div class="tooltip-box">
-            <h3>Welcome to Mission Control!</h3>
+        <div class="tooltip-box" role="dialog" aria-modal="true" aria-labelledby="tooltip-title">
+            <h3 id="tooltip-title">Welcome to Mission Control!</h3>
             <p>Ready for your first launch? Press <span class="key-hint">SPACE</span> to ignite the engines!</p>
             <p class="font-small text-muted">Use arrow keys to steer, SHIFT/CTRL for throttle.</p>
             <button id="tooltip-dismiss">GOT IT!</button>

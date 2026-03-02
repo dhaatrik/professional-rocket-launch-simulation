@@ -90,13 +90,21 @@ let flightPhase: 'prelaunch' | 'ascending' | 'descending' | 'landed' = 'prelaunc
 function showOnboarding(): void {
     if (localStorage.getItem('onboarding-complete')) return;
     const overlay = uiCache.tooltipOverlay;
-    if (overlay) overlay.classList.add('visible');
+    if (overlay) {
+        overlay.classList.add('visible');
+        // Give time for display:block to apply before focusing
+        setTimeout(() => {
+            document.getElementById('tooltip-dismiss')?.focus();
+        }, 50);
+    }
 }
 
 document.getElementById('tooltip-dismiss')?.addEventListener('click', () => {
     const overlay = uiCache.tooltipOverlay;
     if (overlay) overlay.classList.remove('visible');
     localStorage.setItem('onboarding-complete', 'true');
+    // Return focus to a logical element for keyboard users
+    document.getElementById('launch-btn')?.focus();
 });
 
 // --- Splash Screen Buttons ---
