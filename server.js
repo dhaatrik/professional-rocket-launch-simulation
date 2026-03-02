@@ -157,6 +157,9 @@ http.createServer((req, res) => {
             return;
         }
 
+        // Security: Normalize path before processing to prevent directory traversal bypasses
+        pathname = path.posix.normalize(pathname);
+
         // Security: Block access to sensitive files and directories
         const rootPath = pathname.split('/').filter(Boolean)[0]; // robustly extract first segment
         if (rootPath && BLOCKED_RESOURCES.has(rootPath)) {
