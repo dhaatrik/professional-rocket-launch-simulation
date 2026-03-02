@@ -77,5 +77,10 @@ describe('FlightScript', () => {
                 expect(script.commands[0]!.state).toBe('pending');
             }
         });
+
+        it('should return null when deserializing invalid JSON', () => {
+            const restored = deserializeScript('{ invalid json ');
+            expect(restored).toBeNull();
+        });
     });
 });
