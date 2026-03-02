@@ -448,7 +448,11 @@ export class FlightComputer {
      */
     getCompletedCount(): number {
         if (!this.state.script) return 0;
-        return this.state.script.commands.filter((c) => c.state === 'completed').length;
+        let count = 0;
+        for (const c of this.state.script.commands) {
+            if (c.state === 'completed') count++;
+        }
+        return count;
     }
 }
 
