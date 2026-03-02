@@ -58,6 +58,13 @@ const stateMessage = {
 const FIXED_DT = 0.02;
 const EMPTY_KEYS = Object.freeze({});
 
+export interface PhysicsWorkerConfig {
+    width?: number;
+    height?: number;
+    groundY?: number;
+    sharedBuffer?: SharedArrayBuffer;
+}
+
 self.onmessage = (e: MessageEvent) => {
     const { type, payload } = e.data;
 
@@ -74,7 +81,7 @@ self.onmessage = (e: MessageEvent) => {
     }
 };
 
-function init(config: any) {
+function init(config: PhysicsWorkerConfig) {
     entities = [];
     missionTime = 0;
     trackedIndex = 0;

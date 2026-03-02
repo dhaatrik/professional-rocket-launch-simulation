@@ -28,6 +28,12 @@ export interface PhysicsState {
     // entities removed from payload
 }
 
+export interface PhysicsProxyConfig {
+    width?: number;
+    height?: number;
+    groundY?: number;
+}
+
 export class PhysicsProxy {
     private worker: Worker;
     private latestState: PhysicsState | null = null;
@@ -76,7 +82,7 @@ export class PhysicsProxy {
         };
     }
 
-    init(config: any) {
+    init(config: PhysicsProxyConfig) {
         // Send buffer to worker
         this.worker.postMessage({
             type: 'INIT',
