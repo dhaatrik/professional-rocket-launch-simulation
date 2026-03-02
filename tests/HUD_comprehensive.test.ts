@@ -142,6 +142,9 @@ describe('Game HUD Comprehensive Tests', () => {
         // Populate cache
         (game as any).initHUDCache();
 
+        // Simulate animate() calculating velocity
+        (game as any)._cachedVelocity = Math.sqrt(trackedEntity.vx ** 2 + trackedEntity.vy ** 2);
+
         (game as any).drawHUD();
 
         expect(mockElements['hud-alt'].textContent).toBe('0.5'); // 500m / 1000

@@ -185,6 +185,9 @@ export class Game {
     private _windTextX: number[] = [];
     private _windTextY: number[] = [];
 
+    // Cached state to reduce redundant calculations
+    private _cachedVelocity: number = 0;
+
     private physics: PhysicsProxy;
 
     constructor() {
@@ -520,7 +523,7 @@ export class Game {
             const alt = (this.groundY - this.trackedEntity.y - this.trackedEntity.h) / PIXELS_PER_METER;
 
             // Audio update
-            const vel = Math.sqrt(this.trackedEntity.vx ** 2 + this.trackedEntity.vy ** 2);
+            const vel = this._cachedVelocity;
             const rho = getAtmosphericDensity(alt);
             this.audio.setThrust(this.trackedEntity.throttle, rho, vel);
 
@@ -1215,7 +1218,7 @@ export class Game {
         const last = this.lastHUDState;
 
         const alt = (this.groundY - this.trackedEntity.y - this.trackedEntity.h) / PIXELS_PER_METER;
-        const vel = Math.sqrt(this.trackedEntity.vx ** 2 + this.trackedEntity.vy ** 2);
+        const vel = this._cachedVelocity;
 
         // Apogee estimate
         const g = 9.8;
@@ -1512,6 +1515,13 @@ export class Game {
         this.entities = this.physics.getEntities();
         this.missionTime = this.physics.getMissionTime();
 
+        // Update cached velocity to avoid multiple Math.sqrt calls per frame
+        if (this.trackedEntity) {
+            this._cachedVelocity = Math.sqrt(this.trackedEntity.vx ** 2 + this.trackedEntity.vy ** 2);
+        } else {
+            this._cachedVelocity = 0;
+        }
+
         const alpha = this.physics.getInterpolationAlpha();
 
         if (this.cameraMode === 'MAP') {
@@ -1524,7 +1534,7 @@ export class Game {
                 timestamp: Date.now(),
                 missionTime: this.missionTime,
                 altitude: (this.groundY - this.trackedEntity.y - this.trackedEntity.h) / PIXELS_PER_METER,
-                velocity: Math.sqrt(this.trackedEntity.vx ** 2 + this.trackedEntity.vy ** 2),
+                velocity: this._cachedVelocity,
                 fuel: this.trackedEntity.fuel,
                 throttle: this.trackedEntity.throttle,
                 position: { x: this.trackedEntity.x, y: this.trackedEntity.y },
