@@ -88,7 +88,7 @@ export class FlightDataParser {
         return frames;
     }
 
-    public static parseJSON(jsonContent: string): FlightFrame[] {
+    public static parseJSON(jsonContent: string): FlightFrame[] | null {
         try {
             const data = JSON.parse(jsonContent);
             if (Array.isArray(data)) {
@@ -98,8 +98,8 @@ export class FlightDataParser {
             }
             return [];
         } catch (e) {
-            console.error('Failed to parse JSON', e);
-            return [];
+            console.error('Failed to parse flight data JSON:', e);
+            return null;
         }
     }
 }

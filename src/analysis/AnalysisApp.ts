@@ -120,8 +120,11 @@ class AnalysisApp {
             const content = target.result as string;
             if (file.name.endsWith('.csv')) {
                 this.frames = FlightDataParser.parseCSV(content);
+            } else if (file.name.endsWith('.json')) {
+                this.frames = FlightDataParser.parseJSON(content) || [];
             } else {
-                this.frames = FlightDataParser.parseJSON(content);
+                alert('Unsupported file type');
+                return;
             }
 
             if (this.frames.length > 0) {
