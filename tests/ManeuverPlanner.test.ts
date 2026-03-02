@@ -79,6 +79,8 @@ describe('ManeuverPlanner Logic', () => {
         planner.show();
         const select = document.getElementById('maneuver-type-select') as HTMLSelectElement;
         select.value = 'circularize-apo';
+
+        // This causes this.calculateManeuver() to be called inside ManeuverPlanner.ts
         select.dispatchEvent(new Event('change'));
 
         const resultDiv = document.getElementById('planner-results');
@@ -97,5 +99,26 @@ describe('ManeuverPlanner Logic', () => {
         expect(resultDiv?.textContent).toContain('Hohmann Transfer');
 
         expect(OrbitalMechanics.calculateHohmannTransfer).toHaveBeenCalled();
+    });
+
+    it('should display an error message if calculation fails', () => {
+        // Mock calculateCircularizationFromElements so it throws an error on subsequent calls
+        vi.mocked(OrbitalMechanics.calculateCircularizationFromElements).mockImplementation(() => {
+            throw new Error('Test Error');
+        });
+
+        // Initialize planner
+        planner.show();
+
+        const select = document.getElementById('maneuver-type-select') as HTMLSelectElement;
+        select.value = 'circularize-apo';
+        select.dispatchEvent(new Event('change'));
+
+        const resultDiv = document.getElementById('planner-results');
+
+        const errorEl = resultDiv?.querySelector('.maneuver-error');
+
+        expect(errorEl).not.toBeNull();
+        expect(errorEl?.textContent).toContain('Error: Test Error');
     });
 });
