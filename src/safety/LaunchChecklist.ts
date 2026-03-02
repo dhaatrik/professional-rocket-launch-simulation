@@ -110,10 +110,15 @@ export class LaunchChecklist {
 
     /** Get count of completed items */
     getCompletionCount(): { go: number; noGo: number; pending: number; total: number } {
-        const go = this.items.filter((i) => i.status === 'go').length;
-        const noGo = this.items.filter((i) => i.status === 'no-go').length;
-        const pending = this.items.filter((i) => i.status === 'pending').length;
-        return { go, noGo, pending, total: this.items.length };
+        return this.items.reduce(
+            (acc, item) => {
+                if (item.status === 'go') acc.go++;
+                else if (item.status === 'no-go') acc.noGo++;
+                else if (item.status === 'pending') acc.pending++;
+                return acc;
+            },
+            { go: 0, noGo: 0, pending: 0, total: this.items.length }
+        );
     }
 
     /** Set item status */

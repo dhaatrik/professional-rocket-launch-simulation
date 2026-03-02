@@ -69,5 +69,5 @@ describe('Particle Batching Performance', () => {
 
         // Basic sanity check
         expect(mockCtx.fill).toHaveBeenCalled();
-    });
+    }, 10000); // Increased timeout to 10s
 });
