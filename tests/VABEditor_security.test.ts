@@ -80,8 +80,9 @@ describe('VABEditor Security', () => {
         // If safe: <input ... value=""> (value set via property)
         expect(html).not.toContain('<script>');
 
-        // Ensure the value attribute in HTML is empty (proving it wasn't interpolated)
-        expect(input.getAttribute('value')).toBe('');
+        // Ensure the value attribute in HTML is empty or non-existent (proving it wasn't interpolated)
+        const attrValue = input.getAttribute('value');
+        expect(attrValue === '' || attrValue === null).toBe(true);
     });
 
     it('should safely display blueprint name in input', () => {
