@@ -7,7 +7,7 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             include: ['src/**/*.ts'],
-            exclude: ['src/main.ts', 'src/ui/**'],
+            exclude: ['src/main.ts'],
             reporter: ['text', 'html'],
         },
         environment: 'jsdom',
