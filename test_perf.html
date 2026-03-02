@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+    function benchDOM() {
+        const start = performance.now();
+        for(let i=0; i<100000; i++) {
+            const fcBtn = document.getElementById('fc-btn');
+            if (fcBtn) {
+                fcBtn.classList.toggle('enabled', false);
+            }
+        }
+        const end = performance.now();
+        console.log("Without cache: " + (end - start) + "ms");
+    }
+
+    function benchCache() {
+        const fcBtn = document.getElementById('fc-btn');
+        const start = performance.now();
+        for(let i=0; i<100000; i++) {
+            if (fcBtn) {
+                fcBtn.classList.toggle('enabled', false);
+            }
+        }
+        const end = performance.now();
+        console.log("With cache: " + (end - start) + "ms");
+    }
+</script>
+</head>
+<body>
+    <button id="fc-btn">FC</button>
+</body>
+</html>
