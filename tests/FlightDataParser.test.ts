@@ -98,14 +98,14 @@ abc,def`;
             expect(frames[0]!.missionTime).toBe(10.5);
         });
 
-        it('should return empty array for invalid JSON syntax', () => {
+        it('should return null for invalid JSON syntax', () => {
             const json = `{ "missionTime": 10.5 `; // Missing closing brace
             // Silence console.error for this test as it's expected
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
             const frames = FlightDataParser.parseJSON(json);
 
-            expect(frames).toEqual([]);
+            expect(frames).toBeNull();
             expect(consoleSpy).toHaveBeenCalled();
             consoleSpy.mockRestore();
         });
@@ -115,6 +115,25 @@ abc,def`;
             const frames = FlightDataParser.parseJSON(json);
 
             expect(frames).toEqual([]);
+        });
+
+        it('should return null when JSON.parse throws an error', () => {
+            const json = `{"valid": "json"}`;
+            const mockError = new Error('Mock JSON parse error');
+            const parseSpy = vi.spyOn(JSON, 'parse').mockImplementation(() => {
+                throw mockError;
+            });
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+
+            try {
+                const frames = FlightDataParser.parseJSON(json);
+
+                expect(frames).toBeNull();
+                expect(consoleSpy).toHaveBeenCalledWith('Failed to parse flight data JSON:', mockError);
+            } finally {
+                parseSpy.mockRestore();
+                consoleSpy.mockRestore();
+            }
         });
     });
 });
