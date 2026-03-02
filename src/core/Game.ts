@@ -6,6 +6,7 @@
  */
 
 import { CameraMode, MissionState, OrbitalElements, IVessel } from '../types';
+import { VehicleBlueprint } from '../vab/VehicleBlueprint';
 import {
     CONFIG,
     PIXELS_PER_METER,
@@ -323,7 +324,7 @@ export class Game {
     /**
      * Spawn a new vessel from a blueprint
      */
-    spawnVessel(blueprint: any): void {
+    spawnVessel(blueprint: VehicleBlueprint): void {
         console.log('Spawning blueprint:', blueprint?.name);
         // For now, reset which triggers worker init to spawn default rocket
         this.reset();
