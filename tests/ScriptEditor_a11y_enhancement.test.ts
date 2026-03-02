@@ -69,7 +69,7 @@ describe('ScriptEditor Accessibility Enhancements', () => {
         textarea.value = 'INVALID SYNTAX';
         editor.validate();
 
-        // Now fix it
+        // Now correct the syntax
         textarea.value = 'WHEN ALTITUDE > 1000 THEN PITCH 80';
         editor.validate();
 
@@ -77,7 +77,7 @@ describe('ScriptEditor Accessibility Enhancements', () => {
         expect(errorContainer?.textContent).toContain('Valid script');
 
         // Check that role="alert" is removed or changed
-        expect(errorContainer?.getAttribute('role')).not.toBe('alert');
+        expect(errorContainer?.hasAttribute('role')).toBe(false);
 
         // Check for aria-invalid on textarea
         expect(textarea.getAttribute('aria-invalid')).toBe('false');
