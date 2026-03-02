@@ -60,8 +60,7 @@ class HUDUpdater {
         const hudTimeOfDay = document.getElementById('hud-time-of-day');
         const hudLaunchStatus = document.getElementById('hud-launch-status');
 
-        // Simulating the bug (or correct behavior, but inefficiently)
-        const hudMaxQ = document.getElementById('hud-maxq-warning');
+        const hudMaxQ = this.hudMaxQ;
 
         const last = this.lastHUDState;
 
