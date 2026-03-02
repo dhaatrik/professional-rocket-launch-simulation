@@ -188,40 +188,6 @@ export class Particle implements IParticle {
         }
     }
 
-    /**
-     * Draw particle to canvas
-     *
-     * @param ctx - Canvas 2D rendering context
-     * @deprecated Use Particle.drawParticles for batched rendering instead.
-     */
-    draw(ctx: CanvasRenderingContext2D): void {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, Math.max(0, this.size), 0, Math.PI * 2);
-
-        switch (this.type) {
-            case 'smoke': {
-                const c = Math.floor(this.color);
-                ctx.fillStyle = `rgba(${c},${c},${c},${this.alpha * this.life})`;
-                break;
-            }
-            case 'fire': {
-                const g = Math.floor(255 * this.life);
-                ctx.fillStyle = `rgba(255,${g},0,${this.life})`;
-                break;
-            }
-            case 'spark': {
-                ctx.fillStyle = `rgba(255, 200, 150, ${this.life})`;
-                break;
-            }
-            case 'debris': {
-                ctx.fillStyle = `rgba(100,100,100,${this.life})`;
-                break;
-            }
-        }
-
-        ctx.fill();
-    }
-
     // Reusable batches to reduce GC pressure
     // Benchmark Note: This nested array structure is faster than flat arrays/linked lists.
     // 0: smoke, 1: fire, 2: spark, 3: debris
@@ -267,9 +233,6 @@ export class Particle implements IParticle {
                 if (bucket) {
                     bucket.push(p);
                 }
-            } else {
-                // Fallback for unknown types (or if initialization failed)
-                p.draw(ctx);
             }
         }
 
