@@ -263,10 +263,14 @@ export class FaultInjector {
 
         this.containerEl.innerHTML = '';
 
+        const activeFaultsMap = new Map<string, ActiveFault>(
+            this.activeFaults.map(f => [f.definition.id, f])
+        );
+
         const categoryEls = categories.map(cat => {
             const faults = FAULT_CATALOG.filter((f) => f.category === cat);
             const faultEls = faults.map(fault => {
-                const active = this.activeFaults.find((f) => f.definition.id === fault.id);
+                const active = activeFaultsMap.get(fault.id);
                 const statusClass =
                     active?.status === 'injected' ? 'injected' : active?.status === 'armed' ? 'armed' : '';
                 const statusLabel =
