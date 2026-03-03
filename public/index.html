@@ -144,24 +144,24 @@
 
         <!-- IMPROVEMENT #10: Camera Panel -->
         <div id="camera-panel">
-            <button data-cam="1" class="active" title="Follow Camera [1]">Follow</button>
-            <button data-cam="2" title="Orbit Camera [2]">Orbit</button>
-            <button data-cam="3" title="Cinema Camera [3]">Cinema</button>
+            <button data-cam="1" class="active" title="Follow Camera [1]" aria-pressed="true">Follow</button>
+            <button data-cam="2" title="Orbit Camera [2]" aria-pressed="false">Orbit</button>
+            <button data-cam="3" title="Cinema Camera [3]" aria-pressed="false">Cinema</button>
         </div>
 
         <!-- SAS Controls - Enhanced -->
         <div id="sas-controls">
             <div class="sas-title">SAS CONTROL</div>
             <div class="sas-group">
-                <button id="sas-off" class="sas-btn active" title="SAS Off [T]">OFF</button>
-                <button id="sas-stability" class="sas-btn" title="Stability Assist [T]">STABILITY</button>
+                <button id="sas-off" class="sas-btn active" title="SAS Off [T]" aria-pressed="true">OFF</button>
+                <button id="sas-stability" class="sas-btn" title="Stability Assist [T]" aria-pressed="false">STABILITY</button>
             </div>
             <div class="sas-group">
-                <button id="sas-prograde" class="sas-btn" title="Prograde [ []">PROGRADE</button>
-                <button id="sas-retrograde" class="sas-btn" title="Retrograde [ ]]">RETROGRADE</button>
+                <button id="sas-prograde" class="sas-btn" title="Prograde [ []" aria-pressed="false">PROGRADE</button>
+                <button id="sas-retrograde" class="sas-btn" title="Retrograde [ ]]" aria-pressed="false">RETROGRADE</button>
             </div>
             <div id="sas-mode-indicator">
-                <span class="icon"></span>
+                <span class="icon" aria-hidden="true"></span>
                 <span id="sas-mode-text">OFF</span>
             </div>
         </div>
