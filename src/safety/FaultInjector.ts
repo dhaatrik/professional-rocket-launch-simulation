@@ -261,7 +261,7 @@ export class FaultInjector {
             structure: '🏗️ STRUCTURE'
         };
 
-        this.containerEl.innerHTML = '';
+        this.containerEl.textContent = '';
 
         const activeFaultsMap = new Map<string, ActiveFault>(
             this.activeFaults.map(f => [f.definition.id, f])

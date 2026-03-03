@@ -103,7 +103,7 @@ export class MissionLog implements IMissionLog {
      */
     clear(): void {
         if (this.el) {
-            this.el.innerHTML = '';
+            this.el.textContent = '';
         }
         this.events = [];
     }
