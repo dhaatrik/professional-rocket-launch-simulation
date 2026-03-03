@@ -331,7 +331,7 @@ export class ManeuverPlanner {
 
         try {
             // Clear previous results
-            resultDiv.innerHTML = '';
+            resultDiv.textContent = '';
 
             let plan: ManeuverPlan | null = null;
 
@@ -366,7 +366,7 @@ export class ManeuverPlanner {
                 this.renderHohmannPlan(hResult, targetAltKm, resultDiv);
             }
         } catch (e: any) {
-            resultDiv.innerHTML = '';
+            resultDiv.textContent = '';
             this.createElement('span', resultDiv, {
                 className: 'maneuver-error',
                 text: `Error: ${e.message}`

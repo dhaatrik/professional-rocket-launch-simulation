@@ -8,6 +8,7 @@
 import { parseMissionScript, MissionScript } from '../guidance/FlightScript';
 import { PRESET_SCRIPTS } from '../guidance/FlightComputer';
 import { Game } from '../core/Game';
+import { createElement } from './DOMUtils';
 
 const STORAGE_KEY = 'rocket-sim-scripts';
 
@@ -57,61 +58,56 @@ export class ScriptEditor {
         const modal = document.createElement('div');
         modal.id = 'script-editor-modal';
         modal.className = 'script-editor-modal';
-        modal.innerHTML = `
-            <div class="script-editor-content">
-                <div class="script-editor-header">
-                    <h2>Flight Computer - Script Editor</h2>
-                    <button id="script-editor-close" class="script-close-btn" aria-label="Close script editor" title="Close">×</button>
-                </div>
-                
-                <div class="script-editor-body">
-                    <div class="script-toolbar">
-                        <select id="script-preset-select" class="script-select" aria-label="Load preset script">
-                            <option value="">-- Load Preset --</option>
-                        </select>
-                        
-                        <select id="script-save-select" class="script-select" aria-label="Load saved script">
-                            <option value="">-- Saved Scripts --</option>
-                        </select>
-                        
-                        <button id="script-validate-btn" class="script-btn">Validate</button>
-                        <button id="script-clear-btn" class="script-btn script-btn-danger">Clear</button>
-                    </div>
-                    
-                    <div class="script-syntax-help" id="script-syntax-help">
-                        <strong>Syntax:</strong> WHEN &lt;condition&gt; THEN &lt;action&gt;
-                        <br>
-                        <span class="script-help-vars">
-                            Variables: ALTITUDE, VELOCITY, APOGEE, FUEL, TIME | 
-                            Actions: PITCH &lt;deg&gt;, THROTTLE &lt;0-100&gt;, STAGE, SAS &lt;mode&gt;
-                        </span>
-                    </div>
-                    
-                    <textarea id="script-textarea" class="script-textarea"
-                        aria-label="Script editor content"
-                        aria-describedby="script-syntax-help"
-                        placeholder="# Mission Script
-# Example:
-WHEN ALTITUDE > 1000 THEN PITCH 80
-WHEN ALTITUDE > 10000 THEN PITCH 60
-WHEN APOGEE > 100000 THEN THROTTLE 0"></textarea>
-                    
-                    <div id="script-errors" class="script-errors" aria-live="polite" aria-atomic="true"></div>
-                </div>
-                
-                <div class="script-editor-footer">
-                    <div class="script-footer-left">
-                        <input type="text" id="script-name-input" class="script-name-input" aria-label="Script name"
-                            placeholder="Script name..." value="My Mission">
-                        <button id="script-save-btn" class="script-btn script-btn-secondary">Save</button>
-                        <button id="script-delete-btn" class="script-btn script-btn-danger">Delete</button>
-                    </div>
-                    <div class="script-footer-right">
-                        <button id="script-load-btn" class="script-btn script-btn-primary">Load to FC</button>
-                    </div>
-                </div>
-            </div>
-        `;
+
+        const content = createElement('div', { className: 'script-editor-content' }, [
+            createElement('div', { className: 'script-editor-header' }, [
+                createElement('h2', { textContent: 'Flight Computer - Script Editor' }),
+                createElement('button', {
+                    id: 'script-editor-close',
+                    className: 'script-close-btn',
+                    'aria-label': 'Close script editor',
+                    title: 'Close',
+                    textContent: '×'
+                })
+            ]),
+            createElement('div', { className: 'script-editor-body' }, [
+                createElement('div', { className: 'script-toolbar' }, [
+                    createElement('select', { id: 'script-preset-select', className: 'script-select', 'aria-label': 'Load preset script' }, [
+                        createElement('option', { value: '', textContent: '-- Load Preset --' })
+                    ]),
+                    createElement('select', { id: 'script-save-select', className: 'script-select', 'aria-label': 'Load saved script' }, [
+                        createElement('option', { value: '', textContent: '-- Saved Scripts --' })
+                    ]),
+                    createElement('button', { id: 'script-validate-btn', className: 'script-btn', textContent: 'Validate' }),
+                    createElement('button', { id: 'script-clear-btn', className: 'script-btn script-btn-danger', textContent: 'Clear' })
+                ]),
+                createElement('div', { className: 'script-syntax-help', id: 'script-syntax-help' }, [
+                    createElement('strong', { textContent: 'Syntax:' }), ' WHEN <condition> THEN <action>',
+                    createElement('br'),
+                    createElement('span', { className: 'script-help-vars', textContent: 'Variables: ALTITUDE, VELOCITY, APOGEE, FUEL, TIME | Actions: PITCH <deg>, THROTTLE <0-100>, STAGE, SAS <mode>' })
+                ]),
+                createElement('textarea', {
+                    id: 'script-textarea',
+                    className: 'script-textarea',
+                    'aria-label': 'Script editor content',
+                    'aria-describedby': 'script-syntax-help',
+                    placeholder: '# Mission Script\n# Example:\nWHEN ALTITUDE > 1000 THEN PITCH 80\nWHEN ALTITUDE > 10000 THEN PITCH 60\nWHEN APOGEE > 100000 THEN THROTTLE 0'
+                }),
+                createElement('div', { id: 'script-errors', className: 'script-errors', 'aria-live': 'polite', 'aria-atomic': 'true' })
+            ]),
+            createElement('div', { className: 'script-editor-footer' }, [
+                createElement('div', { className: 'script-footer-left' }, [
+                    createElement('input', { type: 'text', id: 'script-name-input', className: 'script-name-input', 'aria-label': 'Script name', placeholder: 'Script name...', value: 'My Mission' }),
+                    createElement('button', { id: 'script-save-btn', className: 'script-btn script-btn-secondary', textContent: 'Save' }),
+                    createElement('button', { id: 'script-delete-btn', className: 'script-btn script-btn-danger', textContent: 'Delete' })
+                ]),
+                createElement('div', { className: 'script-footer-right' }, [
+                    createElement('button', { id: 'script-load-btn', className: 'script-btn script-btn-primary', textContent: 'Load to FC' })
+                ])
+            ])
+        ]);
+
+        modal.appendChild(content);
 
         document.body.appendChild(modal);
         this.modal = modal;

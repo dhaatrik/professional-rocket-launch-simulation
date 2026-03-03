@@ -32,6 +32,11 @@ class MockHTMLElement {
         this.attributes[name] = value;
     }
 
+    // Also mock set id, className etc if assigned directly
+    set id_val(val: string) {
+        this.id = val;
+    }
+
     addEventListener() { }
     removeEventListener() { }
     focus() { }
@@ -47,10 +52,12 @@ class MockHTMLElement {
 
 const mockDocument = {
     body: new MockHTMLElement('BODY'),
+    createTextNode: (text: string) => text,
     getElementById: (id: string) => {
-        const findIn = (el: MockHTMLElement): MockHTMLElement | null => {
+        const findIn = (el: MockHTMLElement | string): MockHTMLElement | null => {
+            if (typeof el === 'string') return null;
             if (el.id === id) return el;
-            for (const child of el.children) {
+            for (const child of el.children || []) {
                 const found = findIn(child);
                 if (found) return found;
             }
@@ -61,6 +68,10 @@ const mockDocument = {
     createElement: (tagName: string) => new MockHTMLElement(tagName),
     addEventListener: () => { },
 };
+
+// Need to implement mock setAttribute to also set properties if needed or track appropriately.
+// MockHTMLElement already has setAttribute which saves to this.attributes.
+// And getAttribute reads from this.attributes.
 
 const mockLocalStorage = {
     getItem: vi.fn(),
@@ -104,30 +115,50 @@ describe('ScriptEditor Accessibility', () => {
         const modal = mockDocument.body.children[0];
         expect(modal).toBeDefined();
 
-        const html = modal!.innerHTML;
+        // Helper to check attributes since we changed from innerHTML to a mocked DOM tree
+        const getById = (id: string): MockHTMLElement | null => {
+            const findIn = (el: any): MockHTMLElement | null => {
+                if (!el || typeof el === 'string') return null;
+                if (el.id === id) return el;
+                // Also check attributes map because DOMUtils might use setAttribute('id', id)
+                if (el.attributes && el.attributes['id'] === id) return el;
+
+                for (const child of el.children || []) {
+                    const found = findIn(child);
+                    if (found) return found;
+                }
+                return null;
+            };
+            return findIn(mockDocument.body as MockHTMLElement);
+        };
 
         // Assertions for Accessibility Attributes
 
         // 1. Close Button
-        expect(html).toContain('id="script-editor-close"');
-        expect(html).toContain('aria-label="Close script editor"');
-        expect(html).toContain('title="Close"');
+        const closeBtn = getById('script-editor-close');
+        expect(closeBtn).toBeDefined();
+        expect(closeBtn?.getAttribute('aria-label')).toBe('Close script editor');
+        expect(closeBtn?.getAttribute('title')).toBe('Close');
 
         // 2. Preset Select
-        expect(html).toContain('id="script-preset-select"');
-        expect(html).toContain('aria-label="Load preset script"');
+        const presetSelect = getById('script-preset-select');
+        expect(presetSelect).toBeDefined();
+        expect(presetSelect?.getAttribute('aria-label')).toBe('Load preset script');
 
         // 3. Save Select
-        expect(html).toContain('id="script-save-select"');
-        expect(html).toContain('aria-label="Load saved script"');
+        const saveSelect = getById('script-save-select');
+        expect(saveSelect).toBeDefined();
+        expect(saveSelect?.getAttribute('aria-label')).toBe('Load saved script');
 
         // 4. Textarea
-        expect(html).toContain('id="script-textarea"');
-        expect(html).toContain('aria-label="Script editor content"');
+        const textarea = getById('script-textarea');
+        expect(textarea).toBeDefined();
+        expect(textarea?.getAttribute('aria-label')).toBe('Script editor content');
 
         // 5. Name Input
-        expect(html).toContain('id="script-name-input"');
-        expect(html).toContain('aria-label="Script name"');
+        const nameInput = getById('script-name-input');
+        expect(nameInput).toBeDefined();
+        expect(nameInput?.getAttribute('aria-label')).toBe('Script name');
     });
 });
 

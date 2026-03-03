@@ -210,7 +210,7 @@ export class LaunchChecklist {
         const counts = this.getCompletionCount();
         const allGo = this.isReadyForLaunch();
 
-        this.containerEl.innerHTML = '';
+        this.containerEl.textContent = '';
 
         const checklistItems = this.items.map(item => {
             const statusClass = item.status === 'go' ? 'go' : item.status === 'no-go' ? 'no-go' : 'pending';
