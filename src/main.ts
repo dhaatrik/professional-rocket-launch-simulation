@@ -187,8 +187,12 @@ document.getElementById('audio-btn')?.addEventListener('click', (e) => {
 // --- IMPROVEMENT #4: SAS Control with Mode Indicator ---
 document.querySelectorAll('.sas-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.sas-btn').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.sas-btn').forEach((b) => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+        });
         btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
 
         const mode = btn.id.replace('sas-', '').toUpperCase() as keyof typeof SASModes;
         const sasMode = SASModes[mode] ?? SASModes.OFF;
@@ -214,8 +218,12 @@ document.querySelectorAll('.sas-btn').forEach((btn) => {
 // --- IMPROVEMENT #10: Camera Mode Panel ---
 document.querySelectorAll('#camera-panel button').forEach((btn) => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('#camera-panel button').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('#camera-panel button').forEach((b) => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+        });
         btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
 
         const camMode = parseInt((btn as HTMLButtonElement).dataset.cam ?? '1');
         game.input.cameraMode = camMode;
