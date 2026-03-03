@@ -8,3 +8,7 @@
 ## 2025-03-02 - FlightComputer.getCompletedCount Intermediate Array Allocation
 **Learning:** `Array.prototype.filter().length` creates a hidden intermediate array allocation, which can become a significant performance bottleneck in functions that are queried frequently or on large collections (like script commands). Replacing it with a standard `for...of` loop and a local counter integer significantly decreases garbage collection overhead and execution time.
 **Action:** When counting matching items in a collection, prefer explicit looping and counting over `.filter().length` in any performance-sensitive path or high-frequency update loops.
+
+## 2025-03-02 - LaunchChecklist.getCompletionCount Array Reduce Overhead
+**Learning:** Using `Array.prototype.reduce()` creates closure overhead and allocates a new accumulator object (or constantly mutates an object within a callback) which puts pressure on garbage collection when called frequently.
+**Action:** When calculating statistics from arrays in hot paths or frequently updated UI components, prefer a standard `for` loop with local primitive counters over `.reduce()` to minimize object allocation.
