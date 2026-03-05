@@ -18,6 +18,7 @@ export class ScriptEditor {
     private errorDisplay: HTMLElement | null = null;
     private saveSelect: HTMLSelectElement | null = null;
     private game: Game;
+    private invokingElement: HTMLElement | null = null;
 
     constructor(game: Game) {
         this.game = game;
@@ -59,9 +60,14 @@ export class ScriptEditor {
         modal.id = 'script-editor-modal';
         modal.className = 'script-editor-modal';
 
-        const content = createElement('div', { className: 'script-editor-content' }, [
+        const content = createElement('div', {
+            className: 'script-editor-content',
+            role: 'dialog',
+            'aria-modal': 'true',
+            'aria-labelledby': 'script-editor-title'
+        }, [
             createElement('div', { className: 'script-editor-header' }, [
-                createElement('h2', { textContent: 'Flight Computer - Script Editor' }),
+                createElement('h2', { id: 'script-editor-title', textContent: 'Flight Computer - Script Editor' }),
                 createElement('button', {
                     id: 'script-editor-close',
                     className: 'script-close-btn',
@@ -216,6 +222,9 @@ export class ScriptEditor {
      * Show the editor modal
      */
     show(): void {
+        if (!this.isVisible()) {
+            this.invokingElement = document.activeElement as HTMLElement;
+        }
         if (this.modal) {
             this.modal.classList.add('visible');
             this.textarea?.focus();
@@ -228,6 +237,10 @@ export class ScriptEditor {
     hide(): void {
         if (this.modal) {
             this.modal.classList.remove('visible');
+            if (this.invokingElement) {
+                this.invokingElement.focus();
+                this.invokingElement = null;
+            }
         }
     }
 
