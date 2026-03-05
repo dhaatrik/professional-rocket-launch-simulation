@@ -25,6 +25,18 @@ describe('ScriptEditor Accessibility Enhancements', () => {
     });
 
     it('should have ARIA attributes for accessibility', () => {
+        editor.show();
+
+        const modalContent = document.querySelector('.script-editor-content');
+        expect(modalContent).toBeTruthy();
+        expect(modalContent?.getAttribute('role')).toBe('dialog');
+        expect(modalContent?.getAttribute('aria-modal')).toBe('true');
+        expect(modalContent?.getAttribute('aria-labelledby')).toBe('script-editor-title');
+
+        const title = document.getElementById('script-editor-title');
+        expect(title).toBeTruthy();
+        expect(title?.tagName).toBe('H2');
+
         const textarea = document.getElementById('script-textarea') as HTMLTextAreaElement;
         const helpText = document.querySelector('.script-syntax-help');
         const errorContainer = document.getElementById('script-errors');
@@ -81,5 +93,28 @@ describe('ScriptEditor Accessibility Enhancements', () => {
 
         // Check for aria-invalid on textarea
         expect(textarea.getAttribute('aria-invalid')).toBe('false');
+    });
+
+    it('should manage focus properly when opened and closed', () => {
+        // Create a dummy button to act as the invoking element
+        const triggerBtn = document.createElement('button');
+        triggerBtn.id = 'trigger-btn';
+        document.body.appendChild(triggerBtn);
+        triggerBtn.focus();
+
+        expect(document.activeElement).toBe(triggerBtn);
+
+        // Open editor
+        editor.show();
+
+        // The textarea should receive focus when opened
+        const textarea = document.getElementById('script-textarea');
+        expect(document.activeElement).toBe(textarea);
+
+        // Close editor
+        editor.hide();
+
+        // Focus should return to the invoking element
+        expect(document.activeElement).toBe(triggerBtn);
     });
 });
