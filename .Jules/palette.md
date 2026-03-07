@@ -16,3 +16,7 @@
 ## 2026-03-02 - Focus Management for Custom Modals
 **Learning:** Custom overlay elements like tooltips or onboarding dialogs disrupt keyboard navigation if they don't explicitly trap or direct focus upon opening and closing, forcing users to tab through the entire DOM to reach them.
 **Action:** Always add `role="dialog"` and `aria-modal="true"` to such overlays, and use JavaScript to explicitly set focus to the primary action button when shown, and return focus to the invoking element when dismissed.
+
+## 2026-03-03 - Accessible Toggle Buttons
+**Learning:** Found that custom toggle buttons in the main HUD (`#autopilot-btn`, `#audio-btn`) updated their text and classes visually but lacked `aria-pressed` attribute synchronization, leaving screen reader users unaware of their active state.
+**Action:** Always synchronize `aria-pressed` (true/false) with the visual active state in JavaScript for toggle buttons.

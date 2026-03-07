@@ -174,6 +174,7 @@ document.getElementById('autopilot-btn')?.addEventListener('click', (e) => {
     state.autopilotEnabled = !state.autopilotEnabled;
     btn.textContent = state.autopilotEnabled ? 'Auto-Land: ON' : 'Auto-Land: OFF';
     btn.classList.toggle('enabled', state.autopilotEnabled);
+    btn.setAttribute('aria-pressed', String(state.autopilotEnabled));
 });
 
 document.getElementById('audio-btn')?.addEventListener('click', (e) => {
@@ -182,6 +183,7 @@ document.getElementById('audio-btn')?.addEventListener('click', (e) => {
     btn.textContent = muted ? 'Enable Audio' : 'Disable Audio';
     btn.classList.remove('enabled', 'disabled');
     btn.classList.add(muted ? 'disabled' : 'enabled');
+    btn.setAttribute('aria-pressed', String(!muted));
 });
 
 // --- IMPROVEMENT #4: SAS Control with Mode Indicator ---
