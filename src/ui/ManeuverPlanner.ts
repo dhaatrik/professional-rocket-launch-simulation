@@ -23,6 +23,7 @@ export class ManeuverPlanner {
     private contentDiv: HTMLElement | null = null;
     private isVisible: boolean = false;
     private updateInterval: number | null = null;
+    private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
 
     constructor(game: Game) {
         this.game = game;
@@ -181,6 +182,7 @@ export class ManeuverPlanner {
             this.calculateManeuver();
         });
 
+
         // Refresh button
         document.getElementById('planner-refresh-btn')?.addEventListener('click', () => {
             this.updateOrbitStats();
@@ -203,6 +205,13 @@ export class ManeuverPlanner {
             this.updateInterval = window.setInterval(() => {
                 if (this.isVisible) this.updateOrbitStats();
             }, 1000);
+
+            this.escapeHandler = (e: KeyboardEvent) => {
+                if (e.key === 'Escape' && this.isVisible) {
+                    this.hide();
+                }
+            };
+            document.addEventListener('keydown', this.escapeHandler);
         }
     }
 
@@ -218,6 +227,11 @@ export class ManeuverPlanner {
             if (this.updateInterval) {
                 clearInterval(this.updateInterval);
                 this.updateInterval = null;
+            }
+
+            if (this.escapeHandler) {
+                document.removeEventListener('keydown', this.escapeHandler);
+                this.escapeHandler = null;
             }
         }
     }

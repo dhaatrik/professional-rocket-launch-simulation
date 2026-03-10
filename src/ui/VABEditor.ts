@@ -28,6 +28,7 @@ export class VABEditor {
     private selectedCategory: PartCategory = 'engine';
     private selectedPartId: string | null = null;
     private onLaunch: (blueprint: VehicleBlueprint) => void;
+    private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
 
     constructor(containerId: string, onLaunch: (blueprint: VehicleBlueprint) => void) {
         const container = document.getElementById(containerId);
@@ -45,6 +46,13 @@ export class VABEditor {
     public show(): void {
         this.container.style.display = 'flex';
         this.render();
+
+        this.escapeHandler = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && this.container.style.display !== 'none') {
+                this.hide();
+            }
+        };
+        document.addEventListener('keydown', this.escapeHandler);
     }
 
     /**
@@ -52,6 +60,11 @@ export class VABEditor {
      */
     public hide(): void {
         this.container.style.display = 'none';
+
+        if (this.escapeHandler) {
+            document.removeEventListener('keydown', this.escapeHandler);
+            this.escapeHandler = null;
+        }
     }
 
     /**
