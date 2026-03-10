@@ -19,6 +19,7 @@ export class ScriptEditor {
     private saveSelect: HTMLSelectElement | null = null;
     private game: Game;
     private invokingElement: HTMLElement | null = null;
+    private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
 
     constructor(game: Game) {
         this.game = game;
@@ -260,12 +261,6 @@ export class ScriptEditor {
             }, 500);
         });
 
-        // Keyboard shortcut to close
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isVisible()) {
-                this.hide();
-            }
-        });
     }
 
     /**
@@ -278,6 +273,13 @@ export class ScriptEditor {
         if (this.modal) {
             this.modal.classList.add('visible');
             this.textarea?.focus();
+
+            this.escapeHandler = (e: KeyboardEvent) => {
+                if (e.key === 'Escape' && this.isVisible()) {
+                    this.hide();
+                }
+            };
+            document.addEventListener('keydown', this.escapeHandler);
         }
     }
 
@@ -290,6 +292,11 @@ export class ScriptEditor {
             if (this.invokingElement) {
                 this.invokingElement.focus();
                 this.invokingElement = null;
+            }
+
+            if (this.escapeHandler) {
+                document.removeEventListener('keydown', this.escapeHandler);
+                this.escapeHandler = null;
             }
         }
     }
