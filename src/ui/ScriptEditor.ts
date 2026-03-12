@@ -231,10 +231,12 @@ export class ScriptEditor {
 
         // Clear button
         document.getElementById('script-clear-btn')?.addEventListener('click', () => {
-            if (this.textarea) {
-                this.textarea.value = '';
+            if (window.confirm('Are you sure you want to clear the editor?')) {
+                if (this.textarea) {
+                    this.textarea.value = '';
+                }
+                this.clearErrors();
             }
-            this.clearErrors();
         });
 
         // Save button
@@ -244,7 +246,9 @@ export class ScriptEditor {
 
         // Delete button
         document.getElementById('script-delete-btn')?.addEventListener('click', () => {
-            this.deleteScript();
+            if (window.confirm('Are you sure you want to delete this script?')) {
+                this.deleteScript();
+            }
         });
 
         // Load to FC button
