@@ -182,7 +182,6 @@ export class ManeuverPlanner {
             this.calculateManeuver();
         });
 
-
         // Refresh button
         document.getElementById('planner-refresh-btn')?.addEventListener('click', () => {
             this.updateOrbitStats();

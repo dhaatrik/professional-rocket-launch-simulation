@@ -101,12 +101,22 @@ function showOnboarding(): void {
     }
 }
 
-document.getElementById('tooltip-dismiss')?.addEventListener('click', () => {
+function dismissOnboarding(): void {
     const overlay = uiCache.tooltipOverlay;
-    if (overlay) overlay.classList.remove('visible');
-    localStorage.setItem('onboarding-complete', 'true');
-    // Return focus to a logical element for keyboard users
-    document.getElementById('launch-btn')?.focus();
+    if (overlay && overlay.classList.contains('visible')) {
+        overlay.classList.remove('visible');
+        localStorage.setItem('onboarding-complete', 'true');
+        // Return focus to a logical element for keyboard users
+        document.getElementById('launch-btn')?.focus();
+    }
+}
+
+document.getElementById('tooltip-dismiss')?.addEventListener('click', dismissOnboarding);
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        dismissOnboarding();
+    }
 });
 
 // --- Splash Screen Buttons ---

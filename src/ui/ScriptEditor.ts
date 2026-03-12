@@ -260,7 +260,6 @@ export class ScriptEditor {
                 this.validate();
             }, 500);
         });
-
     }
 
     /**
