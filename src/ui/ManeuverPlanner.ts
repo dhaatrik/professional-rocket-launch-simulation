@@ -24,6 +24,7 @@ export class ManeuverPlanner {
     private isVisible: boolean = false;
     private updateInterval: number | null = null;
     private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
+    private invokingElement: HTMLElement | null = null;
 
     constructor(game: Game) {
         this.game = game;
@@ -193,10 +194,17 @@ export class ManeuverPlanner {
      * Show the planner
      */
     show(): void {
+        if (!this.isVisible) {
+            this.invokingElement = document.activeElement as HTMLElement;
+        }
         if (this.modal) {
             this.modal.style.display = 'flex';
             this.modal.classList.add('visible');
             this.isVisible = true;
+
+            // Set focus for accessibility
+            document.getElementById('maneuver-type-select')?.focus();
+
             this.updateOrbitStats();
             this.calculateManeuver();
 
@@ -231,6 +239,12 @@ export class ManeuverPlanner {
             if (this.escapeHandler) {
                 document.removeEventListener('keydown', this.escapeHandler);
                 this.escapeHandler = null;
+            }
+
+            // Return focus to invoking element for accessibility
+            if (this.invokingElement) {
+                this.invokingElement.focus();
+                this.invokingElement = null;
             }
         }
     }
