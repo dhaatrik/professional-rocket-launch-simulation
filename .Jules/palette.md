@@ -20,3 +20,7 @@
 ## 2026-03-03 - Accessible Toggle Buttons
 **Learning:** Found that custom toggle buttons in the main HUD (`#autopilot-btn`, `#audio-btn`) updated their text and classes visually but lacked `aria-pressed` attribute synchronization, leaving screen reader users unaware of their active state.
 **Action:** Always synchronize `aria-pressed` (true/false) with the visual active state in JavaScript for toggle buttons.
+
+## 2025-03-10 - Add Keyboard Navigation for Dialogs
+**Learning:** Custom UI dialogs in this application (e.g. VABEditor, ManeuverPlanner) often lacked consistent keyboard accessibility, specifically dismissing with the Escape key, unlike the ScriptEditor which correctly implemented it. Using `role='dialog'` visually implies modal behavior, but keyboard handlers must be added manually.
+**Action:** Always check custom dialog/modal components for `Escape` key close handlers to ensure keyboard navigability parity across the interface.

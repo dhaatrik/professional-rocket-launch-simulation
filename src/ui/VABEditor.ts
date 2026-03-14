@@ -29,6 +29,7 @@ export class VABEditor {
     private selectedPartId: string | null = null;
     private onLaunch: (blueprint: VehicleBlueprint) => void;
     private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
+    private invokingElement: HTMLElement | null = null;
 
     constructor(containerId: string, onLaunch: (blueprint: VehicleBlueprint) => void) {
         const container = document.getElementById(containerId);
@@ -44,8 +45,18 @@ export class VABEditor {
      * Show the VAB editor
      */
     public show(): void {
+        if (this.container.style.display !== 'flex') {
+            this.invokingElement = document.activeElement as HTMLElement;
+        }
+
         this.container.style.display = 'flex';
         this.render();
+
+        // Focus the name input for accessibility
+        const nameInput = this.container.querySelector('.vab-name-input') as HTMLElement;
+        if (nameInput) {
+            nameInput.focus();
+        }
 
         this.escapeHandler = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && this.container.style.display !== 'none') {
@@ -60,6 +71,11 @@ export class VABEditor {
      */
     public hide(): void {
         this.container.style.display = 'none';
+
+        if (this.invokingElement) {
+            this.invokingElement.focus();
+            this.invokingElement = null;
+        }
 
         if (this.escapeHandler) {
             document.removeEventListener('keydown', this.escapeHandler);
@@ -145,7 +161,16 @@ export class VABEditor {
 
         const actionsDiv = createElement('div', { className: 'vab-actions' }, [presetsDiv, mainActionsDiv]);
 
-        const editorDiv = createElement('div', { className: 'vab-editor' }, [header, mainPanel, statsBar, actionsDiv]);
+        const editorDiv = createElement(
+            'div',
+            {
+                className: 'vab-editor',
+                role: 'dialog',
+                'aria-modal': 'true',
+                'aria-label': 'Vehicle Assembly Building'
+            },
+            [header, mainPanel, statsBar, actionsDiv]
+        );
 
         this.container.appendChild(editorDiv);
 
