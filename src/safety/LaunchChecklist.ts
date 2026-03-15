@@ -40,6 +40,8 @@ export class LaunchChecklist {
     private auditLog: ChecklistAuditEntry[] = [];
     private containerEl: HTMLElement | null = null;
     private _visible: boolean = false;
+    private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
+    private invokingElement: HTMLElement | null = null;
 
     constructor(containerId: string) {
         this.containerEl = document.getElementById(containerId);
@@ -169,23 +171,41 @@ export class LaunchChecklist {
 
     /** Toggle visibility */
     toggle(): void {
-        this._visible = !this._visible;
         if (this._visible) {
-            this.runAutoChecks();
-            this.render();
-        }
-        if (this.containerEl) {
-            this.containerEl.style.display = this._visible ? 'block' : 'none';
+            this.hide();
+        } else {
+            this.show();
         }
     }
 
     /** Show the panel */
     show(): void {
+        if (!this._visible) {
+            this.invokingElement = document.activeElement as HTMLElement;
+        }
         this._visible = true;
         this.runAutoChecks();
         this.render();
         if (this.containerEl) {
             this.containerEl.style.display = 'block';
+
+            // Set focus
+            const firstBtn = this.containerEl.querySelector('.cl-btn') as HTMLElement;
+            if (firstBtn) {
+                firstBtn.focus();
+            } else {
+                const closeBtn = this.containerEl.querySelector('#checklist-close-btn') as HTMLElement;
+                if (closeBtn) closeBtn.focus();
+            }
+
+            if (!this.escapeHandler) {
+                this.escapeHandler = (e: KeyboardEvent) => {
+                    if (e.key === 'Escape' && this._visible) {
+                        this.hide();
+                    }
+                };
+                document.addEventListener('keydown', this.escapeHandler);
+            }
         }
     }
 
@@ -194,6 +214,16 @@ export class LaunchChecklist {
         this._visible = false;
         if (this.containerEl) {
             this.containerEl.style.display = 'none';
+        }
+
+        if (this.escapeHandler) {
+            document.removeEventListener('keydown', this.escapeHandler);
+            this.escapeHandler = null;
+        }
+
+        if (this.invokingElement) {
+            this.invokingElement.focus();
+            this.invokingElement = null;
         }
     }
 

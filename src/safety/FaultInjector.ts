@@ -101,6 +101,8 @@ export class FaultInjector {
     private activeFaults: ActiveFault[] = [];
     private containerEl: HTMLElement | null = null;
     private _visible: boolean = false;
+    private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
+    private invokingElement: HTMLElement | null = null;
 
     // Custom fault states
     private _throttleStuck: boolean = false;
@@ -228,12 +230,52 @@ export class FaultInjector {
 
     /** Toggle panel visibility */
     toggle(): void {
-        this._visible = !this._visible;
         if (this._visible) {
+            this.hide();
+        } else {
+            this.invokingElement = document.activeElement as HTMLElement;
+            this._visible = true;
             this.render();
+
+            if (this.containerEl) {
+                this.containerEl.style.display = 'block';
+
+                // Set focus
+                const firstBtn = this.containerEl.querySelector('.fis-fault-btn') as HTMLElement;
+                if (firstBtn) {
+                    firstBtn.focus();
+                } else {
+                    const closeBtn = this.containerEl.querySelector('#fis-close-btn') as HTMLElement;
+                    if (closeBtn) closeBtn.focus();
+                }
+
+                if (!this.escapeHandler) {
+                    this.escapeHandler = (e: KeyboardEvent) => {
+                        if (e.key === 'Escape' && this._visible) {
+                            this.hide();
+                        }
+                    };
+                    document.addEventListener('keydown', this.escapeHandler);
+                }
+            }
         }
+    }
+
+    /** Hide the panel */
+    hide(): void {
+        this._visible = false;
         if (this.containerEl) {
-            this.containerEl.style.display = this._visible ? 'block' : 'none';
+            this.containerEl.style.display = 'none';
+        }
+
+        if (this.escapeHandler) {
+            document.removeEventListener('keydown', this.escapeHandler);
+            this.escapeHandler = null;
+        }
+
+        if (this.invokingElement) {
+            this.invokingElement.focus();
+            this.invokingElement = null;
         }
     }
 
@@ -339,10 +381,7 @@ export class FaultInjector {
         // Close button
         const closeBtn = this.containerEl.querySelector('#fis-close-btn');
         if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                this._visible = false;
-                if (this.containerEl) this.containerEl.style.display = 'none';
-            });
+            closeBtn.addEventListener('click', () => this.hide());
         }
     }
 }
