@@ -453,10 +453,42 @@ export class ScriptEditor {
     private getSavedScripts(): Record<string, { text: string; script: MissionScript }> {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
-            return stored ? JSON.parse(stored) : {};
+            if (!stored) return {};
+
+            const parsed = JSON.parse(stored);
+            if (this.isValidSavedScripts(parsed)) {
+                return parsed;
+            } else {
+                console.warn('ScriptEditor: Invalid saved scripts format in localStorage');
+                return {};
+            }
         } catch {
             return {};
         }
+    }
+
+    /**
+     * Basic type validation for saved scripts payload
+     */
+    private isValidSavedScripts(data: any): data is Record<string, { text: string; script: MissionScript }> {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            return false;
+        }
+
+        for (const key in data) {
+            const entry = data[key];
+            // Each entry should be { text: string, script: MissionScript }
+            if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+            if (typeof entry.text !== 'string') return false;
+
+            const script = entry.script;
+            if (!script || typeof script !== 'object' || Array.isArray(script)) return false;
+            if (typeof script.name !== 'string') return false;
+            if (!Array.isArray(script.commands)) return false;
+            if (typeof script.createdAt !== 'number') return false;
+        }
+
+        return true;
     }
 
     /**

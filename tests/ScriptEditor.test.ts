@@ -200,4 +200,52 @@ describe('ScriptEditor Syntax Highlighting Error Path', () => {
         expect((newEditor as any).getSavedScripts()).toEqual({});
         expect(mockLocalStorage.getItem).toHaveBeenCalledWith('rocket-sim-scripts');
     });
+
+    it('should handle valid JSON but invalid schema in localStorage', () => {
+        // Mock localStorage to return valid JSON but invalid schema (e.g., an array instead of a Record)
+        mockLocalStorage.getItem.mockReturnValue(JSON.stringify(['this', 'is', 'not', 'a', 'record']));
+
+        let newEditor = new ScriptEditor((editor as any).game);
+
+        // Should return empty object due to validation failure
+        expect((newEditor as any).getSavedScripts()).toEqual({});
+    });
+
+    it('should handle valid JSON but invalid script entry in localStorage', () => {
+        // Mock localStorage to return a record but with missing required fields
+        const invalidData = {
+            'Broken Script': {
+                text: 'WHEN ALTITUDE > 100 THEN STAGE',
+                // script field is missing or malformed
+                script: {
+                    name: 'Broken Script'
+                    // commands and createdAt are missing
+                }
+            }
+        };
+        mockLocalStorage.getItem.mockReturnValue(JSON.stringify(invalidData));
+
+        let newEditor = new ScriptEditor((editor as any).game);
+
+        // Should return empty object due to validation failure of the entry
+        expect((newEditor as any).getSavedScripts()).toEqual({});
+    });
+
+    it('should return valid scripts from localStorage', () => {
+        const validData = {
+            'Valid Script': {
+                text: 'WHEN ALTITUDE > 100 THEN STAGE',
+                script: {
+                    name: 'Valid Script',
+                    commands: [],
+                    createdAt: Date.now()
+                }
+            }
+        };
+        mockLocalStorage.getItem.mockReturnValue(JSON.stringify(validData));
+
+        let newEditor = new ScriptEditor((editor as any).game);
+
+        expect((newEditor as any).getSavedScripts()).toEqual(validData);
+    });
 });
