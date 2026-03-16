@@ -613,6 +613,9 @@ export class VABEditor {
         // Preset buttons
         this.container.querySelectorAll('.vab-preset-btn').forEach((btn) => {
             btn.addEventListener('click', (e) => {
+                if (!window.confirm('This will replace your current vehicle. Are you sure you want to proceed?')) {
+                    return;
+                }
                 const preset = (e.currentTarget as HTMLElement).dataset.preset;
                 switch (preset) {
                     case 'falcon':

@@ -12,3 +12,7 @@
 ## 2025-03-10 - Add Keyboard Navigation for Dialogs
 **Learning:** Custom UI dialogs in this application (e.g. VABEditor, ManeuverPlanner) often lacked consistent keyboard accessibility, specifically dismissing with the Escape key, unlike the ScriptEditor which correctly implemented it. Using `role='dialog'` visually implies modal behavior, but keyboard handlers must be added manually.
 **Action:** Always check custom dialog/modal components for `Escape` key close handlers to ensure keyboard navigability parity across the interface.
+
+## 2024-03-12 - Destructive Action Protection in VAB
+**Learning:** [UX: Loading presets or starting a "New Rocket" in the Vehicle Assembly Building completely overwrites the user's current vehicle design without warning, leading to potential data loss and frustration.]
+**Action:** [Added a `window.confirm` dialog to the preset loading logic in `VABEditor.ts` to ensure users explicitly acknowledge that their current work will be overwritten before proceeding.]
