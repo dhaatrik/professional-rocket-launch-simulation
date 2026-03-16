@@ -165,20 +165,19 @@ export function calculateHohmannTransfer(
     const aTransfer = (r1 + r2) / 2;
 
     // 2. Initial velocity (v1) for circular orbit at r1
-    const v1 = Math.sqrt(MU / r1);
+    const v1 = calculateCircularVelocity(r1);
 
     // 3. Transfer velocity (vTransfer1) at periapsis/apoapsis (at r1)
-    // Vis-Viva: v^2 = mu * (2/r - 1/a)
-    const vTransfer1 = Math.sqrt(MU * (2 / r1 - 1 / aTransfer));
+    const vTransfer1 = calculateVisViva(r1, aTransfer);
 
     // 4. First Burn Delta-V
     const deltaV1 = Math.abs(vTransfer1 - v1);
 
     // 5. Final velocity (v2) for circular orbit at r2
-    const v2 = Math.sqrt(MU / r2);
+    const v2 = calculateCircularVelocity(r2);
 
     // 6. Transfer velocity (vTransfer2) at arrival (at r2)
-    const vTransfer2 = Math.sqrt(MU * (2 / r2 - 1 / aTransfer));
+    const vTransfer2 = calculateVisViva(r2, aTransfer);
 
     // 7. Second Burn Delta-V
     const deltaV2 = Math.abs(v2 - vTransfer2);
@@ -219,8 +218,7 @@ export function calculateCircularizationFromElements(
     const vCurrent = calculateVisViva(rBurn, a);
 
     // Target velocity for CIRCULAR orbit at that radius
-    // Vis-Viva with a = r (circular) -> v^2 = MU/r
-    const vTarget = Math.sqrt(MU / rBurn);
+    const vTarget = calculateCircularVelocity(rBurn);
 
     // Delta-V required
     const deltaV = Math.abs(vTarget - vCurrent);
