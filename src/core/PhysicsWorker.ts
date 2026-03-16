@@ -236,7 +236,7 @@ function performStaging() {
 
     if (tracked.type === EntityType.FULLSTACK) {
         // Sep S1
-        entities = entities.filter((e) => e !== tracked);
+        entities.splice(trackedIndex, 1);
 
         const booster = new Booster(tracked.x, tracked.y, tracked.vx, tracked.vy);
         booster.angle = tracked.angle;
