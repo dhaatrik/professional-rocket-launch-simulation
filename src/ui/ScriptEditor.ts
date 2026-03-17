@@ -206,7 +206,14 @@ export class ScriptEditor {
         document.getElementById('script-preset-select')?.addEventListener('change', (e) => {
             const select = e.target as HTMLSelectElement;
             const presetName = select.value;
+
             if (presetName && PRESET_SCRIPTS[presetName as keyof typeof PRESET_SCRIPTS]) {
+                if (this.textarea && this.textarea.value.trim() !== '') {
+                    if (!window.confirm('This will replace your current script. Are you sure you want to proceed?')) {
+                        select.value = '';
+                        return;
+                    }
+                }
                 if (this.textarea) {
                     this.textarea.value = PRESET_SCRIPTS[presetName as keyof typeof PRESET_SCRIPTS];
                 }
@@ -219,9 +226,17 @@ export class ScriptEditor {
         this.saveSelect?.addEventListener('change', (e) => {
             const select = e.target as HTMLSelectElement;
             const scriptName = select.value;
+
             if (scriptName) {
+                if (this.textarea && this.textarea.value.trim() !== '') {
+                    if (!window.confirm('This will replace your current script. Are you sure you want to proceed?')) {
+                        select.value = '';
+                        return;
+                    }
+                }
                 this.loadSavedScript(scriptName);
             }
+            select.value = '';
         });
 
         // Validate button
