@@ -150,6 +150,47 @@ canvas {
     color: #ddd;
 }
 
+.splash-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.menu-btn {
+    width: 100%;
+    max-width: 350px;
+    padding: 15px 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border: 1px solid var(--color-primary);
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all var(--transition-normal);
+}
+
+.menu-btn:hover, .menu-btn:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5);
+    background: linear-gradient(135deg, #4aa3df, var(--color-primary));
+}
+
+.menu-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: none;
+}
+
+.menu-btn.secondary:hover, .menu-btn.secondary:focus-visible {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+}
+
 .key {
     background: #333;
     border: 1px solid #555;
