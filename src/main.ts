@@ -82,7 +82,9 @@ document.querySelector('#mission-log h3')?.addEventListener('click', () => {
 
 // --- Reset Button ---
 document.getElementById('reset-btn')?.addEventListener('click', () => {
-    location.reload();
+    if (window.confirm('Are you sure you want to reset the simulation? All progress will be lost.')) {
+        location.reload();
+    }
 });
 
 // Track flight phase for dynamic buttons
