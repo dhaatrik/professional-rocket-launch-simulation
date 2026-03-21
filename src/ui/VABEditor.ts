@@ -108,7 +108,9 @@ export class VABEditor {
             className: 'vab-name-input',
             placeholder: 'Rocket Name',
             value: '',
-            'aria-label': 'Rocket Name'
+            'aria-label': 'Rocket Name',
+            'aria-required': 'true',
+            required: true
         });
         nameInput.value = this.blueprint.name;
 

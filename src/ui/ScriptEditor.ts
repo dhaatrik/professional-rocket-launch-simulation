@@ -139,6 +139,8 @@ export class ScriptEditor {
                             id: 'script-name-input',
                             className: 'script-name-input',
                             'aria-label': 'Script name',
+                            'aria-required': 'true',
+                            required: true,
                             placeholder: 'Script name...',
                             value: 'My Mission'
                         }),
