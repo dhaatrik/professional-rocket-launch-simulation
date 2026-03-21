@@ -136,6 +136,8 @@ export class ManeuverPlanner {
                                     type: 'number',
                                     id: 'target-alt-input',
                                     className: 'script-name-input maneuver-input',
+                                    'aria-required': 'true',
+                                    required: true,
                                     value: '500'
                                 })
                             ]
