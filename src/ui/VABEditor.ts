@@ -158,7 +158,7 @@ export class VABEditor {
         const mainActionsDiv = createElement('div', { className: 'vab-main-actions' }, [
             createElement('button', { className: 'vab-save-btn' }, ['Save']),
             createElement('button', { className: 'vab-cancel-btn' }, ['Cancel']),
-            createElement('button', { className: 'vab-launch-btn primary large' }, ['GO FOR LAUNCH'])
+            createElement('button', { className: 'vab-launch-btn large' }, ['GO FOR LAUNCH'])
         ]);
 
         const actionsDiv = createElement('div', { className: 'vab-actions' }, [presetsDiv, mainActionsDiv]);
