@@ -284,26 +284,38 @@ export class LaunchChecklist {
             ]);
         });
 
-        const checklistInner = createElement('div', { className: 'checklist-inner' }, [
-            createElement('div', { className: 'checklist-header' }, [
-                createElement('h3', { textContent: '📋 LAUNCH READINESS POLL' }),
-                createElement('span', { className: 'checklist-count', textContent: `${counts.go}/${counts.total} GO` }),
-                createElement('button', {
-                    className: 'checklist-close',
-                    id: 'checklist-close-btn',
-                    'aria-label': 'Close Launch Checklist',
-                    textContent: '✕'
-                })
-            ]),
-            createElement('div', { className: 'checklist-items' }, checklistItems),
-            createElement('div', { className: 'checklist-footer' }, [
-                createElement('div', {
-                    className: `checklist-verdict ${allGo ? 'all-go' : 'not-ready'}`,
-                    'aria-live': 'polite',
-                    textContent: allGo ? '✅ ALL STATIONS GO — LAUNCH AUTHORIZED' : '⏳ AWAITING ALL STATIONS'
-                })
-            ])
-        ]);
+        const checklistInner = createElement(
+            'div',
+            {
+                className: 'checklist-inner',
+                role: 'dialog',
+                'aria-modal': 'true',
+                'aria-labelledby': 'checklist-title'
+            },
+            [
+                createElement('div', { className: 'checklist-header' }, [
+                    createElement('h3', { id: 'checklist-title', textContent: '📋 LAUNCH READINESS POLL' }),
+                    createElement('span', {
+                        className: 'checklist-count',
+                        textContent: `${counts.go}/${counts.total} GO`
+                    }),
+                    createElement('button', {
+                        className: 'checklist-close',
+                        id: 'checklist-close-btn',
+                        'aria-label': 'Close Launch Checklist',
+                        textContent: '✕'
+                    })
+                ]),
+                createElement('div', { className: 'checklist-items' }, checklistItems),
+                createElement('div', { className: 'checklist-footer' }, [
+                    createElement('div', {
+                        className: `checklist-verdict ${allGo ? 'all-go' : 'not-ready'}`,
+                        'aria-live': 'polite',
+                        textContent: allGo ? '✅ ALL STATIONS GO — LAUNCH AUTHORIZED' : '⏳ AWAITING ALL STATIONS'
+                    })
+                ])
+            ]
+        );
 
         this.containerEl.appendChild(checklistInner);
 

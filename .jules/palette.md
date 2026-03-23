@@ -24,3 +24,7 @@
 ## 2025-03-22 - Important Form Inputs Missing Required State
 **Learning:** [a11y: Important form inputs inside custom UI editors (like `script-name-input`, `vab-name-input`, and `target-alt-input`) lacked the `required` and `aria-required` attributes. This meant screen readers would not announce that filling out these fields is mandatory for the form to be valid or the action to succeed.]
 **Action:** [Always include `required: true` and `aria-required: "true"` properties when instantiating mandatory input elements via `DOMUtils.createElement` to ensure correct screen reader accessibility.]
+
+## 2024-03-24 - Buttons that open Modals Need ARIA HasPopup
+**Learning:** [a11y: Buttons that open custom modal dialogs (like the VAB Editor, Script Editor, or Maneuver Planner) should inform screen reader users of this behavior beforehand. Without `aria-haspopup="dialog"`, users might expect an immediate action or navigation rather than a context shift to a modal.]
+**Action:** [Always add `aria-haspopup="dialog"` to buttons whose primary action is opening a `role="dialog"` modal to set correct interaction expectations for assistive technologies.]
