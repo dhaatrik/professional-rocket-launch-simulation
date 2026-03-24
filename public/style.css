@@ -787,10 +787,19 @@ button.primary:hover {
     transition: all var(--transition-normal);
 }
 
-.vab-launch-btn:hover, .vab-launch-btn:focus-visible {
+.vab-launch-btn:hover:not(:disabled), .vab-launch-btn:focus-visible:not(:disabled) {
     background: linear-gradient(135deg, #40d47e, var(--color-success));
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+.vab-launch-btn:disabled {
+    background: linear-gradient(135deg, #555, #333);
+    color: var(--color-text-muted);
+    animation: none;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Legacy control group styles for other modals */

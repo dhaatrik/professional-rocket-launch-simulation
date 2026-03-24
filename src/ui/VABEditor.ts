@@ -155,10 +155,21 @@ export class VABEditor {
             createElement('button', { className: 'vab-preset-btn', 'data-preset': 'new' }, ['New Rocket'])
         ]);
 
+        const isReady = this.blueprint.stages.length > 0 && (stats.stageTWR[0] || 0) >= 1.0;
+
         const mainActionsDiv = createElement('div', { className: 'vab-main-actions' }, [
             createElement('button', { className: 'vab-save-btn' }, ['Save']),
             createElement('button', { className: 'vab-cancel-btn' }, ['Cancel']),
-            createElement('button', { className: 'vab-launch-btn large' }, ['GO FOR LAUNCH'])
+            createElement(
+                'button',
+                {
+                    className: 'vab-launch-btn large',
+                    disabled: !isReady,
+                    'aria-disabled': (!isReady).toString(),
+                    title: isReady ? 'Launch Vehicle' : 'Vehicle not ready! Ensure you have stages and TWR > 1.0'
+                },
+                ['GO FOR LAUNCH']
+            )
         ]);
 
         const actionsDiv = createElement('div', { className: 'vab-actions' }, [presetsDiv, mainActionsDiv]);
@@ -660,11 +671,6 @@ export class VABEditor {
 
         // Launch button
         this.container.querySelector('.vab-launch-btn')?.addEventListener('click', () => {
-            const stats = calculateStats(this.blueprint);
-            if (this.blueprint.stages.length === 0 || (stats.stageTWR[0] || 0) < 1.0) {
-                alert('Vehicle not ready! Ensure you have stages and TWR > 1.0');
-                return;
-            }
             this.hide();
             this.onLaunch(this.blueprint);
         });

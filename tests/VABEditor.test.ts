@@ -123,7 +123,7 @@ describe('VABEditor Core Functionality', () => {
         expect(container.style.display).toBe('none');
     });
 
-    it('should show alert and not trigger onLaunch if vehicle has no stages', () => {
+    it('should disable launch button and not trigger onLaunch if vehicle has no stages', () => {
         const onLaunch = vi.fn();
         const editor = new VABEditor('vab-container', onLaunch);
 
@@ -131,10 +131,13 @@ describe('VABEditor Core Functionality', () => {
         (editor as any).blueprint.stages = [];
         (editor as any).render();
 
-        const launchBtn = container.querySelector('.vab-launch-btn') as HTMLElement;
+        const launchBtn = container.querySelector('.vab-launch-btn') as HTMLButtonElement;
+
+        expect(launchBtn.disabled).toBe(true);
+        expect(launchBtn.getAttribute('aria-disabled')).toBe('true');
+
         launchBtn.click();
 
-        expect(global.alert).toHaveBeenCalledWith('Vehicle not ready! Ensure you have stages and TWR > 1.0');
         expect(onLaunch).not.toHaveBeenCalled();
     });
 });
