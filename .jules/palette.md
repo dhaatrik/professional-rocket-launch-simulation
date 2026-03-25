@@ -28,3 +28,7 @@
 ## 2024-03-24 - Buttons that open Modals Need ARIA HasPopup
 **Learning:** [a11y: Buttons that open custom modal dialogs (like the VAB Editor, Script Editor, or Maneuver Planner) should inform screen reader users of this behavior beforehand. Without `aria-haspopup="dialog"`, users might expect an immediate action or navigation rather than a context shift to a modal.]
 **Action:** [Always add `aria-haspopup="dialog"` to buttons whose primary action is opening a `role="dialog"` modal to set correct interaction expectations for assistive technologies.]
+
+## 2025-03-30 - Prevent User Errors with Dynamic Action Buttons
+**Learning:** [UX/a11y: Relying on reactive `alert` messages when a user clicks a button (e.g., launching an incomplete vehicle) creates friction and a poor experience. Furthermore, users using screen readers or navigating visually do not know the action is invalid until they attempt it.]
+**Action:** [Dynamically disable primary action buttons (like the VAB "GO FOR LAUNCH" button) when the prerequisite conditions are not met. Always provide visual feedback (e.g., muted colors, `cursor: not-allowed`), `aria-disabled="true"`, and a descriptive `title` attribute explaining why the action is unavailable.]
