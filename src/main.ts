@@ -146,16 +146,31 @@ function updateActionButton(): void {
         btn.textContent = 'INITIATE LAUNCH';
         btn.className = 'primary state-launch';
         flightPhase = 'prelaunch';
+
+        const isReady = game.checklist.isReadyForLaunch();
+        (btn as HTMLButtonElement).disabled = !isReady;
+        btn.setAttribute('aria-disabled', (!isReady).toString());
+        if (!isReady) {
+            btn.title = 'Launch Hold: Complete checklist first [C]';
+        } else {
+            btn.title = 'Launch [SPACE]';
+        }
     } else if (vy < 0) {
         // Ascending
         btn.textContent = 'ABORT MISSION';
         btn.className = 'primary state-abort';
         flightPhase = 'ascending';
+        (btn as HTMLButtonElement).disabled = false;
+        btn.setAttribute('aria-disabled', 'false');
+        btn.title = 'Abort Mission';
     } else if (vy > 0 && alt > 1000) {
         // Descending from high altitude
         btn.textContent = 'DEPLOY LEGS';
         btn.className = 'primary state-deploy';
         flightPhase = 'descending';
+        (btn as HTMLButtonElement).disabled = false;
+        btn.setAttribute('aria-disabled', 'false');
+        btn.title = 'Deploy Landing Legs';
     }
 }
 
