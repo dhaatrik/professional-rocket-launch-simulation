@@ -20,6 +20,8 @@ export class MissionControl {
     private isVisible: boolean = false;
     private pathPoints: PathPoint[] = [];
     private lastPathUpdate: number = 0;
+    private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
+    private invokingElement: HTMLElement | null = null;
 
     constructor(game: Game) {
         this.game = game;
@@ -28,10 +30,35 @@ export class MissionControl {
     }
 
     toggle(): void {
+        if (!this.isVisible) {
+            this.invokingElement = document.activeElement as HTMLElement;
+        }
+
         this.isVisible = !this.isVisible;
         const mcOverlay = document.getElementById('mission-control-overlay');
+
         if (mcOverlay) {
             mcOverlay.style.display = this.isVisible ? 'block' : 'none';
+        }
+
+        if (this.isVisible) {
+            if (!this.escapeHandler) {
+                this.escapeHandler = (e: KeyboardEvent) => {
+                    if (e.key === 'Escape' && this.isVisible) {
+                        this.toggle();
+                    }
+                };
+                document.addEventListener('keydown', this.escapeHandler);
+            }
+        } else {
+            if (this.escapeHandler) {
+                document.removeEventListener('keydown', this.escapeHandler);
+                this.escapeHandler = null;
+            }
+            if (this.invokingElement) {
+                this.invokingElement.focus();
+                this.invokingElement = null;
+            }
         }
     }
 
