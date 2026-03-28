@@ -5,6 +5,7 @@
 ## 2024-03-04 - [Dynamic Lists Need ARIA Live Regions]
 **Learning:** [a11y: Dynamic lists that append content (like a Mission Log) will not announce updates to screen readers unless they are marked as ARIA live regions.]
 **Action:** [Always add `aria-live="polite"` and `aria-relevant="additions"` to lists that receive real-time UI updates (like appending `<li>` tags) so visually impaired users don't miss important mission status updates.]
+
 ## 2024-03-05 - [Dynamic Status Indicators Need ARIA Live Regions]
 **Learning:** [a11y: Dynamic status indicators that change text content (like Flight Computer mode or Black Box recording status) will not announce updates to screen readers unless they are marked as ARIA live regions with `aria-live="polite"` and `aria-atomic="true"`.]
 **Action:** [Always add `aria-live="polite"` and `aria-atomic="true"` to dynamic text indicators (like `div` or `span` tags representing status) that receive real-time UI updates, so visually impaired users are aware of crucial state changes without needing to navigate to the element.]
@@ -32,3 +33,7 @@
 ## 2025-03-30 - Prevent User Errors with Dynamic Action Buttons
 **Learning:** [UX/a11y: Relying on reactive `alert` messages when a user clicks a button (e.g., launching an incomplete vehicle) creates friction and a poor experience. Furthermore, users using screen readers or navigating visually do not know the action is invalid until they attempt it.]
 **Action:** [Dynamically disable primary action buttons (like the VAB "GO FOR LAUNCH" button) when the prerequisite conditions are not met. Always provide visual feedback (e.g., muted colors, `cursor: not-allowed`), `aria-disabled="true"`, and a descriptive `title` attribute explaining why the action is unavailable.]
+
+## 2025-04-10 - String Booleans for DOMUtils ARIA Attributes
+**Learning:** [a11y: When using `DOMUtils.createElement` to set ARIA attributes like `aria-pressed`, boolean values (`true` / `false`) were being incorrectly translated to empty strings `""` or completely omitted. This broke screen reader semantics for toggle buttons.]
+**Action:** [Always explicitly pass string equivalents (`"true"` or `"false"`) when evaluating conditions for ARIA attributes in `DOMUtils.createElement` to ensure they are rendered correctly in the DOM.]
