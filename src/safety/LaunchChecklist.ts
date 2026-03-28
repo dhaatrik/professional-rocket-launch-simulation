@@ -264,7 +264,7 @@ export class LaunchChecklist {
                                 'data-item': item.id,
                                 'data-action': 'go',
                                 'aria-label': `Set ${item.station} to GO`,
-                                'aria-pressed': item.status === 'go'
+                                'aria-pressed': item.status === 'go' ? 'true' : 'false'
                             },
                             ['GO']
                         ),
@@ -275,7 +275,7 @@ export class LaunchChecklist {
                                 'data-item': item.id,
                                 'data-action': 'no-go',
                                 'aria-label': `Set ${item.station} to NO GO`,
-                                'aria-pressed': item.status === 'no-go'
+                                'aria-pressed': item.status === 'no-go' ? 'true' : 'false'
                             },
                             ['NO GO']
                         )
@@ -311,6 +311,7 @@ export class LaunchChecklist {
                     createElement('div', {
                         className: `checklist-verdict ${allGo ? 'all-go' : 'not-ready'}`,
                         'aria-live': 'polite',
+                        'aria-atomic': 'true',
                         textContent: allGo ? '✅ ALL STATIONS GO — LAUNCH AUTHORIZED' : '⏳ AWAITING ALL STATIONS'
                     })
                 ])
