@@ -82,5 +82,23 @@ describe('FlightScript', () => {
             const restored = deserializeScript('{ invalid json ');
             expect(restored).toBeNull();
         });
+
+        it('should return null when deserializing valid JSON with invalid structure', () => {
+            expect(deserializeScript('null')).toBeNull();
+            expect(deserializeScript('true')).toBeNull();
+            expect(deserializeScript('123')).toBeNull();
+            expect(deserializeScript('"string"')).toBeNull();
+            expect(deserializeScript('[]')).toBeNull();
+
+            // Missing required fields
+            expect(deserializeScript('{}')).toBeNull();
+            expect(deserializeScript('{"name": "test"}')).toBeNull();
+            expect(deserializeScript('{"name": "test", "commands": []}')).toBeNull();
+
+            // Invalid types
+            expect(deserializeScript('{"name": 123, "commands": [], "createdAt": 123}')).toBeNull();
+            expect(deserializeScript('{"name": "test", "commands": "not an array", "createdAt": 123}')).toBeNull();
+            expect(deserializeScript('{"name": "test", "commands": [], "createdAt": "not a number"}')).toBeNull();
+        });
     });
 });
