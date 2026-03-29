@@ -16,7 +16,7 @@ describe('OrbitalMechanics', () => {
     describe('Orbital Elements', () => {
         it('should calculate circular orbit correctly', () => {
             const rMag = R_EARTH + 400000;
-            const vMag = Math.sqrt(MU / rMag);
+            const vMag = calculateCircularVelocity(rMag);
             const elements = calculateOrbitalElements(vec2(rMag, 0), vec2(0, vMag));
 
             expect(elements.eccentricity).toBeCloseTo(0, 5);
@@ -26,7 +26,7 @@ describe('OrbitalMechanics', () => {
         it('should calculate elliptical orbit correctly', () => {
             const altitude = 400000;
             const rMag = R_EARTH + altitude;
-            const vMag = Math.sqrt(MU / rMag) * 1.1;
+            const vMag = calculateCircularVelocity(rMag) * 1.1;
             const elements = calculateOrbitalElements(vec2(rMag, 0), vec2(0, vMag));
 
             expect(elements.eccentricity).toBeGreaterThan(0);
@@ -39,7 +39,7 @@ describe('OrbitalMechanics', () => {
         it('should match circular velocity formula', () => {
             const r = R_EARTH + 500000;
             const v = calculateVisViva(r, r); // a=r
-            const expected = Math.sqrt(MU / r);
+            const expected = calculateCircularVelocity(r);
             expect(v).toBeCloseTo(expected, 5);
         });
     });
@@ -51,8 +51,8 @@ describe('OrbitalMechanics', () => {
             const plan = calculateHohmannTransfer(r1, r2, 100000, 5000);
 
             const aTransfer = (r1 + r2) / 2;
-            const v1 = Math.sqrt(MU / r1);
-            const vTp = Math.sqrt(MU * (2 / r1 - 1 / aTransfer));
+            const v1 = calculateCircularVelocity(r1);
+            const vTp = calculateVisViva(r1, aTransfer);
             const expectedDV1 = Math.abs(vTp - v1);
 
             expect(plan.deltaV1).toBeCloseTo(expectedDV1, 3);

@@ -117,7 +117,7 @@ export function calculateOrbitalElements(r: Vector2D, v: Vector2D): KeplerianEle
     }
 
     // 7. Period (T = 2*pi*sqrt(a^3/mu))
-    const period = 2 * Math.PI * Math.sqrt(Math.max(0, Math.pow(a, 3)) / MU);
+    const period = calculateOrbitalPeriod(a);
 
     return {
         semiMajorAxis: a,
@@ -147,6 +147,14 @@ export function calculateVisViva(r: number, a: number): number {
  */
 export function calculateCircularVelocity(r: number): number {
     return Math.sqrt(MU / r);
+}
+
+/**
+ * Calculate orbital period for a given semi-major axis
+ * @param a Semi-major axis (m)
+ */
+export function calculateOrbitalPeriod(a: number): number {
+    return 2 * Math.PI * Math.sqrt(Math.max(0, Math.pow(a, 3)) / MU);
 }
 
 /**
@@ -184,7 +192,7 @@ export function calculateHohmannTransfer(
 
     // 8. Transfer Time (half period)
     // T = 2*pi * sqrt(a^3 / mu)
-    const transferTime = Math.PI * Math.sqrt(Math.pow(aTransfer, 3) / MU);
+    const transferTime = calculateOrbitalPeriod(aTransfer) / 2;
 
     // 9. Estimate initial burn time
     const burnTime1 = (deltaV1 * mass) / Math.max(1, thrust);
