@@ -57,6 +57,18 @@ describe('Constants Physics Functions', () => {
             expect(getGravity(R_EARTH)).toBeCloseTo(GRAVITY * 0.25);
         });
 
+        it('should calculate gravity correctly for Low Earth Orbit (LEO, e.g., 400km)', () => {
+            const h = 400000;
+            const expectedG = GRAVITY * Math.pow(R_EARTH / (R_EARTH + h), 2);
+            expect(getGravity(h)).toBeCloseTo(expectedG);
+        });
+
+        it('should calculate gravity correctly for Geostationary Orbit (GEO, e.g., 35786km)', () => {
+            const h = 35786000;
+            const expectedG = GRAVITY * Math.pow(R_EARTH / (R_EARTH + h), 2);
+            expect(getGravity(h)).toBeCloseTo(expectedG);
+        });
+
         it('should handle negative altitude by clamping to sea level', () => {
             expect(getGravity(-1000)).toBeCloseTo(GRAVITY);
         });
