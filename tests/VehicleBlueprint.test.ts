@@ -37,6 +37,65 @@ describe('VehicleBlueprint Error Paths', () => {
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to deserialize blueprint:', expect.any(SyntaxError));
         });
 
+        it('should return null and log error when parsed JSON is not an object', () => {
+            const result = deserializeBlueprint(JSON.stringify("just a string"));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid blueprint format: not an object' })
+            );
+        });
+
+        it('should return null and log error when stages is missing or not an array', () => {
+            const badData = { name: 'Bad Rocket', id: 'bad-1' };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid blueprint format: stages is not an array' })
+            );
+        });
+
+        it('should return null and log error when a stage is not an object', () => {
+            const badData = { stages: [ "not a stage object" ] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid stage format: not an object' })
+            );
+        });
+
+        it('should return null and log error when parts is not an array', () => {
+            const badData = { stages: [ { stageNumber: 0, parts: "not an array" } ] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid stage format: parts is not an array' })
+            );
+        });
+
+        it('should return null and log error when a part instance is not an object', () => {
+            const badData = { stages: [ { parts: [ "not an object" ] } ] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid part instance format: not an object' })
+            );
+        });
+
+        it('should return null and log error when partId is not a string', () => {
+            const badData = { stages: [ { parts: [ { partId: 123 } ] } ] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid part instance format: partId is not a string' })
+            );
+        });
+
         it('should return null and log error when part ID is unknown', () => {
             // Create a valid JSON structure but with a bad part ID
             const badData = {
@@ -66,6 +125,15 @@ describe('VehicleBlueprint Error Paths', () => {
     });
 
     describe('loadBlueprints', () => {
+        it('should return empty array and log error when localStorage contains a non-array JSON structure', () => {
+            localStorage.setItem('vab-blueprints', JSON.stringify({ not: 'an array' }));
+            const result = loadBlueprints();
+            expect(result).toEqual([]);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to load blueprints:',
+                expect.objectContaining({ message: 'Stored blueprints data is not an array' })
+            );
+        });
         it('should return empty array when localStorage is empty', () => {
             const result = loadBlueprints();
             expect(result).toEqual([]);
