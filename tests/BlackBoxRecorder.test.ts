@@ -38,7 +38,7 @@ describe('BlackBoxRecorder', () => {
         heatShieldRemaining: 1,
         isAblating: false,
         isThermalCritical: false,
-        engineState: 'ACTIVE' as EngineState,
+        engineState: 'ACTIVE' as unknown as EngineState,
         ignitersRemaining: 1,
         ullageSettled: true,
         actualThrottle: 1,

@@ -13,6 +13,6 @@ export class MathUtils {
             // Fallback for environments without Web Crypto API (should be rare in modern contexts)
             return Math.random();
         }
-        return array[0] / (0xffffffff + 1);
+        return (array[0] ?? 0) / (0xffffffff + 1);
     }
 }

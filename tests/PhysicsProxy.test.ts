@@ -72,7 +72,7 @@ describe('PhysicsProxy', () => {
 
         it('should send INIT message to worker on init()', () => {
             const proxy = new PhysicsProxy();
-            const config = { someConfig: true };
+            const config = { someConfig: true } as any;
 
             proxy.init(config);
 
@@ -211,7 +211,7 @@ describe('PhysicsProxy', () => {
             const entities = proxy.getEntities();
             expect(entities.length).toBe(1);
 
-            const booster = entities[0];
+            const booster = entities[0]!;
             expect(booster.type).toBe(EntityType.BOOSTER);
             expect(booster.x).toBe(100);
             expect(booster.y).toBe(200);
@@ -237,7 +237,7 @@ describe('PhysicsProxy', () => {
 
             proxy.syncView(0.016, 1.0);
             expect(proxy.getEntities().length).toBe(1);
-            expect(proxy.getEntities()[0].type).toBe(EntityType.BOOSTER);
+            expect(proxy.getEntities()[0]!.type).toBe(EntityType.BOOSTER);
         });
 
         it('should calculate interpolation alpha correctly', () => {

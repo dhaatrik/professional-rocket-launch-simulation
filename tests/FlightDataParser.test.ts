@@ -80,9 +80,9 @@ abc,def`;
             ]`;
             const frames = FlightDataParser.parseJSON(json);
 
-            expect(frames).toHaveLength(2);
-            expect(frames[0]!.missionTime).toBe(10.5);
-            expect(frames[1]!.altitude).toBe(510.2);
+            expect(frames!).toHaveLength(2);
+            expect(frames![0]!.missionTime).toBe(10.5);
+            expect(frames![1]!.altitude).toBe(510.2);
         });
 
         it('should parse JSON object with frames property', () => {
@@ -94,8 +94,8 @@ abc,def`;
             }`;
             const frames = FlightDataParser.parseJSON(json);
 
-            expect(frames).toHaveLength(1);
-            expect(frames[0]!.missionTime).toBe(10.5);
+            expect(frames!).toHaveLength(1);
+            expect(frames![0]!.missionTime).toBe(10.5);
         });
 
         it('should return null for invalid JSON syntax', () => {

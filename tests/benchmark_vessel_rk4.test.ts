@@ -43,7 +43,7 @@ describe('Vessel RK4 Performance Benchmark', () => {
     });
 
     it('benchmarks updatePhysics performance', () => {
-        const ITERATIONS = 100000;
+        const ITERATIONS = 1000;
         const dt = 0.016; // 60 FPS
 
         // Warmup

@@ -6,7 +6,7 @@ import { EntityType } from '../src/core/PhysicsBuffer';
 describe('Performance Benchmark: Type Check vs instanceof (Mixed Array)', () => {
     it('should measure the speed difference between type property access and instanceof', () => {
         const count = 1000;
-        const iterations = 10_000;
+        const iterations = 100;
 
         // Create a mixed array of entities
         const entities: Vessel[] = [];

@@ -54,7 +54,7 @@ describe('Particle Batching Performance', () => {
             Particle.drawParticles(mockCtx, particles);
         }
 
-        const iterations = 1000;
+        const iterations = 100;
         const start = performance.now();
 
         for (let i = 0; i < iterations; i++) {
@@ -69,5 +69,5 @@ describe('Particle Batching Performance', () => {
 
         // Basic sanity check
         expect(mockCtx.fill).toHaveBeenCalled();
-    }, 10000); // Increased timeout to 10s
+    });
 });

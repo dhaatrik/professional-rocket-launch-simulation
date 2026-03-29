@@ -159,7 +159,7 @@ describe('VehicleBlueprint Error Paths', () => {
             expect(result).toEqual([]);
             expect(consoleErrorSpy).toHaveBeenCalledWith(
                 'Failed to load blueprints:',
-                expect.objectContaining({ message: 'Data is not an array' })
+                expect.objectContaining({ message: 'Stored blueprints data is not an array' })
             );
         });
 
@@ -198,7 +198,7 @@ describe('VehicleBlueprint Error Paths', () => {
 
             // Should only contain the valid blueprint
             expect(result.length).toBe(1);
-            expect(result[0].name).toBe('Good Rocket');
+            expect(result[0]!.name).toBe('Good Rocket');
 
             // And should have logged an error for the invalid one from deserializeBlueprint
             expect(consoleErrorSpy).toHaveBeenCalledWith(

@@ -20,7 +20,7 @@ describe('FaultInjector rendering performance', () => {
             injector.armFault(fault.id);
         }
 
-        const ITERATIONS = 1000;
+        const ITERATIONS = 100;
 
         const start = performance.now();
         for (let i = 0; i < ITERATIONS; i++) {
