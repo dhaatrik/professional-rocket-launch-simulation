@@ -368,19 +368,44 @@ export function deserializeBlueprint(json: string): VehicleBlueprint | null {
     try {
         const data = JSON.parse(json);
 
+        if (!data || typeof data !== 'object') {
+            throw new Error('Invalid blueprint format: not an object');
+        }
+
+        if (!Array.isArray(data.stages)) {
+            throw new Error('Invalid blueprint format: stages is not an array');
+        }
+
         // Reconstruct part instances from IDs
-        const stages: VehicleStage[] = data.stages.map((stage: any) => ({
-            ...stage,
-            parts: stage.parts.map((inst: any) => {
-                const part = getPartById(inst.partId);
-                if (!part) throw new Error(`Unknown part: ${inst.partId}`);
-                return {
-                    part,
-                    instanceId: inst.instanceId,
-                    stageIndex: inst.stageIndex
-                };
-            })
-        }));
+        const stages: VehicleStage[] = data.stages.map((stage: any) => {
+            if (!stage || typeof stage !== 'object') {
+                throw new Error('Invalid stage format: not an object');
+            }
+
+            if (!Array.isArray(stage.parts)) {
+                throw new Error('Invalid stage format: parts is not an array');
+            }
+
+            return {
+                ...stage,
+                parts: stage.parts.map((inst: any) => {
+                    if (!inst || typeof inst !== 'object') {
+                        throw new Error('Invalid part instance format: not an object');
+                    }
+                    if (typeof inst.partId !== 'string') {
+                        throw new Error('Invalid part instance format: partId is not a string');
+                    }
+
+                    const part = getPartById(inst.partId);
+                    if (!part) throw new Error(`Unknown part: ${inst.partId}`);
+                    return {
+                        part,
+                        instanceId: inst.instanceId,
+                        stageIndex: inst.stageIndex
+                    };
+                })
+            };
+        });
 
         return {
             ...data,
@@ -409,6 +434,9 @@ export function loadBlueprints(): VehicleBlueprint[] {
 
     try {
         const jsons = JSON.parse(data) as string[];
+        if (!Array.isArray(jsons)) {
+            throw new Error('Stored blueprints data is not an array');
+        }
         return jsons.map(deserializeBlueprint).filter((b): b is VehicleBlueprint => b !== null);
     } catch (e) {
         console.error('Failed to load blueprints:', e);
