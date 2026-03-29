@@ -9,6 +9,7 @@ import { IVessel } from '../types';
 import { state, addParticle } from '../core/State';
 import { Particle } from './Particle';
 import { PIXELS_PER_METER, DT } from '../config/Constants';
+import { MathUtils } from '../utils/MathUtils';
 
 export class ParticleSystem {
     /**
@@ -45,7 +46,7 @@ export class ParticleSystem {
         const ejectionSpeed = 30 + vessel.throttle * 20;
 
         for (let i = 0; i < count; i++) {
-            const particleAngle = vessel.angle + Math.PI + (Math.random() - 0.5) * spreadBase;
+            const particleAngle = vessel.angle + Math.PI + (MathUtils.secureRandom() - 0.5) * spreadBase;
             const ejectVx = Math.sin(particleAngle) * ejectionSpeed;
             const ejectVy = -Math.cos(particleAngle) * ejectionSpeed;
 
@@ -66,7 +67,7 @@ export class ParticleSystem {
             addParticle(p);
 
             // Add smoke at lower altitudes
-            if (Math.random() > 0.5 && vacuumFactor < 0.5) {
+            if (MathUtils.secureRandom() > 0.5 && vacuumFactor < 0.5) {
                 const s = Particle.create(exX, exY, 'smoke', rocketVxPx + ejectVx, rocketVyPx + ejectVy);
                 if (sizeScale > 1.0) {
                     s.size *= sizeScale;
