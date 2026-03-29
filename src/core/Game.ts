@@ -32,7 +32,7 @@ import {
 import { InputManager } from './InputManager';
 import { AudioEngine } from '../utils/AudioEngine';
 import { AssetLoader } from '../utils/AssetLoader';
-import { SAS, SASModes } from '../utils/SAS';
+import { SAS } from '../utils/SAS';
 import { MissionLog } from '../ui/MissionLog';
 import { Navball } from '../ui/Navball';
 import { TelemetrySystem } from '../ui/Telemetry';
