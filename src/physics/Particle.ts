@@ -62,6 +62,11 @@ export class Particle implements IParticle {
     private color: number;
     private alpha: number;
 
+    // Cached Drag Variables to prevent Math.pow in hot loop
+    private static lastTimeScale: number = -1;
+    private static cachedSmokeDrag: number = 1;
+    private static cachedDefaultDrag: number = 1;
+
     // Object Pool
     private static pool: Particle[] = [];
 
@@ -168,16 +173,22 @@ export class Particle implements IParticle {
     update(groundLevel: number, timeScale: number): void {
         this.life -= this.decay * timeScale;
 
-        // Simple aerodynamic drag
-        // Smoke/debris slows down relative to "air" (static frame)
-        // Fire maintains velocity more (simulating high pressure jet)
-        const drag = 1.0 - (this.type === 'smoke' ? 0.05 : 0.01);
+        // Update cached drag values when timeScale changes
+        if (Particle.lastTimeScale !== timeScale) {
+            Particle.lastTimeScale = timeScale;
+            // Smoke drag: 1.0 - 0.05 = 0.95
+            Particle.cachedSmokeDrag = Math.pow(0.95, timeScale);
+            // Default drag (fire, spark, debris): 1.0 - 0.01 = 0.99
+            Particle.cachedDefaultDrag = Math.pow(0.99, timeScale);
+        }
+
+        const dragFactor = this.type === 'smoke' ? Particle.cachedSmokeDrag : Particle.cachedDefaultDrag;
 
         // Apply drag only if not in vacuum (simplified, assuming scale height effect)
         // Since we don't pass altitude here, we'll just apply generic drag
         // A better approach would be to pass density, but this visual approximation works
-        this.vx *= Math.pow(drag, timeScale);
-        this.vy *= Math.pow(drag, timeScale);
+        this.vx *= dragFactor;
+        this.vy *= dragFactor;
 
         this.x += this.vx * timeScale;
         this.y += this.vy * timeScale;
