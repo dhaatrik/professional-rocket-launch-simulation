@@ -85,7 +85,7 @@ describe('FaultInjector', () => {
         injector.injectFault('engine-flameout', v, v.reliability);
 
         // Check reliability system
-        expect(v.reliability.activeFailures).toContain('ENGINE_FLAME_OUT');
+        expect(v.reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(true);
     });
 
     it('should handle timed faults', () => {
@@ -95,11 +95,11 @@ describe('FaultInjector', () => {
 
         // Update 1s - should not trigger
         injector.update(v, v.reliability, 0, 1.0);
-        expect(v.reliability.activeFailures).not.toContain('GIMBAL_LOCK');
+        expect(v.reliability.activeFailures.has('GIMBAL_LOCK')).toBe(false);
 
         // Update 5s more - should trigger
         injector.update(v, v.reliability, 0, 5.0);
-        expect(v.reliability.activeFailures).toContain('GIMBAL_LOCK');
+        expect(v.reliability.activeFailures.has('GIMBAL_LOCK')).toBe(true);
     });
 
     it('should handle custom faults (Throttle Stuck)', () => {

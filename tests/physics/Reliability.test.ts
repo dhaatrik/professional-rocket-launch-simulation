@@ -22,7 +22,7 @@ describe('ReliabilitySystem', () => {
 
     it('should initialize with default configuration', () => {
         expect(reliability.config).toEqual(DEFAULT_RELIABILITY_CONFIG);
-        expect(reliability.activeFailures).toEqual([]);
+        expect(reliability.activeFailures.size).toBe(0);
     });
 
     describe('attemptIgnition', () => {
@@ -36,7 +36,7 @@ describe('ReliabilitySystem', () => {
 
             const result = reliability.attemptIgnition();
             expect(result).toBe(true);
-            expect(reliability.activeFailures).not.toContain('ENGINE_FLAME_OUT');
+            expect(reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(false);
         });
 
         it('should fail when random value is above reliability threshold', () => {
@@ -45,7 +45,7 @@ describe('ReliabilitySystem', () => {
 
             const result = reliability.attemptIgnition();
             expect(result).toBe(false);
-            expect(reliability.activeFailures).toContain('ENGINE_FLAME_OUT');
+            expect(reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(true);
             expect(mockLog.log).toHaveBeenCalledWith(expect.stringContaining('Engine Flameout'), 'warn');
         });
     });
@@ -57,7 +57,7 @@ describe('ReliabilitySystem', () => {
 
             const failures = reliability.update(1.0, 1.0); // dt=1, stress=1
             expect(failures).toHaveLength(0);
-            expect(reliability.activeFailures).toHaveLength(0);
+            expect(reliability.activeFailures.size).toBe(0);
         });
 
         it('should trigger engine flameout on failure', () => {
@@ -86,7 +86,7 @@ describe('ReliabilitySystem', () => {
             const failures = reliability.update(1.0, 1.0); // dt=1, stress=1 (engine active)
 
             expect(failures).toContain('ENGINE_FLAME_OUT');
-            expect(reliability.activeFailures).toContain('ENGINE_FLAME_OUT');
+            expect(reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(true);
         });
 
         it('should trigger engine explosion on catastrophic failure', () => {
@@ -111,7 +111,7 @@ describe('ReliabilitySystem', () => {
             const failures = reliability.update(1.0, 1.0);
 
             expect(failures).toContain('ENGINE_EXPLOSION');
-            expect(reliability.activeFailures).toContain('ENGINE_EXPLOSION');
+            expect(reliability.activeFailures.has('ENGINE_EXPLOSION')).toBe(true);
             expect(mockLog.log).toHaveBeenCalledWith(expect.stringContaining('Catastrophic'), 'warn');
         });
 
@@ -148,7 +148,7 @@ describe('ReliabilitySystem', () => {
             const failures = reliability.update(1.0, 1.0);
 
             expect(failures).toContain('STRUCTURAL_FATIGUE');
-            expect(reliability.activeFailures).toContain('STRUCTURAL_FATIGUE');
+            expect(reliability.activeFailures.has('STRUCTURAL_FATIGUE')).toBe(true);
         });
 
         it('should trigger sensor glitch and handle transient duration', () => {
@@ -176,21 +176,21 @@ describe('ReliabilitySystem', () => {
             let failures = reliability.update(0.5, 0);
 
             expect(failures).toContain('SENSOR_GLITCH');
-            expect(reliability.activeFailures).toContain('SENSOR_GLITCH');
+            expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(true);
 
             // Update 2: dt=1.0.
             // Loop decrements 1.0 -> 0.5 remaining.
             // It should still be active.
             vi.mocked(Math.random).mockReturnValue(1.0); // No new failures
             failures = reliability.update(1.0, 0);
-            expect(reliability.activeFailures).toContain('SENSOR_GLITCH');
+            expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(true);
 
             // Update 3: dt=1.0.
             // Loop decrements 1.0 -> -0.5.
             // It should be removed.
             vi.mocked(Math.random).mockReturnValue(1.0);
             failures = reliability.update(1.0, 0);
-            expect(reliability.activeFailures).not.toContain('SENSOR_GLITCH');
+            expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(false);
         });
     });
 });

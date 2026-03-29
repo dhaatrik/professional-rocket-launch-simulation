@@ -43,7 +43,7 @@ export class ReliabilitySystem {
     private stressAccumulator: number = 0; // Integrated G-force stress
 
     // Active failures
-    public activeFailures: FailureType[] = [];
+    public activeFailures: Set<FailureType> = new Set();
 
     // Internal reuse buffer for new failures
     private _newFailures: FailureType[] = [];
@@ -135,10 +135,7 @@ export class ReliabilitySystem {
                 this.transientFailures.delete(type);
 
                 // Remove from active failures list
-                const index = this.activeFailures.indexOf(type);
-                if (index > -1) {
-                    this.activeFailures.splice(index, 1);
-                }
+                this.activeFailures.delete(type);
             } else {
                 this.transientFailures.set(type, newDuration);
             }
@@ -155,17 +152,17 @@ export class ReliabilitySystem {
             this.transientFailures.set(type, duration);
 
             // If already active, don't re-log or re-add
-            if (this.activeFailures.includes(type)) {
+            if (this.activeFailures.has(type)) {
                 return false;
             }
         } else {
             // Prevent duplicate permanent failures
-            if (this.activeFailures.includes(type)) {
+            if (this.activeFailures.has(type)) {
                 return false;
             }
         }
 
-        this.activeFailures.push(type);
+        this.activeFailures.add(type);
 
         // Log it
         if (state.missionLog) {
