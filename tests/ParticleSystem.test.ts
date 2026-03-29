@@ -4,6 +4,7 @@ import { IVessel } from '../src/types';
 import { state, addParticle } from '../src/core/State';
 import { Particle } from '../src/physics/Particle';
 import { PIXELS_PER_METER } from '../src/config/Constants';
+import { MathUtils } from '../src/utils/MathUtils';
 
 // Mock State module
 vi.mock('../src/core/State', () => ({
@@ -56,8 +57,8 @@ describe('ParticleSystem', () => {
             // ... other props not needed for spawnExhaust
         } as unknown as IVessel;
 
-        // Reset Math.random spy
-        vi.spyOn(Math, 'random').mockReturnValue(0.5);
+        // Reset MathUtils.secureRandom spy
+        vi.spyOn(MathUtils, 'secureRandom').mockReturnValue(0.5);
     });
 
     afterEach(() => {
@@ -66,7 +67,7 @@ describe('ParticleSystem', () => {
 
     it('should spawn exhaust particles when active', () => {
         // Random 0.5 -> smoke check: 0.5 > 0.5 is false. No smoke.
-        vi.spyOn(Math, 'random').mockReturnValue(0.4);
+        vi.spyOn(MathUtils, 'secureRandom').mockReturnValue(0.4);
         ParticleSystem.spawnExhaust(mockVessel, 1.0);
 
         // Expected count: ceil(throttle * 5 * timeScale) = ceil(1.0 * 5 * 1.0) = 5
@@ -93,7 +94,7 @@ describe('ParticleSystem', () => {
     });
 
     it('should clamp particle count at max', () => {
-        vi.spyOn(Math, 'random').mockReturnValue(0.4); // No smoke
+        vi.spyOn(MathUtils, 'secureRandom').mockReturnValue(0.4); // No smoke
         mockVessel.throttle = 10.0; // Artificial high throttle -> 50 particles
         // Max is 20
         ParticleSystem.spawnExhaust(mockVessel, 1.0);
@@ -104,7 +105,7 @@ describe('ParticleSystem', () => {
 
     it('should add smoke particles at low altitude', () => {
         // Mock random to trigger smoke (random > 0.5)
-        vi.spyOn(Math, 'random').mockReturnValue(0.6);
+        vi.spyOn(MathUtils, 'secureRandom').mockReturnValue(0.6);
 
         // Low altitude (already 500px, ground 1000px, so 500px altitude = 50m)
         // Vacuum factor will be low
