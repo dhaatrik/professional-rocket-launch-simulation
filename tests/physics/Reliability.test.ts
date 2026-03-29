@@ -22,7 +22,7 @@ describe('ReliabilitySystem', () => {
 
     it('should initialize with default configuration', () => {
         expect(reliability.config).toEqual(DEFAULT_RELIABILITY_CONFIG);
-        expect(reliability.activeFailures).toEqual([]);
+        expect(reliability.activeFailures.size).toBe(0);
     });
 
     describe('attemptIgnition', () => {
@@ -57,7 +57,7 @@ describe('ReliabilitySystem', () => {
 
             const failures = reliability.update(1.0, 1.0); // dt=1, stress=1
             expect(failures).toHaveLength(0);
-            expect(reliability.activeFailures).toHaveLength(0);
+            expect(reliability.activeFailures.size).toBe(0);
         });
 
         it('should trigger engine flameout on failure', () => {
