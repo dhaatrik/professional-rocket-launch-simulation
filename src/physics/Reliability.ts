@@ -5,6 +5,7 @@
  */
 
 import { state } from '../core/State';
+import { secureRandom } from '../utils/Security';
 
 export type FailureType =
     | 'ENGINE_FLAME_OUT' // Engine shuts down unexpectedly
@@ -61,7 +62,7 @@ export class ReliabilitySystem {
      */
     attemptIgnition(): boolean {
         // Simple distinct check for ignition
-        if (Math.random() > this.config.ignitionReliability) {
+        if (secureRandom() > this.config.ignitionReliability) {
             this.triggerFailure('ENGINE_FLAME_OUT');
             return false; // Failed to ignite
         }
@@ -102,8 +103,8 @@ export class ReliabilitySystem {
         const pEngineFail = lambdaEngine * engineWearMultiplier * dt * (stressLevel > 0 ? 1 : 0); // Only checking active engines logic outside
 
         // We only roll for engine failure if we passed in a positive stress level (implying engine usage)
-        if (stressLevel > 0.1 && Math.random() < pEngineFail) {
-            if (Math.random() < 0.05) {
+        if (stressLevel > 0.1 && secureRandom() < pEngineFail) {
+            if (secureRandom() < 0.05) {
                 // 5% chance of explosion if engine fails
                 if (this.triggerFailure('ENGINE_EXPLOSION')) newFailures.push('ENGINE_EXPLOSION');
             } else {
@@ -117,13 +118,13 @@ export class ReliabilitySystem {
         // Probability increases as we approach limit
         const pStructFail = (this.stressAccumulator / fatigueLimit) * dt * 0.01;
 
-        if (Math.random() < pStructFail) {
+        if (secureRandom() < pStructFail) {
             if (this.triggerFailure('STRUCTURAL_FATIGUE')) newFailures.push('STRUCTURAL_FATIGUE');
         }
 
         // 3. Sensor/Electronics Reliability (Random constant rate)
         const pSensorFail = (1 / this.config.mtbfElectronics) * dt;
-        if (Math.random() < pSensorFail) {
+        if (secureRandom() < pSensorFail) {
             // Sensors glitches are transient, so we handle them with duration tracking
             if (this.triggerFailure('SENSOR_GLITCH')) newFailures.push('SENSOR_GLITCH');
         }

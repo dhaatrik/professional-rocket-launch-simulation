@@ -12,6 +12,7 @@
 
 import { vec2, Vec2 } from '../types/index';
 import type { Vector2D } from '../types/index';
+import { secureRandom } from '../utils/Security';
 
 // ============================================================================
 // Interfaces
@@ -118,8 +119,8 @@ export const DEFAULT_ENVIRONMENT_CONFIG: EnvironmentConfig = {
 export class EnvironmentSystem {
     private config: EnvironmentConfig;
     private simulationTime: number = 0;
-    private gustPhaseX: number = Math.random() * Math.PI * 2;
-    private gustPhaseY: number = Math.random() * Math.PI * 2;
+    private gustPhaseX: number = secureRandom() * Math.PI * 2;
+    private gustPhaseY: number = secureRandom() * Math.PI * 2;
     private currentGust: Vector2D = vec2(0, 0);
     private gustUpdateTimer: number = 0;
 
@@ -158,8 +159,8 @@ export class EnvironmentSystem {
 
             // Perlin-like noise using sinusoidal combination
             const t = this.simulationTime;
-            this.gustPhaseX += (Math.random() - 0.5) * 0.5;
-            this.gustPhaseY += (Math.random() - 0.5) * 0.5;
+            this.gustPhaseX += (secureRandom() - 0.5) * 0.5;
+            this.gustPhaseY += (secureRandom() - 0.5) * 0.5;
 
             // Generate smooth random gusts
             const gustMagnitude = this.config.maxGustSpeed;
@@ -367,8 +368,8 @@ export class EnvironmentSystem {
      */
     reset(): void {
         this.simulationTime = 0;
-        this.gustPhaseX = Math.random() * Math.PI * 2;
-        this.gustPhaseY = Math.random() * Math.PI * 2;
+        this.gustPhaseX = secureRandom() * Math.PI * 2;
+        this.gustPhaseY = secureRandom() * Math.PI * 2;
         this.currentGust = vec2(0, 0);
         this.gustUpdateTimer = 0;
     }
