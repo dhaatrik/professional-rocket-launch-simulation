@@ -35,5 +35,8 @@
         "physics",
         "typescript"
     ],
-    "license": "MIT"
+    "license": "MIT",
+    "dependencies": {
+        "proxy-addr": "^2.0.7"
+    }
 }
