@@ -328,7 +328,6 @@ export class Game {
      * Spawn a new vessel from a blueprint
      */
     spawnVessel(blueprint: VehicleBlueprint): void {
-        console.log('Spawning blueprint:', blueprint?.name);
         // For now, reset which triggers worker init to spawn default rocket
         this.reset();
     }
