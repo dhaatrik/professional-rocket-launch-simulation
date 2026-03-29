@@ -117,6 +117,16 @@ abc,def`;
             expect(frames).toEqual([]);
         });
 
+        it('should safely handle null JSON', () => {
+            expect(FlightDataParser.parseJSON('null')).toEqual([]);
+        });
+
+        it('should safely handle primitive JSON types', () => {
+            expect(FlightDataParser.parseJSON('"string"')).toEqual([]);
+            expect(FlightDataParser.parseJSON('123')).toEqual([]);
+            expect(FlightDataParser.parseJSON('true')).toEqual([]);
+        });
+
         it('should return null when JSON.parse throws an error', () => {
             const json = `{"valid": "json"}`;
             const mockError = new Error('Mock JSON parse error');

@@ -91,10 +91,13 @@ export class FlightDataParser {
     public static parseJSON(jsonContent: string): FlightFrame[] | null {
         try {
             const data = JSON.parse(jsonContent);
+            if (!data || typeof data !== 'object') {
+                return [];
+            }
             if (Array.isArray(data)) {
                 return data as FlightFrame[];
-            } else if (data.frames && Array.isArray(data.frames)) {
-                return data.frames as FlightFrame[];
+            } else if ('frames' in data && Array.isArray((data as any).frames)) {
+                return (data as any).frames as FlightFrame[];
             }
             return [];
         } catch (e) {
