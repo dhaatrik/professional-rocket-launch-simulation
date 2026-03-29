@@ -1,6 +1,7 @@
 import { ReliabilitySystem, DEFAULT_RELIABILITY_CONFIG, ReliabilityConfig } from '../../src/physics/Reliability';
 import { state } from '../../src/core/State';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as Security from '../../src/utils/Security';
 
 describe('ReliabilitySystem', () => {
     let reliability: ReliabilitySystem;
@@ -12,7 +13,7 @@ describe('ReliabilitySystem', () => {
         state.missionLog = mockLog as any;
 
         reliability = new ReliabilitySystem();
-        vi.spyOn(Math, 'random');
+        vi.spyOn(Security, 'secureRandom');
     });
 
     afterEach(() => {
@@ -28,11 +29,11 @@ describe('ReliabilitySystem', () => {
     describe('attemptIgnition', () => {
         it('should succeed when random value is below reliability threshold', () => {
             // ignitionReliability is typically 0.99
-            // Success condition: Math.random() <= ignitionReliability
-            // Wait, code says: if (Math.random() > this.config.ignitionReliability) { fail }
+            // Success condition: secureRandom() <= ignitionReliability
+            // Wait, code says: if (secureRandom() > this.config.ignitionReliability) { fail }
             // So if random is 0.5, 0.5 > 0.99 is false -> Success
 
-            vi.mocked(Math.random).mockReturnValue(0.5);
+            vi.mocked(Security.secureRandom).mockReturnValue(0.5);
 
             const result = reliability.attemptIgnition();
             expect(result).toBe(true);
@@ -40,8 +41,8 @@ describe('ReliabilitySystem', () => {
         });
 
         it('should fail when random value is above reliability threshold', () => {
-            // Failure condition: Math.random() > 0.99
-            vi.mocked(Math.random).mockReturnValue(0.999);
+            // Failure condition: secureRandom() > 0.99
+            vi.mocked(Security.secureRandom).mockReturnValue(0.999);
 
             const result = reliability.attemptIgnition();
             expect(result).toBe(false);
@@ -53,7 +54,7 @@ describe('ReliabilitySystem', () => {
     describe('update', () => {
         it('should not trigger failures when random values are high (safe)', () => {
             // Force random to return 1.0 (safe for all checks as they usually check random < prob)
-            vi.mocked(Math.random).mockReturnValue(1.0);
+            vi.mocked(Security.secureRandom).mockReturnValue(1.0);
 
             const failures = reliability.update(1.0, 1.0); // dt=1, stress=1
             expect(failures).toHaveLength(0);
@@ -77,7 +78,7 @@ describe('ReliabilitySystem', () => {
             // 3. Structure failure check: Return 1.0 (safe).
             // 4. Sensor failure check: Return 1.0 (safe).
 
-            vi.mocked(Math.random)
+            vi.mocked(Security.secureRandom)
                 .mockReturnValueOnce(0.001) // Engine fail check
                 .mockReturnValueOnce(0.1)   // Explosion check (0.1 > 0.05 -> Flameout)
                 .mockReturnValueOnce(1.0)   // Structure
@@ -102,7 +103,7 @@ describe('ReliabilitySystem', () => {
             // 3. Structure: 1.0
             // 4. Sensor: 1.0
 
-            vi.mocked(Math.random)
+            vi.mocked(Security.secureRandom)
                 .mockReturnValueOnce(0.001)
                 .mockReturnValueOnce(0.01)
                 .mockReturnValueOnce(1.0)
@@ -128,7 +129,7 @@ describe('ReliabilitySystem', () => {
             // pStructFail = (accumulator / 100) * dt * 0.01
 
             // Step 1: Accumulate stress. Pass random=1.0 to avoid any failures during accumulation.
-            vi.mocked(Math.random).mockReturnValue(1.0);
+            vi.mocked(Security.secureRandom).mockReturnValue(1.0);
             reliability.update(100.0, 2.0); // dt=100, stress=2.0. Accum += (1.0)*100 = 100.
 
             // Now accumulator is 100.
@@ -140,7 +141,7 @@ describe('ReliabilitySystem', () => {
             // 2. Structure: < 0.01 -> 0.005 (Fail!)
             // 3. Sensor: 1.0 (safe)
 
-            vi.mocked(Math.random)
+            vi.mocked(Security.secureRandom)
                 .mockReturnValueOnce(1.0)   // Engine
                 .mockReturnValueOnce(0.005) // Structure
                 .mockReturnValueOnce(1.0);  // Sensor
@@ -166,7 +167,7 @@ describe('ReliabilitySystem', () => {
             // 1. Structure: 1.0
             // 2. Sensor: < 0.01 -> 0.005 (Fail!)
 
-            vi.mocked(Math.random)
+            vi.mocked(Security.secureRandom)
                 .mockReturnValueOnce(1.0)
                 .mockReturnValueOnce(0.001);
 
@@ -181,14 +182,14 @@ describe('ReliabilitySystem', () => {
             // Update 2: dt=1.0.
             // Loop decrements 1.0 -> 0.5 remaining.
             // It should still be active.
-            vi.mocked(Math.random).mockReturnValue(1.0); // No new failures
+            vi.mocked(Security.secureRandom).mockReturnValue(1.0); // No new failures
             failures = reliability.update(1.0, 0);
             expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(true);
 
             // Update 3: dt=1.0.
             // Loop decrements 1.0 -> -0.5.
             // It should be removed.
-            vi.mocked(Math.random).mockReturnValue(1.0);
+            vi.mocked(Security.secureRandom).mockReturnValue(1.0);
             failures = reliability.update(1.0, 0);
             expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(false);
         });
