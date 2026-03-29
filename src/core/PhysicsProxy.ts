@@ -226,7 +226,7 @@ export class PhysicsProxy {
                 }
 
                 const engStateCode = this.sharedView[base + EntityOffset.ENGINE_STATE] || 0;
-                (view as any).engineState = this.mapEngineStateCode(engStateCode);
+                (view as any).engineState = engStateCode;
                 (view as any).ignitersRemaining = this.sharedView[base + EntityOffset.IGNITERS] || 0;
             }
         }
@@ -237,19 +237,6 @@ export class PhysicsProxy {
         const alpha =
             (this.localRenderTime - this.previousPhysicsTime) / (this.currentPhysicsTime - this.previousPhysicsTime);
         return Math.max(0, Math.min(1, alpha));
-    }
-
-    private mapEngineStateCode(code: number): string {
-        switch (code) {
-            case EngineStateCode.STARTING:
-                return 'starting';
-            case EngineStateCode.RUNNING:
-                return 'running';
-            case EngineStateCode.FLAMEOUT:
-                return 'flameout';
-            default:
-                return 'off';
-        }
     }
 
     private createViewEntity(typeCode: number, x: number, y: number): Vessel {

@@ -215,7 +215,7 @@ describe('PhysicsProxy', () => {
             expect(booster.type).toBe(EntityType.BOOSTER);
             expect(booster.x).toBe(100);
             expect(booster.y).toBe(200);
-            expect((booster as any).engineState).toBe('running');
+            expect((booster as any).engineState).toBe(EngineStateCode.RUNNING);
         });
 
         it('should resize entities array if count drops', () => {

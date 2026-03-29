@@ -56,6 +56,7 @@ import {
     commandShutdown,
     getIgnitionFailureMessage
 } from './Propulsion';
+import { EngineStateCode } from '../core/PhysicsBuffer';
 import { ReliabilitySystem, ReliabilityConfig, DEFAULT_RELIABILITY_CONFIG } from './Reliability';
 import { ParticleSystem } from './ParticleSystem';
 
@@ -123,7 +124,7 @@ export class Vessel implements IVessel {
     // Propulsion State Machine
     public propConfig: PropulsionConfig = FULLSTACK_PROP_CONFIG;
     public propState: PropulsionState = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
-    public engineState: EngineState = 'off'; // Current engine state
+    public engineState: EngineState = EngineStateCode.OFF; // Current engine state
     public ignitersRemaining: number = 3; // Remaining igniter cartridges
     public ullageSettled: boolean = true; // Fuel settled for ignition
     public actualThrottle: number = 0; // Lagged throttle output
@@ -525,7 +526,7 @@ export class Vessel implements IVessel {
                 this.vx = 0;
 
                 // Only cut throttle if not trying to launch
-                if (this.engineState !== 'starting' && this.engineState !== 'running') {
+                if (this.engineState !== EngineStateCode.STARTING && this.engineState !== EngineStateCode.RUNNING) {
                     this.throttle = 0;
                 }
             }

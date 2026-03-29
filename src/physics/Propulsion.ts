@@ -8,12 +8,14 @@
  * - Engine state machine
  */
 
+import { EngineStateCode } from '../core/PhysicsBuffer';
+
 // ============================================================================
 // Types
 // ============================================================================
 
 /** Engine operational states */
-export type EngineState = 'off' | 'starting' | 'running' | 'shutdown';
+export type EngineState = EngineStateCode;
 
 /**
  * Propulsion system configuration
@@ -131,7 +133,7 @@ export const PAYLOAD_PROP_CONFIG: PropulsionConfig = {
  */
 export function createInitialPropulsionState(config: PropulsionConfig): PropulsionState {
     return {
-        engineState: 'off',
+        engineState: EngineStateCode.OFF,
         actualThrottle: 0,
         commandedThrottle: 0,
         ignitersRemaining: config.igniterCount,
@@ -180,7 +182,7 @@ export function attemptIgnition(state: PropulsionState, config: PropulsionConfig
     const newState = { ...state };
 
     // Already running or starting
-    if (state.engineState === 'running' || state.engineState === 'starting') {
+    if (state.engineState === EngineStateCode.RUNNING || state.engineState === EngineStateCode.STARTING) {
         return newState;
     }
 
@@ -209,7 +211,7 @@ export function attemptIgnition(state: PropulsionState, config: PropulsionConfig
     }
 
     // Success! Start the engine
-    newState.engineState = 'starting';
+    newState.engineState = EngineStateCode.STARTING;
     newState.ignitersRemaining--;
     newState.spoolProgress = 0;
     newState.lastIgnitionResult = 'success';
@@ -223,12 +225,12 @@ export function attemptIgnition(state: PropulsionState, config: PropulsionConfig
 export function commandShutdown(state: PropulsionState): PropulsionState {
     const newState = { ...state };
 
-    if (state.engineState === 'running') {
-        newState.engineState = 'shutdown';
+    if (state.engineState === EngineStateCode.RUNNING) {
+        newState.engineState = EngineStateCode.SHUTDOWN;
         newState.commandedThrottle = 0;
-    } else if (state.engineState === 'starting') {
+    } else if (state.engineState === EngineStateCode.STARTING) {
         // Abort startup
-        newState.engineState = 'off';
+        newState.engineState = EngineStateCode.OFF;
         newState.spoolProgress = 0;
         newState.actualThrottle = 0;
     }
@@ -256,7 +258,7 @@ export function updatePropulsionState(
 
     // State machine
     switch (state.engineState) {
-        case 'off':
+        case EngineStateCode.OFF:
             newState.actualThrottle = 0;
             newState.spoolProgress = 0;
 
@@ -266,7 +268,7 @@ export function updatePropulsionState(
             }
             break;
 
-        case 'starting': {
+        case EngineStateCode.STARTING: {
             // Spool up
             const spoolRate = 1 / config.spoolUpTime;
             newState.spoolProgress = Math.min(1, state.spoolProgress + spoolRate * dt);
@@ -276,7 +278,7 @@ export function updatePropulsionState(
 
             // Transition to running when spooled up
             if (newState.spoolProgress >= 1) {
-                newState.engineState = 'running';
+                newState.engineState = EngineStateCode.RUNNING;
             }
 
             // Abort if throttle zeroed
@@ -286,7 +288,7 @@ export function updatePropulsionState(
             break;
         }
 
-        case 'running': {
+        case EngineStateCode.RUNNING: {
             // Track burn time
             if (state.actualThrottle > 0) {
                 newState.totalBurnTime += dt;
@@ -307,20 +309,20 @@ export function updatePropulsionState(
 
             // Flame out if fuel exhausted
             if (!hasFuel) {
-                newState.engineState = 'off';
+                newState.engineState = EngineStateCode.OFF;
                 newState.actualThrottle = 0;
             }
             break;
         }
 
-        case 'shutdown': {
+        case EngineStateCode.SHUTDOWN: {
             // Spool down
             const shutdownRate = 1 / config.spoolDownTime;
             newState.actualThrottle = Math.max(0, state.actualThrottle - shutdownRate * dt);
 
             // Transition to off when spooled down
             if (newState.actualThrottle <= 0) {
-                newState.engineState = 'off';
+                newState.engineState = EngineStateCode.OFF;
                 newState.spoolProgress = 0;
             }
             break;
@@ -343,14 +345,18 @@ export function getEffectiveThrustMultiplier(state: PropulsionState): number {
  */
 export function getEngineStateDisplay(state: PropulsionState): string {
     switch (state.engineState) {
-        case 'off':
+        case EngineStateCode.OFF:
             return 'OFF';
-        case 'starting':
+        case EngineStateCode.STARTING:
             return `STARTING ${Math.round(state.spoolProgress * 100)}%`;
-        case 'running':
+        case EngineStateCode.RUNNING:
             return 'RUNNING';
-        case 'shutdown':
+        case EngineStateCode.SHUTDOWN:
             return 'SHUTDOWN';
+        case EngineStateCode.FLAMEOUT:
+            return 'FLAMEOUT';
+        default:
+            return 'UNKNOWN';
     }
 }
 
@@ -359,14 +365,18 @@ export function getEngineStateDisplay(state: PropulsionState): string {
  */
 export function getEngineStateColor(state: PropulsionState): string {
     switch (state.engineState) {
-        case 'off':
+        case EngineStateCode.OFF:
             return '#95a5a6'; // Gray
-        case 'starting':
+        case EngineStateCode.STARTING:
             return '#f1c40f'; // Yellow
-        case 'running':
+        case EngineStateCode.RUNNING:
             return '#2ecc71'; // Green
-        case 'shutdown':
+        case EngineStateCode.SHUTDOWN:
             return '#e67e22'; // Orange
+        case EngineStateCode.FLAMEOUT:
+            return '#e74c3c'; // Red
+        default:
+            return '#ffffff';
     }
 }
 

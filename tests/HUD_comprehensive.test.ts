@@ -1,6 +1,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Game } from '../src/core/Game';
+import { EngineStateCode } from '../src/core/PhysicsBuffer';
 
 // Mock dependencies
 const mockCanvas = {
@@ -132,7 +133,7 @@ describe('Game HUD Comprehensive Tests', () => {
             isThermalCritical: false,
             heatShieldRemaining: 0.9,
             isAblating: false,
-            engineState: 'running',
+            engineState: EngineStateCode.RUNNING,
             ignitersRemaining: 2
         };
 
@@ -171,7 +172,7 @@ describe('Game HUD Comprehensive Tests', () => {
             isThermalCritical: true,
             heatShieldRemaining: 0.2,
             isAblating: true,
-            engineState: 'off',
+            engineState: EngineStateCode.OFF,
             ignitersRemaining: 0
         };
         (game as any).trackedEntity = trackedEntity;
@@ -198,7 +199,7 @@ describe('Game HUD Comprehensive Tests', () => {
             y: 0, h: 0, vx: 0, vy: 0, angle: 0,
             throttle: 0, fuel: 0, aoa: 0, stabilityMargin: 0, isAeroStable: true,
             skinTemp: 300, isThermalCritical: false, heatShieldRemaining: 1, isAblating: false,
-            engineState: 'off', ignitersRemaining: 3
+            engineState: EngineStateCode.OFF, ignitersRemaining: 3
         };
 
         (game as any).drawHUD();

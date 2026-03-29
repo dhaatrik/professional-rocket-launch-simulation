@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { EngineStateCode } from '../src/core/PhysicsBuffer';
 import {
     createInitialPropulsionState,
     updatePropulsionState,
@@ -16,7 +17,7 @@ describe('Propulsion System', () => {
     describe('Initialization', () => {
         it('should start with correct initial state', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
-            expect(state.engineState).toBe('off');
+            expect(state.engineState).toBe(EngineStateCode.OFF);
             expect(state.ignitersRemaining).toBe(FULLSTACK_PROP_CONFIG.igniterCount);
             expect(state.ullageSettled).toBe(true);
         });
@@ -55,7 +56,7 @@ describe('Propulsion System', () => {
         it('should not ignite without fuel', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
             const result = attemptIgnition(state, FULLSTACK_PROP_CONFIG, false);
-            expect(result.engineState).toBe('off');
+            expect(result.engineState).toBe(EngineStateCode.OFF);
             expect(result.lastIgnitionResult).toBe('no_fuel');
         });
 
@@ -63,7 +64,7 @@ describe('Propulsion System', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
             state.ullageSettled = false;
             const result = attemptIgnition(state, FULLSTACK_PROP_CONFIG, true);
-            expect(result.engineState).toBe('off');
+            expect(result.engineState).toBe(EngineStateCode.OFF);
             expect(result.lastIgnitionResult).toBe('no_ullage');
         });
 
@@ -71,14 +72,14 @@ describe('Propulsion System', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
             state.ignitersRemaining = 0;
             const result = attemptIgnition(state, FULLSTACK_PROP_CONFIG, true);
-            expect(result.engineState).toBe('off');
+            expect(result.engineState).toBe(EngineStateCode.OFF);
             expect(result.lastIgnitionResult).toBe('no_igniters');
         });
 
         it('should ignite when conditions met', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
             const result = attemptIgnition(state, FULLSTACK_PROP_CONFIG, true);
-            expect(result.engineState).toBe('starting');
+            expect(result.engineState).toBe(EngineStateCode.STARTING);
             expect(result.ignitersRemaining).toBe(FULLSTACK_PROP_CONFIG.igniterCount - 1);
             expect(result.lastIgnitionResult).toBe('success');
         });
@@ -91,27 +92,27 @@ describe('Propulsion System', () => {
 
             // OFF -> STARTING
             state = updatePropulsionState(state, FULLSTACK_PROP_CONFIG, 1.0, true, 1.0, dt);
-            expect(state.engineState).toBe('starting');
+            expect(state.engineState).toBe(EngineStateCode.STARTING);
 
             // STARTING -> RUNNING
             // Fast forward spool up
             for (let i = 0; i < 30; i++) {
                 state = updatePropulsionState(state, FULLSTACK_PROP_CONFIG, 1.0, true, 1.0, dt);
-                if (state.engineState === 'running') break;
+                if (state.engineState === EngineStateCode.RUNNING) break;
             }
-            expect(state.engineState).toBe('running');
+            expect(state.engineState).toBe(EngineStateCode.RUNNING);
             expect(state.actualThrottle).toBeGreaterThan(0.9);
 
             // RUNNING -> SHUTDOWN
             state = updatePropulsionState(state, FULLSTACK_PROP_CONFIG, 0, true, 1.0, dt);
-            expect(state.engineState).toBe('shutdown');
+            expect(state.engineState).toBe(EngineStateCode.SHUTDOWN);
 
             // SHUTDOWN -> OFF
             for (let i = 0; i < 10; i++) {
                 state = updatePropulsionState(state, FULLSTACK_PROP_CONFIG, 0, true, 1.0, dt);
-                if (state.engineState === 'off') break;
+                if (state.engineState === EngineStateCode.OFF) break;
             }
-            expect(state.engineState).toBe('off');
+            expect(state.engineState).toBe(EngineStateCode.OFF);
             expect(state.actualThrottle).toBe(0);
         });
     });
@@ -120,22 +121,22 @@ describe('Propulsion System', () => {
         it('should return correct display strings and colors', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
 
-            state.engineState = 'running';
+            state.engineState = EngineStateCode.RUNNING;
             expect(getEngineStateDisplay(state)).toBe('RUNNING');
             expect(getEngineStateColor(state)).toBe('#2ecc71');
 
-            state.engineState = 'shutdown';
+            state.engineState = EngineStateCode.SHUTDOWN;
             expect(getEngineStateColor(state)).toBe('#e67e22');
 
-            state.engineState = 'starting';
+            state.engineState = EngineStateCode.STARTING;
             expect(getEngineStateColor(state)).toBe('#f1c40f');
         });
 
         it('should handle payload configuration', () => {
             const state = createInitialPropulsionState(PAYLOAD_PROP_CONFIG);
-            expect(state.engineState).toBe('off');
+            expect(state.engineState).toBe(EngineStateCode.OFF);
             const result = attemptIgnition(state, PAYLOAD_PROP_CONFIG, true);
-            expect(result.engineState).toBe('off');
+            expect(result.engineState).toBe(EngineStateCode.OFF);
         });
     });
 });
