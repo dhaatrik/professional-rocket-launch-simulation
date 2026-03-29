@@ -151,6 +151,18 @@ describe('VehicleBlueprint Error Paths', () => {
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to load blueprints:', expect.any(SyntaxError));
         });
 
+        it('should return empty array and log error when localStorage contains a non-array JSON', () => {
+            localStorage.setItem('vab-blueprints', '{"some": "object"}');
+
+            const result = loadBlueprints();
+
+            expect(result).toEqual([]);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to load blueprints:',
+                expect.objectContaining({ message: 'Data is not an array' })
+            );
+        });
+
         it('should successfully load valid blueprints and filter out invalid ones', () => {
             // Create a valid blueprint
             let bp1 = createBlueprint('Good Rocket');

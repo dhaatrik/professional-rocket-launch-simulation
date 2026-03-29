@@ -376,7 +376,22 @@ export function serializeScript(script: MissionScript): string {
  */
 export function deserializeScript(json: string): MissionScript | null {
     try {
-        return JSON.parse(json) as MissionScript;
+        const parsed = JSON.parse(json);
+
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return null;
+        }
+
+        const script = parsed as Record<string, unknown>;
+
+        if (typeof script.name !== 'string') return null;
+        if (!Array.isArray(script.commands)) return null;
+        if (typeof script.createdAt !== 'number') return null;
+
+        // Note: For full robustness, we could also recursively validate every
+        // command, action, and condition here. For basic type safety of the
+        // top-level structure to prevent immediate crashes, this is sufficient.
+        return script as unknown as MissionScript;
     } catch {
         return null;
     }
