@@ -44,6 +44,13 @@ describe('Constants Physics Functions', () => {
         it('should return 0 when density is 0', () => {
             expect(getDynamicPressure(0, 100)).toBe(0);
         });
+
+        it('should handle negative velocity', () => {
+            const density = 1.225;
+            const velocity = -100;
+            // q = 0.5 * rho * (-v)^2 = 0.5 * 1.225 * 10000 = 6125
+            expect(getDynamicPressure(density, velocity)).toBeCloseTo(6125);
+        });
     });
 
     describe('getGravity', () => {
