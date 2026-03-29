@@ -8,6 +8,7 @@
 import { IVessel } from '../types';
 import { state } from '../core/State';
 import { CONFIG, PIXELS_PER_METER, getMachNumber } from '../config/Constants';
+import { EngineStateCode } from '../core/PhysicsBuffer';
 
 // ============================================================================
 // Types
@@ -34,7 +35,7 @@ export interface FlightDataFrame {
     mach: number; // Mach number
     aoa: number; // Angle of attack (degrees)
     skinTemp: number; // Skin temperature (K)
-    engineState: string; // Engine state
+    engineState: EngineStateCode; // Engine state
     apogee: number; // Predicted apogee (m)
 }
 

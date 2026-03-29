@@ -29,6 +29,8 @@ export interface FlightDataExport {
 // CSV Export
 // ============================================================================
 
+const engineStateLabels = ['OFF', 'STARTING', 'RUNNING', 'FLAMEOUT', 'SHUTDOWN'];
+
 /**
  * Convert frames to CSV string
  */
@@ -80,7 +82,7 @@ export function framesToCSV(frames: readonly FlightDataFrame[]): string {
             frame.mach.toFixed(3),
             frame.aoa.toFixed(2),
             frame.skinTemp.toFixed(1),
-            `"${frame.engineState}"`,
+            `"${engineStateLabels[frame.engineState] || 'UNKNOWN'}"`,
             frame.apogee.toFixed(0)
         ];
         lines.push(row.join(','));

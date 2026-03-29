@@ -50,6 +50,7 @@ import { FaultInjector } from '../safety/FaultInjector';
 import { Vessel } from '../physics/Vessel';
 import { PhysicsProxy } from './PhysicsProxy';
 import { TelemetryTransmitter } from '../telemetry/TelemetryTransmitter';
+import { EngineStateCode } from './PhysicsBuffer';
 import { ParticleSystem } from '../physics/ParticleSystem';
 
 export class Game {
@@ -1401,21 +1402,25 @@ export class Game {
             let color: string;
 
             switch (state) {
-                case 'off':
+                case EngineStateCode.OFF:
                     statusStr = 'OFF';
                     color = UI_COLORS.GRAY;
                     break;
-                case 'starting':
+                case EngineStateCode.STARTING:
                     statusStr = 'SPOOL';
                     color = UI_COLORS.YELLOW;
                     break;
-                case 'running':
+                case EngineStateCode.RUNNING:
                     statusStr = 'RUN';
                     color = UI_COLORS.GREEN;
                     break;
-                case 'shutdown':
+                case EngineStateCode.SHUTDOWN:
                     statusStr = 'STOP';
                     color = UI_COLORS.ORANGE;
+                    break;
+                case EngineStateCode.FLAMEOUT:
+                    statusStr = 'FLAMEOUT';
+                    color = UI_COLORS.RED;
                     break;
             }
 

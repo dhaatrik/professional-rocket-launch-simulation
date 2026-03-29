@@ -141,8 +141,8 @@ function step(inputs: any) {
 
                 if (inputs.controls.ignition) {
                     v.active = true;
-                    if (v.engineState === 'off') {
-                        v.engineState = 'starting';
+                    if (v.engineState === EngineStateCode.OFF) {
+                        v.engineState = EngineStateCode.STARTING;
                     }
                 }
                 if (inputs.controls.cutoff) {
@@ -307,19 +307,6 @@ function performStaging() {
     postState();
 }
 
-function mapEngineState(state: string): number {
-    switch (state) {
-        case 'starting':
-            return EngineStateCode.STARTING;
-        case 'running':
-            return EngineStateCode.RUNNING;
-        case 'flameout':
-            return EngineStateCode.FLAMEOUT;
-        default:
-            return EngineStateCode.OFF;
-    }
-}
-
 function postState() {
     if (sharedView) {
         // 1. Header
@@ -353,7 +340,7 @@ function postState() {
             sharedView[base + EntityOffset.FUEL] = e.fuel;
             sharedView[base + EntityOffset.ACTIVE] = e.active ? 1 : 0;
 
-            sharedView[base + EntityOffset.ENGINE_STATE] = mapEngineState(e.engineState);
+            sharedView[base + EntityOffset.ENGINE_STATE] = e.engineState;
             sharedView[base + EntityOffset.IGNITERS] = e.ignitersRemaining || 0;
 
             sharedView[base + EntityOffset.WIDTH] = e.w;

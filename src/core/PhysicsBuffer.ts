@@ -69,7 +69,8 @@ export enum EngineStateCode {
     OFF = 0,
     STARTING = 1,
     RUNNING = 2,
-    FLAMEOUT = 3
+    FLAMEOUT = 3,
+    SHUTDOWN = 4
 }
 
 /**

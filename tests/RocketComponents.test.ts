@@ -1,13 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { FullStack, Booster, UpperStage, Payload, Fairing } from '../src/physics/RocketComponents';
 import { state } from '../src/core/State';
+import { EngineStateCode } from '../src/core/PhysicsBuffer';
 
 describe('RocketComponents', () => {
     describe('Initialization', () => {
         it('FullStack should have mass and engine off', () => {
             const fs = new FullStack(0, 0);
             expect(fs.mass).toBeGreaterThan(0);
-            expect(fs.propState.engineState).toBe('off');
+            expect(fs.propState.engineState).toBe(EngineStateCode.OFF);
         });
 
         it('Booster should have mass and fuel', () => {
