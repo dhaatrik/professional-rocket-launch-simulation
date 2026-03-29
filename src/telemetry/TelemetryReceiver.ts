@@ -29,7 +29,8 @@ class TelemetryReceiver {
 
     // Data Buffers
     private readonly MAX_POINTS = 100;
-    private altHistory: number[] = new Array(100).fill(0);
+    private altHistory: number[] = new Array(this.MAX_POINTS).fill(0);
+    private altHistoryHead: number = 0;
     private path: Vector2D[] = [];
 
     constructor() {
@@ -147,8 +148,8 @@ class TelemetryReceiver {
     }
 
     private updateChart(newVal: number) {
-        this.altHistory.push(newVal);
-        this.altHistory.shift();
+        this.altHistory[this.altHistoryHead] = newVal;
+        this.altHistoryHead = (this.altHistoryHead + 1) % this.MAX_POINTS;
 
         const ctx = this.chartCtx;
         const width = this.chartCanvas.width;
@@ -166,13 +167,14 @@ class TelemetryReceiver {
 
         const step = width / (this.MAX_POINTS - 1);
 
-        this.altHistory.forEach((val, i) => {
+        for (let i = 0; i < this.MAX_POINTS; i++) {
+            const val = this.altHistory[(this.altHistoryHead + i) % this.MAX_POINTS];
             const x = i * step;
             const normalize = (val - min) / (max - min);
             const y = height - normalize * height;
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
-        });
+        }
         ctx.stroke();
     }
 }
