@@ -40,7 +40,8 @@ const uiCache = {
     bbStatus: null as HTMLElement | null,
     sasModeText: null as HTMLElement | null,
     tooltipOverlay: null as HTMLElement | null,
-    fcBtn: null as HTMLElement | null
+    fcBtn: null as HTMLElement | null,
+    exportBtn: null as HTMLButtonElement | null
 };
 
 function initUI() {
@@ -50,6 +51,7 @@ function initUI() {
     uiCache.sasModeText = document.getElementById('sas-mode-text');
     uiCache.tooltipOverlay = document.getElementById('tooltip-overlay');
     uiCache.fcBtn = document.getElementById('fc-btn');
+    uiCache.exportBtn = document.getElementById('export-btn') as HTMLButtonElement | null;
 }
 initUI();
 
@@ -463,6 +465,17 @@ function updateBlackBoxStatus(): void {
         const status = game.blackBox.getStatusString();
         bbStatus.textContent = status;
         bbStatus.classList.toggle('recording', game.blackBox.isRecording());
+    }
+
+    const exportBtn = uiCache.exportBtn;
+    if (exportBtn) {
+        const hasData = game.blackBox.getFrames().length > 0;
+        if (exportBtn.disabled !== !hasData) {
+            exportBtn.disabled = !hasData;
+            exportBtn.classList.toggle('disabled', !hasData);
+            exportBtn.setAttribute('aria-disabled', String(!hasData));
+            exportBtn.title = hasData ? 'Export Flight Data [E]' : 'No flight data to export yet';
+        }
     }
 }
 setInterval(updateBlackBoxStatus, 200);
