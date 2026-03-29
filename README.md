@@ -40,6 +40,9 @@ npm install
 
 # 3. Start the local development server
 npm run dev
+
+# 4. Run the test suite
+npm run test
 ```
 
 Navigate to `http://localhost:8080` in your browser to start the simulation.

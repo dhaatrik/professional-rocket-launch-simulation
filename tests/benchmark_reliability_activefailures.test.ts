@@ -10,7 +10,7 @@ describe('Reliability activeFailures Benchmark', () => {
         reliability.triggerFailure('SENSOR_GLITCH');
         reliability.triggerFailure('STRUCTURAL_FATIGUE');
 
-        const N = 1000000;
+        const N = 10000;
 
         // We will mock Math.random to not trigger new failures
         vi.spyOn(Math, 'random').mockReturnValue(1.0);

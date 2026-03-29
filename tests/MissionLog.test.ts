@@ -167,8 +167,8 @@ describe('MissionLog', () => {
 
             const events = log.getEvents();
             expect(events).toHaveLength(2);
-            expect(events[0].msg).toBe('Msg 1');
-            expect(events[1].msg).toBe('Msg 2');
+            expect(events[0]!.msg).toBe('Msg 1');
+            expect(events[1]!.msg).toBe('Msg 2');
         });
 
         it('should return the last event with getLastEvent()', () => {

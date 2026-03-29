@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Updates the Flight Computer HUD element with current status and commands.
  * Uses secure DOM methods to prevent XSS vulnerabilities.

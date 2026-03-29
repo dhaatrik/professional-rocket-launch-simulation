@@ -119,7 +119,9 @@ export class LaunchChecklist {
         const len = items.length;
 
         for (let i = 0; i < len; i++) {
-            const status = items[i].status;
+            const item = items[i];
+            if (!item) continue;
+            const status = item.status;
             if (status === 'go') go++;
             else if (status === 'no-go') noGo++;
             else if (status === 'pending') pending++;

@@ -27,44 +27,44 @@ describe('Propulsion System', () => {
     describe('Engine Shutdown', () => {
         it('should transition from running to shutdown and set commandedThrottle to 0', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
-            state.engineState = 'running';
+            state.engineState = EngineStateCode.RUNNING;
             state.commandedThrottle = 1.0;
 
             const newState = commandShutdown(state);
-            expect(newState.engineState).toBe('shutdown');
+            expect(newState.engineState).toBe(EngineStateCode.SHUTDOWN);
             expect(newState.commandedThrottle).toBe(0);
         });
 
         it('should abort startup, transition from starting to off, and reset spool/throttle', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
-            state.engineState = 'starting';
+            state.engineState = EngineStateCode.STARTING;
             state.spoolProgress = 0.5;
             state.actualThrottle = 0.5;
 
             const newState = commandShutdown(state);
-            expect(newState.engineState).toBe('off');
+            expect(newState.engineState).toBe(EngineStateCode.OFF);
             expect(newState.spoolProgress).toBe(0);
             expect(newState.actualThrottle).toBe(0);
         });
 
         it('should do nothing if already off', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
-            state.engineState = 'off';
+            state.engineState = EngineStateCode.OFF;
             state.commandedThrottle = 1.0;
 
             const newState = commandShutdown(state);
-            expect(newState.engineState).toBe('off');
+            expect(newState.engineState).toBe(EngineStateCode.OFF);
             expect(newState.commandedThrottle).toBe(1.0);
             expect(newState).not.toBe(state); // Ensure it returns a new object
         });
 
         it('should do nothing if already shutdown', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
-            state.engineState = 'shutdown';
+            state.engineState = EngineStateCode.SHUTDOWN;
             state.commandedThrottle = 1.0;
 
             const newState = commandShutdown(state);
-            expect(newState.engineState).toBe('shutdown');
+            expect(newState.engineState).toBe(EngineStateCode.SHUTDOWN);
             expect(newState.commandedThrottle).toBe(1.0);
             expect(newState).not.toBe(state); // Ensure it returns a new object
         });

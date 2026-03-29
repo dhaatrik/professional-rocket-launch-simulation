@@ -168,7 +168,7 @@ class TelemetryReceiver {
         const step = width / (this.MAX_POINTS - 1);
 
         for (let i = 0; i < this.MAX_POINTS; i++) {
-            const val = this.altHistory[(this.altHistoryHead + i) % this.MAX_POINTS];
+            const val = this.altHistory[(this.altHistoryHead + i) % this.MAX_POINTS] ?? 0;
             const x = i * step;
             const normalize = (val - min) / (max - min);
             const y = height - normalize * height;

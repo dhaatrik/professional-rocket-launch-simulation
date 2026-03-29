@@ -44,3 +44,15 @@ coverage/
 .prettiercache
 test-results/
 junit.xml
+.vitest/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# PackageManager Logs
+yarn-error.log
+pnpm-debug.log
+lerna-debug.log
+
+# Editor specific
+.gemini/

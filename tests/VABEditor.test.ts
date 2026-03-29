@@ -115,7 +115,7 @@ describe('VABEditor Core Functionality', () => {
         launchBtn.click();
 
         expect(onLaunch).toHaveBeenCalledTimes(1);
-        const blueprintArg = onLaunch.mock.calls[0][0];
+        const blueprintArg = onLaunch.mock.calls[0]![0];
         expect(blueprintArg).toBeDefined();
         expect(blueprintArg.stages.length).toBeGreaterThan(0);
 
