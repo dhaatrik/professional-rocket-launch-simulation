@@ -408,8 +408,14 @@ export function loadBlueprints(): VehicleBlueprint[] {
     if (!data) return [];
 
     try {
-        const jsons = JSON.parse(data) as string[];
-        return jsons.map(deserializeBlueprint).filter((b): b is VehicleBlueprint => b !== null);
+        const jsons = JSON.parse(data);
+        if (!Array.isArray(jsons)) {
+            throw new Error('Data is not an array');
+        }
+        return jsons
+            .filter((item): item is string => typeof item === 'string')
+            .map(deserializeBlueprint)
+            .filter((b): b is VehicleBlueprint => b !== null);
     } catch (e) {
         console.error('Failed to load blueprints:', e);
         return [];
