@@ -10,6 +10,7 @@
 import { IVessel } from '../types';
 import { PIXELS_PER_METER } from '../config/Constants';
 import { state } from '../core/State';
+import { secureRandom } from '../utils/Security';
 
 // ============================================================================
 // Types
@@ -239,7 +240,7 @@ export class FlightTerminationSystem {
                     }
                 } else if (this._corridorFraction > this.config.warningThreshold) {
                     // Pre-warning: approaching corridor edge
-                    if (state.missionLog && Math.random() < 0.01) {
+                    if (state.missionLog && secureRandom() < 0.01) {
                         state.missionLog.log(
                             `FTS: Corridor ${(this._corridorFraction * 100).toFixed(0)}% — approaching limit`,
                             'info'
