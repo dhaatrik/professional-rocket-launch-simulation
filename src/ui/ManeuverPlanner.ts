@@ -296,16 +296,8 @@ export class ManeuverPlanner {
         // Center = (0, 0)
         // Vessel = (x / 10, -(groundY - y)/10 - R_EARTH) ??
         // Actually, let's just use scalar magnitude for altitude and velocity since
-        // the game uses 2D flat earth approximation for "x" but "y" is radial gravity...
-        // Wait, the game *does* use radial gravity:
-        // Game.ts: const pG = 9.8 * Math.pow(R_EARTH / pRad, 2);
-        // Vessel.ts: const dist = R_EARTH + (this.groundY - this.y - this.h) / PIXELS_PER_METER;
-
-        // So 'y' is effectively the radial distance axis, and 'x' is tangential?
-        // Let's verify Vessel.ts gravity application.
-        // Vessel.ts:
-        // const g = 9.8 * Math.pow(R_EARTH/dist, 2);
-        // derivatives.dvy += g; (which implies g acts downwards in +y)
+        // the game uses 2D flat earth approximation for "x" but "y" is radial gravity.
+        // In this model, 'y' is effectively the radial distance axis, and 'x' is tangential.
         // This is a "Flat Earth with Gravity Gradient" model, NOT a true spherical gravity model.
         // X position does not curve around the planet.
         // This makes "Orbital Mechanics" slightly fake but we can approximate.
