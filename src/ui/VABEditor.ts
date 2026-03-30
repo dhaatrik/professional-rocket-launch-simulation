@@ -115,9 +115,23 @@ export class VABEditor {
         });
         nameInput.value = this.blueprint.name;
 
+        const headerControls = createElement(
+            'div',
+            { style: { display: 'flex', alignItems: 'center', gap: '15px' } },
+            [
+                nameInput,
+                createElement('button', {
+                    className: 'script-close-btn',
+                    'aria-label': 'Close Vehicle Assembly Building',
+                    title: 'Close',
+                    textContent: '×'
+                })
+            ]
+        );
+
         const header = createElement('div', { className: 'vab-header' }, [
             createElement('h2', {}, ['Vehicle Assembly Building']),
-            nameInput
+            headerControls
         ]);
 
         const partsPanel = createElement('div', { className: 'vab-parts-panel' }, [
@@ -667,6 +681,11 @@ export class VABEditor {
 
         // Cancel button
         this.container.querySelector('.vab-cancel-btn')?.addEventListener('click', () => {
+            this.hide();
+        });
+
+        // Close button (X)
+        this.container.querySelector('.script-close-btn')?.addEventListener('click', () => {
             this.hide();
         });
 
