@@ -125,12 +125,15 @@ function calculateStageProperties(stage: VehicleStage): StageProperties {
  * Convert a VehicleBlueprint to a VehicleSpec for physics
  */
 export function createVehicleSpec(blueprint: VehicleBlueprint): VehicleSpec {
-    const stages = blueprint.stages.map(calculateStageProperties);
-    const totalHeight = stages.reduce((sum, s) => sum + s.height, 0);
-
-    // Use max width from any part
+    const stages: StageProperties[] = [];
+    let totalHeight = 0;
     let width = 40; // default
+
     for (const stage of blueprint.stages) {
+        const stageProps = calculateStageProperties(stage);
+        stages.push(stageProps);
+        totalHeight += stageProps.height;
+
         for (const inst of stage.parts) {
             width = Math.max(width, inst.part.width);
         }
