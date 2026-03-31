@@ -39,6 +39,20 @@ export class VABEditor {
         this.onLaunch = onLaunch;
         this.blueprint = createFalconPreset();
         this.savedBlueprints = loadBlueprints();
+
+        // Event delegation for part removal
+        this.container.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            const removeBtn = target.closest('.remove-part') as HTMLElement;
+            if (removeBtn) {
+                e.stopPropagation();
+                const stageIndex = parseInt(removeBtn.dataset.stage || '0');
+                const instanceId = removeBtn.dataset.instance || '';
+                this.blueprint = removePartFromStage(this.blueprint, stageIndex, instanceId);
+                this.render();
+            }
+        });
+
         this.render();
     }
 
@@ -603,18 +617,6 @@ export class VABEditor {
                         this.render();
                     }
                 }
-            });
-        });
-
-        // Remove part buttons
-        this.container.querySelectorAll('.remove-part').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const target = e.currentTarget as HTMLElement;
-                const stageIndex = parseInt(target.dataset.stage || '0');
-                const instanceId = target.dataset.instance || '';
-                this.blueprint = removePartFromStage(this.blueprint, stageIndex, instanceId);
-                this.render();
             });
         });
 
