@@ -36,7 +36,7 @@ export interface ChecklistAuditEntry {
 // ============================================================================
 
 export class LaunchChecklist {
-    private items: ChecklistItem[] = [];
+    private items: Map<string, ChecklistItem> = new Map();
     private auditLog: ChecklistAuditEntry[] = [];
     private containerEl: HTMLElement | null = null;
     private _visible: boolean = false;
@@ -50,7 +50,7 @@ export class LaunchChecklist {
 
     /** Initialize default checklist items */
     private initDefaultItems(): void {
-        this.items = [
+        const defaultItems: ChecklistItem[] = [
             {
                 id: 'prop-pressure',
                 label: 'Tank pressure nominal',
@@ -93,11 +93,16 @@ export class LaunchChecklist {
                 status: 'pending'
             }
         ];
+
+        this.items.clear();
+        for (const item of defaultItems) {
+            this.items.set(item.id, item);
+        }
     }
 
     /** Get all items */
     getItems(): readonly ChecklistItem[] {
-        return this.items;
+        return Array.from(this.items.values());
     }
 
     /** Get audit log */
@@ -107,7 +112,10 @@ export class LaunchChecklist {
 
     /** Check if all items are GO */
     isReadyForLaunch(): boolean {
-        return this.items.every((item) => item.status === 'go');
+        for (const item of this.items.values()) {
+            if (item.status !== 'go') return false;
+        }
+        return true;
     }
 
     /** Get count of completed items */
@@ -115,24 +123,20 @@ export class LaunchChecklist {
         let go = 0;
         let noGo = 0;
         let pending = 0;
-        const items = this.items;
-        const len = items.length;
 
-        for (let i = 0; i < len; i++) {
-            const item = items[i];
-            if (!item) continue;
+        for (const item of this.items.values()) {
             const status = item.status;
             if (status === 'go') go++;
             else if (status === 'no-go') noGo++;
             else if (status === 'pending') pending++;
         }
 
-        return { go, noGo, pending, total: len };
+        return { go, noGo, pending, total: this.items.size };
     }
 
     /** Set item status */
     setItemStatus(id: string, status: ChecklistStatus, operator: string = 'MANUAL'): void {
-        const item = this.items.find((i) => i.id === id);
+        const item = this.items.get(id);
         if (!item) return;
 
         const previous = item.status;
@@ -161,14 +165,14 @@ export class LaunchChecklist {
 
     /** Run auto-checks for items that have autoCheck functions */
     runAutoChecks(): void {
-        this.items.forEach((item) => {
+        for (const item of this.items.values()) {
             if (item.autoCheck && item.status === 'pending') {
                 const result = item.autoCheck();
                 if (result) {
                     this.setItemStatus(item.id, 'go', 'AUTO');
                 }
             }
-        });
+        }
     }
 
     /** Toggle visibility */
@@ -235,7 +239,9 @@ export class LaunchChecklist {
 
     /** Reset all items to pending */
     reset(): void {
-        this.items.forEach((i) => (i.status = 'pending'));
+        for (const i of this.items.values()) {
+            i.status = 'pending';
+        }
         this.auditLog = [];
         this.render();
     }
@@ -249,7 +255,7 @@ export class LaunchChecklist {
 
         this.containerEl.textContent = '';
 
-        const checklistItems = this.items.map((item) => {
+        const checklistItems = Array.from(this.items.values()).map((item) => {
             const statusClass = item.status === 'go' ? 'go' : item.status === 'no-go' ? 'no-go' : 'pending';
 
             return createElement('div', { className: `checklist-row ${statusClass}` }, [
