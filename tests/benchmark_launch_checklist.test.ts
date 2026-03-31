@@ -57,11 +57,11 @@ describe('LaunchChecklist getCompletionCount performance', () => {
 
         // Let's create a larger checklist to make the benchmark more meaningful
         // Note: We bypass private visibility to setup the test data
-        const originalItems = [...(checklist as any).items];
-        const largeItems = [];
+        const originalItems = new Map((checklist as any).items);
+        const largeItems = new Map();
         for (let i = 0; i < 1000; i++) {
             const status = i % 3 === 0 ? 'go' : (i % 3 === 1 ? 'no-go' : 'pending');
-            largeItems.push({
+            largeItems.set(`item-${i}`, {
                 id: `item-${i}`,
                 label: `Item ${i}`,
                 station: 'TEST',
@@ -79,7 +79,7 @@ describe('LaunchChecklist getCompletionCount performance', () => {
         const end = performance.now();
 
         const timeElapsed = end - start;
-        console.log(`[Benchmark] getCompletionCount took ${timeElapsed.toFixed(2)}ms for ${iterations} iterations with ${largeItems.length} items`);
+        console.log(`[Benchmark] getCompletionCount took ${timeElapsed.toFixed(2)}ms for ${iterations} iterations with ${largeItems.size} items`);
 
         // Assert we get the correct result
         const result = checklist.getCompletionCount();

@@ -163,6 +163,15 @@ describe('VehicleBlueprint Error Paths', () => {
             );
         });
 
+        it('should handle native JSON.parse errors gracefully', () => {
+            localStorage.setItem('vab-blueprints', '{ invalid ]');
+
+            const result = loadBlueprints();
+
+            expect(result).toEqual([]);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to load blueprints:', expect.any(SyntaxError));
+        });
+
         it('should successfully load valid blueprints and filter out invalid ones', () => {
             // Create a valid blueprint
             let bp1 = createBlueprint('Good Rocket');

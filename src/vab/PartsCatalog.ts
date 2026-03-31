@@ -301,11 +301,16 @@ export const PARTS_CATALOG: RocketPart[] = [
     SRB_LARGE
 ];
 
+export const PARTS_MAP = new Map<string, RocketPart>();
+for (const part of PARTS_CATALOG) {
+    PARTS_MAP.set(part.id, part);
+}
+
 /**
  * Get a part by ID
  */
 export function getPartById(id: string): RocketPart | undefined {
-    return PARTS_CATALOG.find((p) => p.id === id);
+    return PARTS_MAP.get(id);
 }
 
 /**

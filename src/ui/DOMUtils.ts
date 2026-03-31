@@ -26,7 +26,6 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(
             Object.assign(element.style, value);
         } else if (typeof value === 'boolean') {
             if (value) element.setAttribute(key, '');
-            // if false, do nothing (don't set attribute)
         } else {
             element.setAttribute(key, String(value));
         }

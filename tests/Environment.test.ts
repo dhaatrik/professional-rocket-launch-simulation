@@ -69,6 +69,40 @@ describe('formatTimeOfDay', () => {
     });
 });
 
+describe('DEFAULT_WIND_LAYERS', () => {
+    it('should be an array of wind layers with 6 entries', () => {
+        expect(Array.isArray(DEFAULT_WIND_LAYERS)).toBe(true);
+        expect(DEFAULT_WIND_LAYERS.length).toBe(6);
+    });
+
+    it('should cover altitudes continuously from 0 to Infinity', () => {
+        expect(DEFAULT_WIND_LAYERS[0]?.altitudeMin).toBe(0);
+        expect(DEFAULT_WIND_LAYERS[DEFAULT_WIND_LAYERS.length - 1]?.altitudeMax).toBe(Infinity);
+
+        for (let i = 0; i < DEFAULT_WIND_LAYERS.length - 1; i++) {
+            const currentLayer = DEFAULT_WIND_LAYERS[i];
+            const nextLayer = DEFAULT_WIND_LAYERS[i + 1];
+            expect(currentLayer?.altitudeMax).toBe(nextLayer?.altitudeMin);
+        }
+    });
+
+    it('should have specific properties for key layers', () => {
+        // Surface layer
+        expect(DEFAULT_WIND_LAYERS[0]?.windSpeed).toBe(5);
+        expect(DEFAULT_WIND_LAYERS[0]?.windDirection).toBe(Math.PI / 4);
+
+        // Max-Q zone
+        const maxQLayer = DEFAULT_WIND_LAYERS[2];
+        expect(maxQLayer?.altitudeMin).toBe(5000);
+        expect(maxQLayer?.windSpeed).toBe(25);
+
+        // Upper atmosphere
+        const upperAtmosphereLayer = DEFAULT_WIND_LAYERS[5];
+        expect(upperAtmosphereLayer?.windSpeed).toBe(2);
+        expect(upperAtmosphereLayer?.windDirection).toBe(0);
+    });
+});
+
 describe('EnvironmentSystem', () => {
     describe('Wind Lookup', () => {
         it('should return surface wind correctly', () => {
