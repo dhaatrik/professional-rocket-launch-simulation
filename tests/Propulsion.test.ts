@@ -11,8 +11,7 @@ import {
     PAYLOAD_PROP_CONFIG,
     getEngineStateDisplay,
     getIgnitionFailureMessage,
-    getEngineStateColor,
-    getEffectiveThrustMultiplier
+    getEngineStateColor
 } from '../src/physics/Propulsion';
 
 describe('Propulsion System', () => {
