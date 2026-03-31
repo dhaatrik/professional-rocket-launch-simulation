@@ -33,7 +33,7 @@ export const FPS = 60;
 export const DT = 1 / FPS;
 
 /** Atmospheric scale height for pressure calculations (meters) */
-export const SCALE_HEIGHT = 7000;
+const SCALE_HEIGHT = 7000;
 
 /** Air density at sea level (kg/m³) */
 export const RHO_SL = 1.225;

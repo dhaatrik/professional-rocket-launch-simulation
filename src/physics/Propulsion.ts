@@ -333,14 +333,6 @@ export function updatePropulsionState(
 }
 
 /**
- * Get effective thrust multiplier based on propulsion state
- * Returns 0-1 multiplier to apply to max thrust
- */
-export function getEffectiveThrustMultiplier(state: PropulsionState): number {
-    return state.actualThrottle;
-}
-
-/**
  * Get display string for engine state
  */
 export function getEngineStateDisplay(state: PropulsionState): string {

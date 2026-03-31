@@ -30,13 +30,14 @@ describe('LaunchChecklist Security', () => {
     it('should NOT be vulnerable to XSS in checklist item labels (fix verification)', () => {
         const checklist = new LaunchChecklist('checklist-panel');
 
-        // Access private items array
+        // Access private items Map
         const items = (checklist as any).items;
 
         // Inject malicious payload
         const maliciousPayload = '<img src=x onerror=alert("XSS")>';
-        items[0].label = maliciousPayload;
-        items[0].station = maliciousPayload;
+        const firstItem = items.values().next().value;
+        firstItem.label = maliciousPayload;
+        firstItem.station = maliciousPayload;
 
         // Force render
         (checklist as any).render();
