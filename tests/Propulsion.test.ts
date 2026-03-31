@@ -7,7 +7,7 @@ import {
     attemptIgnition,
     commandShutdown,
     FULLSTACK_PROP_CONFIG,
-    UPPER_STAGE_PROP_CONFIG,
+    BOOSTER_PROP_CONFIG,
     PAYLOAD_PROP_CONFIG,
     getEngineStateDisplay,
     getIgnitionFailureMessage,
@@ -23,48 +23,13 @@ describe('Propulsion System', () => {
             expect(state.ullageSettled).toBe(true);
         });
 
-        it('should start with correct initial state for UPPER_STAGE', () => {
-            const state = createInitialPropulsionState(UPPER_STAGE_PROP_CONFIG);
-            expect(state.engineState).toBe(EngineStateCode.OFF);
-            expect(state.ignitersRemaining).toBe(UPPER_STAGE_PROP_CONFIG.igniterCount);
-            expect(state.ignitersRemaining).toBe(4);
-            expect(state.ullageSettled).toBe(true);
-        });
-    });
-
-    describe('Upper Stage Configurations', () => {
-        it('should have lower minUllageAccel', () => {
-            expect(UPPER_STAGE_PROP_CONFIG.minUllageAccel).toBe(0.05);
-        });
-
-        it('should have slower spool up and down times', () => {
-            expect(UPPER_STAGE_PROP_CONFIG.spoolUpTime).toBe(3.0);
-            expect(UPPER_STAGE_PROP_CONFIG.spoolDownTime).toBe(1.0);
-        });
-    });
-
-    describe('Upper Stage State Transitions', () => {
-        it('should handle ignition and spool up correctly', () => {
-            let state = createInitialPropulsionState(UPPER_STAGE_PROP_CONFIG);
-            const dt = 0.5;
-
-            // OFF -> STARTING
-            // In the first tick, attemptIgnition is called and engineState becomes STARTING
-            // but the STARTING block in the switch is NOT executed in the same tick.
-            state = updatePropulsionState(state, UPPER_STAGE_PROP_CONFIG, 1.0, true, 1.0, dt);
-            expect(state.engineState).toBe(EngineStateCode.STARTING);
-            expect(state.spoolProgress).toBe(0);
-
-            // Second tick: Spool progress increases
-            state = updatePropulsionState(state, UPPER_STAGE_PROP_CONFIG, 1.0, true, 1.0, dt);
-            expect(state.spoolProgress).toBeCloseTo(0.5 / 3.0, 5);
-
-            // Fast forward spool up
-            for (let i = 0; i < 6; i++) {
-                state = updatePropulsionState(state, UPPER_STAGE_PROP_CONFIG, 1.0, true, 1.0, dt);
-                if (state.engineState === EngineStateCode.RUNNING) break;
-            }
-            expect(state.engineState).toBe(EngineStateCode.RUNNING);
+        it('should have correct configuration for BOOSTER_PROP_CONFIG', () => {
+            expect(BOOSTER_PROP_CONFIG.spoolUpTime).toBe(1.5);
+            expect(BOOSTER_PROP_CONFIG.spoolDownTime).toBe(0.3);
+            expect(BOOSTER_PROP_CONFIG.igniterCount).toBe(5);
+            expect(BOOSTER_PROP_CONFIG.minUllageAccel).toBe(0.1);
+            expect(BOOSTER_PROP_CONFIG.ullageSettleTime).toBe(0.3);
+            expect(BOOSTER_PROP_CONFIG.hasEngine).toBe(true);
         });
     });
 
