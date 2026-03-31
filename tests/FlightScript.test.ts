@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
     parseScriptLine,
     parseMissionScript,
@@ -81,6 +81,15 @@ describe('FlightScript', () => {
         it('should return null when deserializing invalid JSON', () => {
             const restored = deserializeScript('{ invalid json ');
             expect(restored).toBeNull();
+        });
+
+        it('should handle unexpected exceptions during deserialization safely', () => {
+            const jsonSpy = vi.spyOn(JSON, 'parse').mockImplementationOnce(() => {
+                throw new Error('Forced Error');
+            });
+            const result = deserializeScript('{"valid":"json"}');
+            expect(result).toBeNull();
+            jsonSpy.mockRestore();
         });
 
         it('should return null when deserializing valid JSON with invalid structure', () => {
