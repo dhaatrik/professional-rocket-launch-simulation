@@ -1,6 +1,33 @@
 import { describe, it, expect } from 'vitest';
-import { EnvironmentSystem, type WindLayer, formatTimeOfDay } from '../src/physics/Environment';
+import { EnvironmentSystem, type WindLayer, formatTimeOfDay, DEFAULT_ENVIRONMENT_CONFIG } from '../src/physics/Environment';
 import { Vec2 } from '../src/types/index';
+
+describe('DEFAULT_ENVIRONMENT_CONFIG', () => {
+    it('should be defined', () => {
+        expect(DEFAULT_ENVIRONMENT_CONFIG).toBeDefined();
+    });
+
+    it('should have the correct structure and default values', () => {
+        expect(DEFAULT_ENVIRONMENT_CONFIG.maxGustSpeed).toBe(8);
+        expect(DEFAULT_ENVIRONMENT_CONFIG.gustFrequency).toBe(0.5);
+        expect(DEFAULT_ENVIRONMENT_CONFIG.launchWindLimit).toBe(15);
+        expect(DEFAULT_ENVIRONMENT_CONFIG.dayCycleMinutes).toBe(10);
+        expect(DEFAULT_ENVIRONMENT_CONFIG.enableDayNightCycle).toBe(true);
+    });
+
+    it('should contain default wind layers', () => {
+        expect(DEFAULT_ENVIRONMENT_CONFIG.windLayers).toBeDefined();
+        expect(Array.isArray(DEFAULT_ENVIRONMENT_CONFIG.windLayers)).toBe(true);
+        expect(DEFAULT_ENVIRONMENT_CONFIG.windLayers.length).toBeGreaterThan(0);
+
+        // Verify the first layer as a sample
+        const firstLayer = DEFAULT_ENVIRONMENT_CONFIG.windLayers[0]!;
+        expect(firstLayer.altitudeMin).toBe(0);
+        expect(firstLayer.altitudeMax).toBe(1000);
+        expect(firstLayer.windSpeed).toBe(5);
+        expect(firstLayer.windDirection).toBeCloseTo(Math.PI / 4);
+    });
+});
 
 describe('formatTimeOfDay', () => {
     it('should format midnight correctly', () => {
