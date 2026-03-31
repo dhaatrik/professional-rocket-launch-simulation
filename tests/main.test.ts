@@ -1,104 +1,118 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Create minimal mock versions of external dependencies imported in main.ts
-vi.mock('../src/telemetry/TelemetryExporter', () => ({
-    exportFlightData: vi.fn(),
-}));
+describe('main.ts Error Handling', () => {
+    let consoleErrorSpy: any;
+    let alertSpy: any;
 
-vi.mock('../src/ui/VABEditor', () => ({
-    VABEditor: class {
-        init() {}
-    },
-}));
-
-vi.mock('../src/ui/FlightComputerHUD', () => ({
-    updateFlightComputerHUD: vi.fn(),
-}));
-
-describe('main.ts error handling', () => {
     beforeEach(() => {
+        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
         vi.resetModules();
-        vi.restoreAllMocks();
-        vi.spyOn(console, 'error').mockImplementation(() => {});
-        vi.spyOn(window, 'alert').mockImplementation(() => {});
 
-        // Mock document elements needed by main.ts
-        document.body.innerHTML = `
-            <div id="camera-panel">
-                <button data-cam="1"></button>
-                <button data-cam="2"></button>
-                <button data-cam="3"></button>
-            </div>
-            <button id="maneuver-btn"></button>
-            <button id="mission-control-btn"></button>
-            <button id="checklist-btn"></button>
-            <button id="fts-destruct-btn"></button>
-            <div id="fis-panel"></div>
-            <button id="telemetry-btn"></button>
-            <button id="export-btn"></button>
-        `;
+        // Mock UI components that do a lot of DOM manipulation
+        vi.doMock('../src/ui/ScriptEditor', () => ({
+            ScriptEditor: class {}
+        }));
+
+        vi.doMock('../src/ui/VABEditor', () => ({
+            VABEditor: class {}
+        }));
+
+        vi.doMock('../src/ui/FlightComputerHUD', () => ({
+            updateFlightComputerHUD: vi.fn()
+        }));
+
+        vi.doMock('../src/telemetry/TelemetryExporter', () => ({
+            exportFlightData: vi.fn()
+        }));
+
+        vi.doMock('../src/ui/MissionControl', () => ({
+            MissionControl: class {
+                render() {}
+                show() {}
+                hide() {}
+                isVisible() { return false; }
+            }
+        }));
+
+        vi.doMock('../src/ui/ManeuverPlanner', () => ({
+            ManeuverPlanner: class {
+                render() {}
+            }
+        }));
+
+        // Basic DOM mock
+        vi.stubGlobal('document', {
+            getElementById: vi.fn(() => ({
+                addEventListener: vi.fn(),
+                style: {},
+                classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn(), contains: vi.fn() },
+                querySelector: vi.fn(() => ({ addEventListener: vi.fn() })),
+                querySelectorAll: vi.fn(() => []),
+                setAttribute: vi.fn(),
+                removeAttribute: vi.fn(),
+                textContent: '',
+            })),
+            querySelector: vi.fn(() => ({
+                addEventListener: vi.fn(),
+                classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() }
+            })),
+            querySelectorAll: vi.fn(() => []),
+            createElement: vi.fn(() => ({
+                addEventListener: vi.fn(),
+                style: {},
+                classList: { add: vi.fn(), remove: vi.fn() }
+            }))
+        });
+
+        vi.stubGlobal('window', {
+            ...window,
+            addEventListener: vi.fn(),
+            alert: alertSpy,
+            location: { reload: vi.fn() }
+        });
     });
 
-    it('should catch synchronous Game constructor errors', async () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    it('handles Game constructor failure correctly', async () => {
         vi.doMock('../src/core/Game', () => {
             return {
                 Game: class {
                     constructor() {
-                        throw new Error('Test SAB Error');
+                        throw new Error('Mocked Constructor Error');
                     }
                 }
             };
         });
 
-        await expect(import('../src/main.ts')).rejects.toThrow('Test SAB Error');
-        expect(console.error).toHaveBeenCalledWith('Game constructor failed:', expect.any(Error));
-        expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Critical Error: Test SAB Error'));
+        await expect(import('../src/main')).rejects.toThrow('Mocked Constructor Error');
+        expect(consoleErrorSpy).toHaveBeenCalledWith('Game constructor failed:', expect.any(Error));
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Critical Error: Mocked Constructor Error'));
     });
 
-    it('should catch asynchronous Game init errors', async () => {
-        // Mock UI components that rely on game
-        vi.doMock('../src/ui/ScriptEditor', () => ({
-            ScriptEditor: class {
-                constructor() {}
-            }
-        }));
-        vi.doMock('../src/ui/VABEditor', () => ({
-            VABEditor: class {
-                constructor() {}
-                init() {}
-            }
-        }));
-
+    it('handles Game init failure correctly', async () => {
         vi.doMock('../src/core/Game', () => {
             return {
                 Game: class {
-                    constructor() {}
+                    addPhysicsEventListener = vi.fn();
+                    addEventListener = vi.fn();
                     async init() {
-                        throw new Error('Test Init Error');
+                        throw new Error('Mocked Init Error');
                     }
-                    // Add stubs for methods called by main.ts
-                    audio = { toggleMute: () => false };
-                    sas = { setMode: () => {} };
-                    input = { cameraMode: 1 };
-                    missionLog = { log: () => {} };
-                    maneuverPlanner = { toggle: () => {} };
-                    missionControl = { toggle: () => {} };
-                    checklist = { toggle: () => {} };
-                    fts = { triggerManualDestruct: () => false };
-                    faultInjector = { toggleFault: () => {} };
-                    blackBox = { toggle: () => {}, getStatusString: () => '', isRecording: () => false, getFrames: () => [] };
-                    getFlightComputerStatus = () => ({ status: 'FC: OFF' });
                 }
             };
         });
 
-        // Dynamic import to trigger main.ts evaluation
-        await import('../src/main.ts');
+        await import('../src/main');
 
-        // Let promises resolve
+        // Allow async init error to be caught
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(console.error).toHaveBeenCalledWith('Game initialization failed:', expect.any(Error));
-        expect(window.alert).toHaveBeenCalledWith('Game Init Error: Test Init Error');
+        expect(consoleErrorSpy).toHaveBeenCalledWith('Game initialization failed:', expect.any(Error));
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Game Init Error: Mocked Init Error'));
     });
 });
