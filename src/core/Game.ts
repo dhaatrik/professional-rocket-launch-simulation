@@ -426,10 +426,7 @@ export class Game {
         this.physics.command('STAGE', {});
     }
 
-    /**
-     * Physics update
-     */
-    private updatePhysics(dt: number): void {
+    private processTimeWarpAndCamera(): void {
         // Time warp controls
         if (this.input.actions.TIME_WARP_UP && this.timeScale < 100) {
             this.timeScale *= 1.1;
@@ -443,7 +440,9 @@ export class Game {
             this.cameraMode = this.cameraMode === 'MAP' ? 'ROCKET' : 'MAP';
             this.input.actions.MAP_MODE = false;
         }
+    }
 
+    private gatherControls(dt: number) {
         // Collect inputs
         let throttle = this.commandThrottle;
         let gimbalAngle = 0;
@@ -475,7 +474,7 @@ export class Game {
             throttle = this.commandThrottle;
         }
 
-        const controls = {
+        return {
             throttle,
             gimbalAngle,
             stage,
@@ -484,20 +483,9 @@ export class Game {
             ignition: this.commandThrottle > 0,
             cutoff: this.commandThrottle === 0
         };
+    }
 
-        // Step Physics logic in Worker
-        this.physics.step(dt, { timeScale: this.timeScale, controls });
-
-        // Update references
-        const trackedIdx = this.physics.getTrackedIndex();
-        this.trackedEntity = this.entities[trackedIdx] || null;
-        this.mainStack = this.trackedEntity; // Simplified assumption
-
-        // Sync globals for legacy/UI
-        state.entities = this.entities as any;
-        window.trackedEntity = this.trackedEntity;
-        window.mainStack = this.mainStack;
-
+    private updateEnvironmentView(dt: number): void {
         // Update Environment (View)
         // Worker sends wind/density via buffer; other env fields come from main-thread EnvironmentSystem
         this.environment.update(dt * this.timeScale);
@@ -515,10 +503,9 @@ export class Game {
         } else {
             this.lastEnvState = this.environment.getState(0);
         }
+    }
 
-        // Update Mission Control
-        this.missionControl.update(dt * this.timeScale, this.missionTime);
-
+    private processMissionEvents(): void {
         // Mission events
         if (this.trackedEntity) {
             const alt = (this.groundY - this.trackedEntity.y - this.trackedEntity.h) / PIXELS_PER_METER;
@@ -546,11 +533,9 @@ export class Game {
                 this.blackBox.stop('crashed');
             }
         }
+    }
 
-        // Sync globals
-        window.trackedEntity = this.trackedEntity;
-        window.mainStack = this.mainStack;
-
+    private updateParticles(): void {
         // Particle System Update (Zero-allocation loop)
         // 1. Spawn exhaust for all entities with throttle > 0
         // Optimized: standard for loop avoids closure allocation of forEach
@@ -584,6 +569,40 @@ export class Game {
         if (activeCount < len) {
             particles.length = activeCount;
         }
+    }
+
+    /**
+     * Physics update
+     */
+    private updatePhysics(dt: number): void {
+        this.processTimeWarpAndCamera();
+        const controls = this.gatherControls(dt);
+
+        // Step Physics logic in Worker
+        this.physics.step(dt, { timeScale: this.timeScale, controls });
+
+        // Update references
+        const trackedIdx = this.physics.getTrackedIndex();
+        this.trackedEntity = this.entities[trackedIdx] || null;
+        this.mainStack = this.trackedEntity; // Simplified assumption
+
+        // Sync globals for legacy/UI
+        state.entities = this.entities as any;
+        window.trackedEntity = this.trackedEntity;
+        window.mainStack = this.mainStack;
+
+        this.updateEnvironmentView(dt);
+
+        // Update Mission Control
+        this.missionControl.update(dt * this.timeScale, this.missionTime);
+
+        this.processMissionEvents();
+
+        // Sync globals
+        window.trackedEntity = this.trackedEntity;
+        window.mainStack = this.mainStack;
+
+        this.updateParticles();
     }
 
     /**
