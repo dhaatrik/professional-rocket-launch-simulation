@@ -17,7 +17,7 @@ import {
 
 describe('Propulsion System', () => {
     describe('Initialization', () => {
-        it('should start with correct initial state', () => {
+        it('should start with correct initial state for FULLSTACK', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
             expect(state.engineState).toBe(EngineStateCode.OFF);
             expect(state.ignitersRemaining).toBe(FULLSTACK_PROP_CONFIG.igniterCount);
