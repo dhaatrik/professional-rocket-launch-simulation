@@ -1,7 +1,8 @@
 
-import { getAtmosphericDensity, SCALE_HEIGHT, RHO_SL } from '../src/config/Constants';
+import { getAtmosphericDensity, RHO_SL } from '../src/config/Constants';
 
 const ITERATIONS = 10000000;
+const SCALE_HEIGHT = 7000;
 
 // --- ORIGINAL IMPLEMENTATION (Baseline) ---
 function getAtmosphericDensityOriginal(altitude: number): number {
