@@ -96,6 +96,33 @@ describe('VehicleBlueprint Error Paths', () => {
             );
         });
 
+        it('should return null and log error when an unexpected error occurs during mapping', () => {
+            const validData = {
+                stages: []
+            };
+
+            const originalMap = Array.prototype.map;
+            let result;
+            try {
+                // Force an unexpected error inside the map operation
+                Array.prototype.map = vi.fn().mockImplementation(() => {
+                    throw new Error('Unexpected mapping error');
+                });
+
+                result = deserializeBlueprint(JSON.stringify(validData));
+            } finally {
+                // Restore map immediately before running expectations
+                // so we don't break Vitest's internal use of map during assertions.
+                Array.prototype.map = originalMap;
+            }
+
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Unexpected mapping error' })
+            );
+        });
+
         it('should return null and log error when part ID is unknown', () => {
             // Create a valid JSON structure but with a bad part ID
             const badData = {
