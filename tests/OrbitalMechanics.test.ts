@@ -3,6 +3,7 @@ import {
     calculateOrbitalElements,
     calculateVisViva,
     calculateCircularVelocity,
+    calculateOrbitalPeriod,
     calculateHohmannTransfer,
     calculateCircularizationFromElements,
     calculateGroundTrack,
@@ -41,6 +42,29 @@ describe('OrbitalMechanics', () => {
             const v = calculateVisViva(r, r); // a=r
             const expected = calculateCircularVelocity(r);
             expect(v).toBeCloseTo(expected, 5);
+        });
+    });
+
+    describe('Orbital Period', () => {
+        it('should calculate correct period for LEO', () => {
+            const r = R_EARTH + 400000; // 400km altitude
+            const period = calculateOrbitalPeriod(r);
+            const expected = 2 * Math.PI * Math.sqrt(Math.pow(r, 3) / MU);
+            expect(period).toBeCloseTo(expected, 1);
+        });
+
+        it('should handle zero or negative semi-major axis', () => {
+            expect(calculateOrbitalPeriod(0)).toBe(0);
+            expect(calculateOrbitalPeriod(-1000)).toBe(0);
+        });
+
+        it('should calculate correct period for GEO', () => {
+            const r = 42164000; // ~42,164 km radius for GEO
+            const period = calculateOrbitalPeriod(r);
+            // GEO period is approx 23 hours 56 minutes 4 seconds (86164 seconds)
+            // Due to simulation constants for MU (g0 * R^2) we expect a slightly different value
+            // Calculated difference is around 88.5 seconds, so we update the margin
+            expect(period).toBeCloseTo(86164, -3); // Allow larger margin for simulation constants
         });
     });
 
