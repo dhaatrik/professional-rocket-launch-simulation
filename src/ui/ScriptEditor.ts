@@ -134,11 +134,13 @@ export class ScriptEditor {
                 createElement('button', {
                     id: 'script-validate-btn',
                     className: 'script-btn',
+                    'aria-label': 'Validate script',
                     textContent: 'Validate'
                 }),
                 createElement('button', {
                     id: 'script-clear-btn',
                     className: 'script-btn script-btn-danger',
+                    'aria-label': 'Clear script',
                     textContent: 'Clear'
                 })
             ]),
@@ -188,11 +190,13 @@ export class ScriptEditor {
                 createElement('button', {
                     id: 'script-save-btn',
                     className: 'script-btn script-btn-secondary',
+                    'aria-label': 'Save script',
                     textContent: 'Save'
                 }),
                 createElement('button', {
                     id: 'script-delete-btn',
                     className: 'script-btn script-btn-danger',
+                    'aria-label': 'Delete script',
                     textContent: 'Delete'
                 })
             ]),
@@ -200,6 +204,7 @@ export class ScriptEditor {
                 createElement('button', {
                     id: 'script-load-btn',
                     className: 'script-btn script-btn-primary',
+                    'aria-label': 'Load script to flight computer',
                     textContent: 'Load to FC'
                 })
             ])
