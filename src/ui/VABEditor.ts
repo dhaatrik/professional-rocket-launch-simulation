@@ -5,7 +5,7 @@
  * Visual vehicle builder UI with parts catalog, stacking area, and stage manager.
  */
 
-import { RocketPart, PartCategory, PARTS_CATALOG, getPartsByCategory } from '../vab/PartsCatalog';
+import { RocketPart, PartCategory, getPartById, getPartsByCategory } from '../vab/PartsCatalog';
 import { createElement } from './DOMUtils';
 import {
     VehicleBlueprint,
@@ -115,19 +115,15 @@ export class VABEditor {
         });
         nameInput.value = this.blueprint.name;
 
-        const headerControls = createElement(
-            'div',
-            { style: { display: 'flex', alignItems: 'center', gap: '15px' } },
-            [
-                nameInput,
-                createElement('button', {
-                    className: 'script-close-btn',
-                    'aria-label': 'Close Vehicle Assembly Building',
-                    title: 'Close',
-                    textContent: '×'
-                })
-            ]
-        );
+        const headerControls = createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '15px' } }, [
+            nameInput,
+            createElement('button', {
+                className: 'script-close-btn',
+                'aria-label': 'Close Vehicle Assembly Building',
+                title: 'Close',
+                textContent: '×'
+            })
+        ]);
 
         const header = createElement('div', { className: 'vab-header' }, [
             createElement('h2', {}, ['Vehicle Assembly Building']),
@@ -396,7 +392,7 @@ export class VABEditor {
             ];
         }
 
-        const selectedPart = this.selectedPartId ? PARTS_CATALOG.find((p) => p.id === this.selectedPartId) : null;
+        const selectedPart = this.selectedPartId ? getPartById(this.selectedPartId) : null;
         const btnTitle = selectedPart ? `Add ${selectedPart.name}` : 'Select a part from the catalog first';
         const btnDisabled = !selectedPart;
         const btnText = selectedPart ? `+ Add ${selectedPart.name}` : '+ Add Selected Part';
@@ -601,7 +597,7 @@ export class VABEditor {
             btn.addEventListener('click', (e) => {
                 const stageIndex = parseInt((e.currentTarget as HTMLElement).dataset.stage || '0');
                 if (this.selectedPartId) {
-                    const part = PARTS_CATALOG.find((p) => p.id === this.selectedPartId);
+                    const part = getPartById(this.selectedPartId);
                     if (part) {
                         this.blueprint = addPartToStage(this.blueprint, stageIndex, part);
                         this.render();

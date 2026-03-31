@@ -43,4 +43,24 @@ describe('AudioEngine', () => {
         expect(engine.initialized).toBe(true);
         expect((engine as any).ctx).toBeInstanceOf(MockAudioContext);
     });
+
+    it('should handle initialization errors gracefully', () => {
+        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(function() {});
+
+        // Temporarily override the global AudioContext mock to throw an error
+        const mockError = new Error('AudioContext initialization failed');
+        vi.stubGlobal('AudioContext', vi.fn().mockImplementation(function() {
+            throw mockError;
+        }));
+
+        const engine = new AudioEngine();
+        engine.init();
+
+        expect(engine.initialized).toBe(false);
+        expect(consoleSpy).toHaveBeenCalledWith('Audio initialization failed:', mockError);
+
+        // Restore globals
+        vi.stubGlobal('AudioContext', MockAudioContext);
+        consoleSpy.mockRestore();
+    });
 });
