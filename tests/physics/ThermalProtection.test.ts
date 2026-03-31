@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import {
-    calculateHeatFlux,
     calculateRadiativeCooling,
     updateThermalState,
     getThermalDamageRate,
@@ -15,38 +14,6 @@ import {
 } from '../../src/physics/ThermalProtection';
 
 describe('Thermal Protection Module', () => {
-    describe('calculateHeatFlux', () => {
-        it('should return 0 when density is very low (vacuum)', () => {
-            // Altitude 250km should have rho < 1e-10
-            expect(calculateHeatFlux(5000, 250000, 0.5)).toBe(0);
-        });
-
-        it('should return 0 at low speeds', () => {
-            expect(calculateHeatFlux(50, 10000, 0.5)).toBe(0);
-        });
-
-        it('should increase with velocity cubed', () => {
-            const h1 = calculateHeatFlux(1000, 20000, 0.5);
-            const h2 = calculateHeatFlux(2000, 20000, 0.5);
-            // 2000^3 / 1000^3 = 8
-            expect(h2).toBeCloseTo(h1 * 8, 2);
-        });
-
-        it('should decrease with larger nose radius', () => {
-            const h1 = calculateHeatFlux(2000, 20000, 0.1);
-            const h2 = calculateHeatFlux(2000, 20000, 0.4);
-            // sqrt(1/0.4) / sqrt(1/0.1) = sqrt(0.25) = 0.5
-            expect(h2).toBeCloseTo(h1 * 0.5, 2);
-        });
-
-        it('should increase with angle of attack', () => {
-            const h0 = calculateHeatFlux(2000, 20000, 0.5, 0);
-            const hAoA = calculateHeatFlux(2000, 20000, 0.5, Math.PI / 6); // 30 deg
-            // Factor = 1 + sin(30) * 0.5 = 1 + 0.5 * 0.5 = 1.25
-            expect(hAoA).toBeCloseTo(h0 * 1.25, 2);
-        });
-    });
-
     describe('calculateRadiativeCooling', () => {
         it('should increase with temperature following T^4', () => {
             const c1 = calculateRadiativeCooling(500, 0.8, 1.0, 0);

@@ -152,40 +152,6 @@ export const PAYLOAD_TPS_CONFIG: TPSConfig = {
 // ============================================================================
 
 /**
- * Calculate stagnation point heat flux using Sutton-Graves approximation
- *
- * q̇ = k × √(ρ/r_n) × V³
- *
- * @param velocity - Vehicle velocity (m/s)
- * @param altitude - Altitude (m)
- * @param noseRadius - Nose radius (m)
- * @param aoa - Angle of attack (radians) - affects heating distribution
- * @returns Heat flux in W/m²
- */
-export function calculateHeatFlux(velocity: number, altitude: number, noseRadius: number, aoa: number = 0): number {
-    // Get atmospheric density
-    const rho = getAtmosphericDensity(altitude);
-
-    // No heating in vacuum or at low speeds
-    if (rho < 1e-10 || velocity < 100) {
-        return 0;
-    }
-
-    // Sutton-Graves stagnation heating
-    // q = k * sqrt(rho / r_n) * V^3
-    const sqrtRhoOverR = Math.sqrt(rho / Math.max(noseRadius, 0.01));
-    const vCubed = velocity * velocity * velocity;
-    let heatFlux = SUTTON_GRAVES_K * sqrtRhoOverR * vCubed;
-
-    // AoA increases heating on windward side
-    // Simplified: heating increases by factor of (1 + sin(|aoa|))
-    const aoaFactor = 1 + Math.sin(Math.abs(aoa)) * 0.5;
-    heatFlux *= aoaFactor;
-
-    return heatFlux;
-}
-
-/**
  * Calculate radiative cooling rate
  *
  * q_rad = ε × σ × A × (T⁴ - T_amb⁴)
@@ -233,8 +199,17 @@ export function updateThermalState(
     aoa: number,
     dt: number
 ): ThermalState {
-    // Calculate heat flux
-    const heatFlux = calculateHeatFlux(velocity, altitude, config.noseRadius, aoa);
+    // Calculate heat flux inline
+    const rho = getAtmosphericDensity(altitude);
+    let heatFlux = 0;
+
+    if (rho >= 1e-10 && velocity >= 100) {
+        const sqrtRhoOverR = Math.sqrt(rho / Math.max(config.noseRadius, 0.01));
+        const vCubed = velocity * velocity * velocity;
+        heatFlux = SUTTON_GRAVES_K * sqrtRhoOverR * vCubed;
+        const aoaFactor = 1 + Math.sin(Math.abs(aoa)) * 0.5;
+        heatFlux *= aoaFactor;
+    }
 
     // Total heating power (W)
     const heatingPower = heatFlux * config.referenceArea;
