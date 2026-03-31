@@ -7,6 +7,7 @@ import {
     attemptIgnition,
     commandShutdown,
     FULLSTACK_PROP_CONFIG,
+    BOOSTER_PROP_CONFIG,
     PAYLOAD_PROP_CONFIG,
     getEngineStateDisplay,
     getIgnitionFailureMessage,
@@ -21,6 +22,15 @@ describe('Propulsion System', () => {
             expect(state.engineState).toBe(EngineStateCode.OFF);
             expect(state.ignitersRemaining).toBe(FULLSTACK_PROP_CONFIG.igniterCount);
             expect(state.ullageSettled).toBe(true);
+        });
+
+        it('should have correct configuration for BOOSTER_PROP_CONFIG', () => {
+            expect(BOOSTER_PROP_CONFIG.spoolUpTime).toBe(1.5);
+            expect(BOOSTER_PROP_CONFIG.spoolDownTime).toBe(0.3);
+            expect(BOOSTER_PROP_CONFIG.igniterCount).toBe(5);
+            expect(BOOSTER_PROP_CONFIG.minUllageAccel).toBe(0.1);
+            expect(BOOSTER_PROP_CONFIG.ullageSettleTime).toBe(0.3);
+            expect(BOOSTER_PROP_CONFIG.hasEngine).toBe(true);
         });
     });
 
