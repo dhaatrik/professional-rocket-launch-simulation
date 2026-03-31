@@ -24,3 +24,7 @@
 ## 2025-03-10 - Add Keyboard Navigation for Dialogs
 **Learning:** Custom UI dialogs in this application (e.g. VABEditor, ManeuverPlanner) often lacked consistent keyboard accessibility, specifically dismissing with the Escape key, unlike the ScriptEditor which correctly implemented it. Using `role='dialog'` visually implies modal behavior, but keyboard handlers must be added manually.
 **Action:** Always check custom dialog/modal components for `Escape` key close handlers to ensure keyboard navigability parity across the interface.
+
+## 2025-02-14 - Modals Missing Explicit Dismiss Controls
+**Learning:** Full-screen or large UI modals (like the VAB Editor) heavily depend on implicit dismiss actions (like clicking "Cancel" at the bottom or pressing Escape). This significantly impacts screen reader users and users navigating by mouse who expect a standard close control (`×`) in the header.
+**Action:** When creating or reviewing modals, ensure an explicit, ARIA-labeled close button is present in the header, even if other forms of dismissal exist.
