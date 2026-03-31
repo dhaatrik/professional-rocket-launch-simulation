@@ -70,6 +70,33 @@ describe('PhysicsProxy', () => {
             consoleSpy.mockRestore();
         });
 
+        it('should catch and rethrow the exact error from SharedArrayBuffer instantiation', () => {
+            const dummyError = new Error('Dummy SharedArrayBuffer error');
+            vi.stubGlobal('SharedArrayBuffer', class ThrowingSharedArrayBuffer {
+                constructor() {
+                    throw dummyError;
+                }
+            });
+
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            expect(() => new PhysicsProxy()).toThrow(dummyError);
+
+            expect(consoleSpy).toHaveBeenCalledWith(
+                'SharedArrayBuffer not supported! Ensure COOP/COEP headers are set.'
+            );
+
+            consoleSpy.mockRestore();
+            vi.unstubAllGlobals(); // Restore globals so subsequent tests don't fail
+
+            // Re-apply the mock that the describe block expects for all tests
+            vi.stubGlobal('SharedArrayBuffer', class MockSharedArrayBuffer extends ArrayBuffer {
+                constructor(length: number) {
+                    super(length);
+                }
+            });
+        });
+
         it('should send INIT message to worker on init()', () => {
             const proxy = new PhysicsProxy();
             const config = { someConfig: true } as any;
