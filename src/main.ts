@@ -217,9 +217,10 @@ document.getElementById('audio-btn')?.addEventListener('click', (e) => {
 });
 
 // --- IMPROVEMENT #4: SAS Control with Mode Indicator ---
-document.querySelectorAll('.sas-btn').forEach((btn) => {
+const sasBtns = document.querySelectorAll('.sas-btn');
+sasBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.sas-btn').forEach((b) => {
+        sasBtns.forEach((b) => {
             b.classList.remove('active');
             b.setAttribute('aria-pressed', 'false');
         });
@@ -248,9 +249,10 @@ document.querySelectorAll('.sas-btn').forEach((btn) => {
 });
 
 // --- IMPROVEMENT #10: Camera Mode Panel ---
-document.querySelectorAll('#camera-panel button').forEach((btn) => {
+const cameraBtns = document.querySelectorAll('#camera-panel button');
+cameraBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('#camera-panel button').forEach((b) => {
+        cameraBtns.forEach((b) => {
             b.classList.remove('active');
             b.setAttribute('aria-pressed', 'false');
         });
