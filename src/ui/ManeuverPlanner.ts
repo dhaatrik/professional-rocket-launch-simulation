@@ -158,6 +158,7 @@ export class ManeuverPlanner {
                     createElement('button', {
                         id: 'planner-refresh-btn',
                         className: 'script-btn',
+                        'aria-label': 'Refresh maneuver plan',
                         textContent: 'Refresh'
                     })
                 ])
