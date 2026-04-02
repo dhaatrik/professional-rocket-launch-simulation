@@ -40,13 +40,16 @@ export class MissionLog implements IMissionLog {
     private initToggle(): void {
         if (!this.toggleBtn || !this.container) return;
 
-        this.toggleBtn.addEventListener('click', () => {
+        const h3 = this.container.querySelector('h3');
+        if (!h3) return;
+
+        h3.addEventListener('click', () => {
             if (this.container) {
                 this.container.classList.toggle('collapsed');
                 const isCollapsed = this.container.classList.contains('collapsed');
                 if (this.toggleBtn) {
                     this.toggleBtn.textContent = isCollapsed ? '+' : '−';
-                    this.toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
+                    this.toggleBtn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
                 }
             }
         });
