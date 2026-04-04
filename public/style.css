@@ -978,7 +978,7 @@ button.primary:hover {
     color: var(--color-text);
 }
 
-.sas-btn.active {
+.sas-btn.active, .sas-btn[aria-pressed="true"] {
     background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
     color: var(--color-text);
     border-color: var(--color-primary);
@@ -1281,7 +1281,7 @@ button.primary:hover {
     color: var(--color-text);
 }
 
-#camera-panel button.active {
+#camera-panel button.active, #camera-panel button[aria-pressed="true"] {
     background: var(--color-primary);
     color: var(--color-text);
     border-color: var(--color-primary);
