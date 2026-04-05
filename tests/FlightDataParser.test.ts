@@ -71,19 +71,14 @@ abc,def`;
             expect(frames[0]!.altitude).toBeNaN();
         });
 
-        it('should return empty array when an error occurs during CSV parsing', () => {
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+        it('should throw an error when an error occurs during CSV parsing', () => {
             const splitSpy = vi.spyOn(String.prototype, 'split').mockImplementation(() => {
                 throw new Error('Split error');
             });
 
-            const frames = FlightDataParser.parseCSV('any,csv');
-
-            expect(frames).toEqual([]);
-            expect(consoleSpy).toHaveBeenCalledWith('Failed to parse flight data CSV:', expect.any(Error));
+            expect(() => FlightDataParser.parseCSV('any,csv')).toThrowError('Failed to parse flight data CSV: Split error');
 
             splitSpy.mockRestore();
-            consoleSpy.mockRestore();
         });
     });
 
@@ -95,9 +90,9 @@ abc,def`;
             ]`;
             const frames = FlightDataParser.parseJSON(json);
 
-            expect(frames!).toHaveLength(2);
-            expect(frames![0]!.missionTime).toBe(10.5);
-            expect(frames![1]!.altitude).toBe(510.2);
+            expect(frames).toHaveLength(2);
+            expect(frames[0]!.missionTime).toBe(10.5);
+            expect(frames[1]!.altitude).toBe(510.2);
         });
 
         it('should parse JSON object with frames property', () => {
@@ -109,20 +104,13 @@ abc,def`;
             }`;
             const frames = FlightDataParser.parseJSON(json);
 
-            expect(frames!).toHaveLength(1);
-            expect(frames![0]!.missionTime).toBe(10.5);
+            expect(frames).toHaveLength(1);
+            expect(frames[0]!.missionTime).toBe(10.5);
         });
 
-        it('should return null for invalid JSON syntax', () => {
+        it('should throw an error for invalid JSON syntax', () => {
             const json = `{ "missionTime": 10.5 `; // Missing closing brace
-            // Silence console.error for this test as it's expected
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-
-            const frames = FlightDataParser.parseJSON(json);
-
-            expect(frames).toBeNull();
-            expect(consoleSpy).toHaveBeenCalled();
-            consoleSpy.mockRestore();
+            expect(() => FlightDataParser.parseJSON(json)).toThrowError(/Failed to parse flight data JSON:/);
         });
 
         it('should return empty array for valid JSON but invalid structure', () => {
@@ -142,22 +130,17 @@ abc,def`;
             expect(FlightDataParser.parseJSON('true')).toEqual([]);
         });
 
-        it('should return null when JSON.parse throws an error', () => {
+        it('should throw an error when JSON.parse throws an error', () => {
             const json = `{"valid": "json"}`;
             const mockError = new Error('Mock JSON parse error');
             const parseSpy = vi.spyOn(JSON, 'parse').mockImplementation(() => {
                 throw mockError;
             });
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
             try {
-                const frames = FlightDataParser.parseJSON(json);
-
-                expect(frames).toBeNull();
-                expect(consoleSpy).toHaveBeenCalledWith('Failed to parse flight data JSON:', mockError);
+                expect(() => FlightDataParser.parseJSON(json)).toThrowError('Failed to parse flight data JSON: Mock JSON parse error');
             } finally {
                 parseSpy.mockRestore();
-                consoleSpy.mockRestore();
             }
         });
     });
