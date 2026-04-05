@@ -202,7 +202,14 @@ function step(inputs: any) {
     postState();
 }
 
-function handleCommand(cmd: any) {
+export type PhysicsCommand =
+    | { type: 'STAGE' }
+    | { type: 'FC_LOAD_SCRIPT'; script: string }
+    | { type: 'FC_START' }
+    | { type: 'FC_STOP' }
+    | { type: 'FC_PAUSE' };
+
+function handleCommand(cmd: PhysicsCommand) {
     switch (cmd.type) {
         case 'STAGE':
             performStaging();
