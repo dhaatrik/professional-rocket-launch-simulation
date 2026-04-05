@@ -373,6 +373,22 @@ export function deserializeBlueprint(json: string): VehicleBlueprint | null {
             throw new Error('Invalid blueprint format: not an object');
         }
 
+        if (typeof data.name !== 'string') {
+            throw new Error('Invalid blueprint format: name is not a string');
+        }
+
+        if (typeof data.id !== 'string') {
+            throw new Error('Invalid blueprint format: id is not a string');
+        }
+
+        if (typeof data.createdAt !== 'number') {
+            throw new Error('Invalid blueprint format: createdAt is not a number');
+        }
+
+        if (typeof data.modifiedAt !== 'number') {
+            throw new Error('Invalid blueprint format: modifiedAt is not a number');
+        }
+
         if (!Array.isArray(data.stages)) {
             throw new Error('Invalid blueprint format: stages is not an array');
         }
@@ -383,18 +399,33 @@ export function deserializeBlueprint(json: string): VehicleBlueprint | null {
                 throw new Error('Invalid stage format: not an object');
             }
 
+            if (typeof stage.stageNumber !== 'number') {
+                throw new Error('Invalid stage format: stageNumber is not a number');
+            }
+
+            if (typeof stage.hasDecoupler !== 'boolean') {
+                throw new Error('Invalid stage format: hasDecoupler is not a boolean');
+            }
+
             if (!Array.isArray(stage.parts)) {
                 throw new Error('Invalid stage format: parts is not an array');
             }
 
             return {
-                ...stage,
+                stageNumber: stage.stageNumber,
+                hasDecoupler: stage.hasDecoupler,
                 parts: stage.parts.map((inst: any) => {
                     if (!inst || typeof inst !== 'object') {
                         throw new Error('Invalid part instance format: not an object');
                     }
                     if (typeof inst.partId !== 'string') {
                         throw new Error('Invalid part instance format: partId is not a string');
+                    }
+                    if (typeof inst.instanceId !== 'string') {
+                        throw new Error('Invalid part instance format: instanceId is not a string');
+                    }
+                    if (typeof inst.stageIndex !== 'number') {
+                        throw new Error('Invalid part instance format: stageIndex is not a number');
                     }
 
                     const part = getPartById(inst.partId);
@@ -409,7 +440,10 @@ export function deserializeBlueprint(json: string): VehicleBlueprint | null {
         });
 
         return {
-            ...data,
+            name: data.name,
+            id: data.id,
+            createdAt: data.createdAt,
+            modifiedAt: data.modifiedAt,
             stages
         };
     } catch (e) {
