@@ -369,47 +369,73 @@ export function deserializeBlueprint(json: string): VehicleBlueprint | null {
     try {
         const data = JSON.parse(json);
 
-        if (!data || typeof data !== 'object') {
+        if (!data || typeof data !== 'object' || data === null) {
             throw new Error('Invalid blueprint format: not an object');
         }
 
+        // Strict validation of top-level fields
+        if (typeof data.name !== 'string') throw new Error('Invalid blueprint: name must be a string');
+        if (typeof data.id !== 'string') throw new Error('Invalid blueprint: id must be a string');
+        if (typeof data.createdAt !== 'number') throw new Error('Invalid blueprint: createdAt must be a number');
+        if (typeof data.modifiedAt !== 'number') throw new Error('Invalid blueprint: modifiedAt must be a number');
         if (!Array.isArray(data.stages)) {
             throw new Error('Invalid blueprint format: stages is not an array');
         }
 
         // Reconstruct part instances from IDs
         const stages: VehicleStage[] = data.stages.map((stage: any) => {
-            if (!stage || typeof stage !== 'object') {
+            if (!stage || typeof stage !== 'object' || stage === null) {
                 throw new Error('Invalid stage format: not an object');
+            }
+
+            if (typeof stage.stageNumber !== 'number') {
+                throw new Error('Invalid stage format: stageNumber must be a number');
+            }
+
+            if (typeof stage.hasDecoupler !== 'boolean') {
+                throw new Error('Invalid stage format: hasDecoupler must be a boolean');
             }
 
             if (!Array.isArray(stage.parts)) {
                 throw new Error('Invalid stage format: parts is not an array');
             }
 
-            return {
-                ...stage,
-                parts: stage.parts.map((inst: any) => {
-                    if (!inst || typeof inst !== 'object') {
-                        throw new Error('Invalid part instance format: not an object');
-                    }
-                    if (typeof inst.partId !== 'string') {
-                        throw new Error('Invalid part instance format: partId is not a string');
-                    }
+            const parts = stage.parts.map((inst: any) => {
+                if (!inst || typeof inst !== 'object' || inst === null) {
+                    throw new Error('Invalid part instance format: not an object');
+                }
+                if (typeof inst.partId !== 'string') {
+                    throw new Error('Invalid part instance format: partId is not a string');
+                }
+                if (typeof inst.instanceId !== 'string') {
+                    throw new Error('Invalid part instance format: instanceId is not a string');
+                }
+                if (typeof inst.stageIndex !== 'number') {
+                    throw new Error('Invalid part instance format: stageIndex is not a number');
+                }
 
-                    const part = getPartById(inst.partId);
-                    if (!part) throw new Error(`Unknown part: ${inst.partId}`);
-                    return {
-                        part,
-                        instanceId: inst.instanceId,
-                        stageIndex: inst.stageIndex
-                    };
-                })
+                const part = getPartById(inst.partId);
+                if (!part) throw new Error(`Unknown part: ${inst.partId}`);
+                return {
+                    part,
+                    instanceId: inst.instanceId,
+                    stageIndex: inst.stageIndex
+                };
+            });
+
+            return {
+                stageNumber: stage.stageNumber,
+                hasDecoupler: stage.hasDecoupler,
+                parts
             };
         });
 
+        // Explicitly construct the result to avoid mass assignment
         return {
-            ...data,
+            name: data.name,
+            id: data.id,
+            createdAt: data.createdAt,
+            modifiedAt: data.modifiedAt,
             stages
         };
     } catch (e) {
@@ -434,11 +460,21 @@ export function loadBlueprints(): VehicleBlueprint[] {
     if (!data) return [];
 
     try {
-        const jsons = JSON.parse(data) as string[];
+        const jsons = JSON.parse(data);
         if (!Array.isArray(jsons)) {
             throw new Error('Stored blueprints data is not an array');
         }
-        return jsons.map(deserializeBlueprint).filter((b): b is VehicleBlueprint => b !== null);
+
+        // Validate that all elements are strings before attempting to deserialize
+        const validJsons = jsons.filter((item): item is string => {
+            if (typeof item !== 'string') {
+                console.warn('Skipping non-string blueprint entry');
+                return false;
+            }
+            return true;
+        });
+
+        return validJsons.map(deserializeBlueprint).filter((b): b is VehicleBlueprint => b !== null);
     } catch (e) {
         console.error('Failed to load blueprints:', e);
         return [];
