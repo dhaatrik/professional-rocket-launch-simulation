@@ -31,6 +31,7 @@ export class VABEditor {
     private onLaunch: (blueprint: VehicleBlueprint) => void;
     private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
     private invokingElement: HTMLElement | null = null;
+    private partsListEl: HTMLElement | null = null;
 
     constructor(containerId: string, onLaunch: (blueprint: VehicleBlueprint) => void) {
         const container = document.getElementById(containerId);
@@ -256,8 +257,7 @@ export class VABEditor {
         const stats = calculateStats(this.blueprint);
 
         // Preserve scroll position of parts list
-        const partsList = this.container.querySelector('#vab-parts-list');
-        const scrollTop = partsList ? partsList.scrollTop : 0;
+        const scrollTop = this.partsListEl ? this.partsListEl.scrollTop : 0;
 
         // Clear container
         this.container.textContent = '';
@@ -288,19 +288,21 @@ export class VABEditor {
             headerControls
         ]);
 
+        this.partsListEl = createElement(
+            'div',
+            {
+                className: 'vab-parts-list',
+                id: 'vab-parts-list',
+                role: 'tabpanel',
+                'aria-labelledby': `tab-${this.selectedCategory}`
+            },
+            this.renderPartsList()
+        );
+
         const partsPanel = createElement('div', { className: 'vab-parts-panel' }, [
             createElement('h3', {}, ['Parts Catalog']),
             createElement('div', { className: 'vab-category-tabs', role: 'tablist' }, this.renderCategoryTabs()),
-            createElement(
-                'div',
-                {
-                    className: 'vab-parts-list',
-                    id: 'vab-parts-list',
-                    role: 'tabpanel',
-                    'aria-labelledby': `tab-${this.selectedCategory}`
-                },
-                this.renderPartsList()
-            )
+            this.partsListEl
         ]);
 
         const previewPanel = createElement('div', { className: 'vab-preview-panel' }, [
@@ -357,9 +359,8 @@ export class VABEditor {
         this.container.appendChild(editorDiv);
 
         // Restore scroll position
-        const newPartsList = this.container.querySelector('#vab-parts-list');
-        if (newPartsList) {
-            newPartsList.scrollTop = scrollTop;
+        if (this.partsListEl) {
+            this.partsListEl.scrollTop = scrollTop;
         }
     }
 

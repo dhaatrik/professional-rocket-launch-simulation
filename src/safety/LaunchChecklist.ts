@@ -46,6 +46,28 @@ export class LaunchChecklist {
     constructor(containerId: string) {
         this.containerEl = document.getElementById(containerId);
         this.initDefaultItems();
+
+        if (this.containerEl) {
+            this.containerEl.addEventListener('click', (e) => {
+                const target = e.target as HTMLElement;
+
+                const btn = target.closest('.cl-btn') as HTMLButtonElement;
+                if (btn) {
+                    const itemId = btn.dataset.item;
+                    const action = btn.dataset.action as ChecklistStatus;
+                    if (itemId && action) {
+                        this.setItemStatus(itemId, action);
+                    }
+                    return;
+                }
+
+                const closeBtn = target.closest('#checklist-close-btn');
+                if (closeBtn) {
+                    this.hide();
+                    return;
+                }
+            });
+        }
     }
 
     /** Initialize default checklist items */
@@ -330,23 +352,5 @@ export class LaunchChecklist {
         );
 
         this.containerEl.appendChild(checklistInner);
-
-        // Wire up button events
-        this.containerEl.querySelectorAll('.cl-btn').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                const target = e.target as HTMLButtonElement;
-                const itemId = target.dataset.item;
-                const action = target.dataset.action as ChecklistStatus;
-                if (itemId && action) {
-                    this.setItemStatus(itemId, action);
-                }
-            });
-        });
-
-        // Close button
-        const closeBtn = this.containerEl.querySelector('#checklist-close-btn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.hide());
-        }
     }
 }

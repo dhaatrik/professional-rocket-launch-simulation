@@ -7,7 +7,10 @@ import type { FlightComputerStatusDTO } from '../types';
  * @param fcStatus The container element for the HUD
  * @param status The FlightComputer status object from Worker
  */
-export function updateFlightComputerHUD(fcStatus: HTMLElement, status: FlightComputerStatusDTO | { getStatusString: () => string; getActiveCommandText: () => string }): void {
+export function updateFlightComputerHUD(
+    fcStatus: HTMLElement,
+    status: FlightComputerStatusDTO | { getStatusString: () => string; getActiveCommandText: () => string }
+): void {
     if (!fcStatus) return;
 
     let statusStr: string;

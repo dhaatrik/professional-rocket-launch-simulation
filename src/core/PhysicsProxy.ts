@@ -11,14 +11,7 @@
 import { Vessel } from '../physics/Vessel';
 // We need the classes to instantiate "view" copies
 import { FullStack, Booster, UpperStage, Fairing, Payload } from '../physics/RocketComponents';
-import {
-    BUFFER_SIZE,
-    HEADER_SIZE,
-    ENTITY_STRIDE,
-    HeaderOffset,
-    EntityOffset,
-    EntityType
-} from './PhysicsBuffer';
+import { BUFFER_SIZE, HEADER_SIZE, ENTITY_STRIDE, HeaderOffset, EntityOffset, EntityType } from './PhysicsBuffer';
 import type { PhysicsEvent, FlightComputerStatusDTO } from '../types';
 import type { FTSStatus } from '../safety/FlightTermination';
 import type { EnvironmentState } from '../physics/Environment';
@@ -62,7 +55,10 @@ export class PhysicsProxy {
         try {
             this.sharedBuffer = new SharedArrayBuffer(BUFFER_SIZE * 8);
         } catch (e) {
-            throw new Error('SharedArrayBuffer not supported! Ensure COOP/COEP headers are set. Original error: ' + (e instanceof Error ? e.message : String(e)));
+            throw new Error(
+                'SharedArrayBuffer not supported! Ensure COOP/COEP headers are set. Original error: ' +
+                    (e instanceof Error ? e.message : String(e))
+            );
         }
         this.sharedView = new Float64Array(this.sharedBuffer);
 
@@ -116,7 +112,9 @@ export class PhysicsProxy {
     }
 
     getFTSStatus(): FTSStatus | { state: 'SAFE'; armTime: number; enabled: boolean } {
-        return this.latestState && this.latestState.fts ? this.latestState.fts : { state: 'SAFE', armTime: 0, enabled: true };
+        return this.latestState && this.latestState.fts
+            ? this.latestState.fts
+            : { state: 'SAFE', armTime: 0, enabled: true };
     }
 
     getEnvironmentState(): Partial<EnvironmentState> | null {

@@ -121,6 +121,32 @@ export class FaultInjector {
     constructor(containerId?: string) {
         if (containerId && typeof document !== 'undefined') {
             this.containerEl = document.getElementById(containerId);
+
+            if (this.containerEl) {
+                this.containerEl.addEventListener('click', (e) => {
+                    const target = e.target as HTMLElement;
+
+                    const faultBtn = target.closest('.fis-fault-btn') as HTMLButtonElement;
+                    if (faultBtn) {
+                        const faultId = faultBtn.dataset.fault;
+                        if (faultId) {
+                            this.containerEl?.dispatchEvent(
+                                new CustomEvent('fis-toggle', {
+                                    detail: { faultId },
+                                    bubbles: true
+                                })
+                            );
+                        }
+                        return;
+                    }
+
+                    const closeBtn = target.closest('#fis-close-btn');
+                    if (closeBtn) {
+                        this.hide();
+                        return;
+                    }
+                });
+            }
         }
     }
 
@@ -369,28 +395,5 @@ export class FaultInjector {
         ]);
 
         this.containerEl.appendChild(fisInner);
-
-        // Wire button events
-        this.containerEl.querySelectorAll('.fis-fault-btn').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                const target = e.currentTarget as HTMLButtonElement;
-                const faultId = target.dataset.fault;
-                if (faultId) {
-                    // Dispatch custom event — handled by main.ts
-                    this.containerEl?.dispatchEvent(
-                        new CustomEvent('fis-toggle', {
-                            detail: { faultId },
-                            bubbles: true
-                        })
-                    );
-                }
-            });
-        });
-
-        // Close button
-        const closeBtn = this.containerEl.querySelector('#fis-close-btn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.hide());
-        }
     }
 }

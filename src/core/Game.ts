@@ -1,4 +1,3 @@
-
 /**
  * Game
  *
@@ -20,13 +19,7 @@ import {
     WIND_DRAW_STEP
 } from '../config/Constants';
 import { predictOrbitPath } from '../physics/OrbitalMechanics';
-import {
-    state,
-    updateDimensions,
-    setAssetLoader,
-    addParticle,
-    clearParticles
-} from './State';
+import { state, updateDimensions, setAssetLoader, addParticle, clearParticles } from './State';
 import { InputManager } from './InputManager';
 import { AudioEngine } from '../utils/AudioEngine';
 import { AssetLoader } from '../utils/AssetLoader';
