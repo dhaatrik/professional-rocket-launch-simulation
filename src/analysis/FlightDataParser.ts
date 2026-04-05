@@ -100,11 +100,11 @@ export class FlightDataParser {
                 return [];
             }
 
-            let rawFrames: any[] = [];
+            let rawFrames: unknown[] = [];
             if (Array.isArray(data)) {
-                return data as FlightFrame[];
+                rawFrames = data;
             } else if ('frames' in data && Array.isArray((data as Record<string, unknown>).frames)) {
-                return (data as Record<string, unknown>).frames as FlightFrame[];
+                rawFrames = (data as Record<string, unknown>).frames as unknown[];
             }
 
             const validFrames: FlightFrame[] = [];
@@ -122,12 +122,18 @@ export class FlightDataParser {
             ];
 
             for (const item of rawFrames) {
-                if (item && typeof item === 'object' && typeof item.missionTime === 'number') {
-                    const frame: any = { missionTime: item.missionTime };
+                if (
+                    item &&
+                    typeof item === 'object' &&
+                    typeof (item as Record<string, unknown>).missionTime === 'number'
+                ) {
+                    const recordItem = item as Record<string, unknown>;
+                    const frame: Partial<FlightFrame> = { missionTime: recordItem.missionTime as number };
                     for (const field of numFields) {
-                        if (typeof item[field] === 'number') frame[field] = item[field];
+                        if (typeof recordItem[field] === 'number')
+                            (frame as Record<string, unknown>)[field] = recordItem[field];
                     }
-                    if (typeof item.event === 'string') frame.event = item.event;
+                    if (typeof recordItem.event === 'string') frame.event = recordItem.event;
                     validFrames.push(frame as FlightFrame);
                 }
             }
