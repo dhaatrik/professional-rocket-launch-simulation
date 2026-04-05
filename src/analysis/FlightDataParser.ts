@@ -99,13 +99,13 @@ export class FlightDataParser {
                 return [];
             }
 
-            const rawFrames: unknown[] = [];
+            let rawFrames: unknown[] = [];
             if (Array.isArray(data)) {
-                return data as FlightFrame[];
+                rawFrames = data;
             } else if ('frames' in data) {
                 const record = data as Record<string, unknown>;
                 if (Array.isArray(record.frames)) {
-                    return record.frames as FlightFrame[];
+                    rawFrames = record.frames;
                 }
             }
 
