@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { loadBlueprints, deserializeBlueprint, serializeBlueprint, createBlueprint, addStage, addPartToStage } from '../src/vab/VehicleBlueprint';
+import { saveBlueprints, loadBlueprints, deserializeBlueprint, serializeBlueprint, createBlueprint, addStage, addPartToStage } from '../src/vab/VehicleBlueprint';
 import { ENGINE_MERLIN_1D } from '../src/vab/PartsCatalog';
 
 describe('VehicleBlueprint Error Paths', () => {
@@ -147,6 +147,24 @@ describe('VehicleBlueprint Error Paths', () => {
             expect(consoleErrorSpy).toHaveBeenCalledWith(
                 'Failed to deserialize blueprint:',
                 expect.objectContaining({ message: 'Unknown part: non-existent-part-id' })
+            );
+        });
+    });
+
+    describe('saveBlueprints', () => {
+        it('should catch and log error when localStorage.setItem throws', () => {
+            const blueprint = createBlueprint('Test');
+
+            // Override the setItem mock for this specific test
+            localStorage.setItem = vi.fn().mockImplementation(() => {
+                throw new Error('Quota exceeded');
+            });
+
+            saveBlueprints([blueprint]);
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to save blueprints:',
+                expect.any(Error)
             );
         });
     });
