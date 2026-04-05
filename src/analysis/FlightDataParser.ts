@@ -100,12 +100,42 @@ export class FlightDataParser {
             if (!data || typeof data !== 'object') {
                 return [];
             }
+
+            let rawFrames: any[] = [];
             if (Array.isArray(data)) {
-                return data as FlightFrame[];
+                rawFrames = data;
             } else if ('frames' in data && Array.isArray((data as any).frames)) {
-                return (data as any).frames as FlightFrame[];
+                rawFrames = (data as any).frames;
+            } else {
+                return [];
             }
-            return [];
+
+            const validFrames: FlightFrame[] = [];
+            const numFields = [
+                'timestamp',
+                'altitude',
+                'velocity',
+                'fuel',
+                'throttle',
+                'q',
+                'gForce',
+                'angle',
+                'posX',
+                'posY'
+            ];
+
+            for (const item of rawFrames) {
+                if (item && typeof item === 'object' && typeof item.missionTime === 'number') {
+                    const frame: any = { missionTime: item.missionTime };
+                    for (const field of numFields) {
+                        if (typeof item[field] === 'number') frame[field] = item[field];
+                    }
+                    if (typeof item.event === 'string') frame.event = item.event;
+                    validFrames.push(frame as FlightFrame);
+                }
+            }
+
+            return validFrames;
         } catch (e) {
             console.error('Failed to parse flight data JSON:', e);
             return null;
