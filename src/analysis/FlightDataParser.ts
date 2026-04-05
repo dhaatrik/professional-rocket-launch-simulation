@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Flight Data Parser
  *
@@ -35,7 +34,7 @@ export class FlightDataParser {
                 const values = line.split(',');
                 if (values.length !== headers.length) continue;
 
-                const frame: any = {};
+                const frame: Partial<FlightFrame> = {};
 
                 headers.forEach((header, index) => {
                     const val = values[index]?.trim();
@@ -95,18 +94,16 @@ export class FlightDataParser {
 
     public static parseJSON(jsonContent: string): FlightFrame[] {
         try {
-            const data = JSON.parse(jsonContent);
+            const data: unknown = JSON.parse(jsonContent);
             if (!data || typeof data !== 'object') {
                 return [];
             }
 
-            let rawFrames: any[] = [];
+            let rawFrames: unknown[] = [];
             if (Array.isArray(data)) {
                 rawFrames = data;
-            } else if ('frames' in data && Array.isArray((data as any).frames)) {
-                rawFrames = (data as any).frames;
-            } else {
-                return [];
+            } else if ('frames' in data && Array.isArray((data as Record<string, unknown>).frames)) {
+                rawFrames = (data as Record<string, unknown>).frames as unknown[];
             }
 
             const validFrames: FlightFrame[] = [];
@@ -124,12 +121,18 @@ export class FlightDataParser {
             ];
 
             for (const item of rawFrames) {
-                if (item && typeof item === 'object' && typeof item.missionTime === 'number') {
-                    const frame: any = { missionTime: item.missionTime };
+                if (
+                    item &&
+                    typeof item === 'object' &&
+                    typeof (item as Record<string, unknown>).missionTime === 'number'
+                ) {
+                    const recordItem = item as Record<string, unknown>;
+                    const frame: Partial<FlightFrame> = { missionTime: recordItem.missionTime as number };
                     for (const field of numFields) {
-                        if (typeof item[field] === 'number') frame[field] = item[field];
+                        if (typeof recordItem[field] === 'number')
+                            (frame as Record<string, unknown>)[field] = recordItem[field];
                     }
-                    if (typeof item.event === 'string') frame.event = item.event;
+                    if (typeof recordItem.event === 'string') frame.event = recordItem.event;
                     validFrames.push(frame as FlightFrame);
                 }
             }
