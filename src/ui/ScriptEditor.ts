@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * ScriptEditor - Flight Computer Script Editor UI
  *
@@ -23,6 +22,7 @@ export class ScriptEditor {
     private game: Game;
     private invokingElement: HTMLElement | null = null;
     private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
+    private validateTimeout?: ReturnType<typeof setTimeout>;
 
     constructor(game: Game) {
         this.game = game;
@@ -301,8 +301,8 @@ export class ScriptEditor {
         // Real-time validation on input
         this.textarea?.addEventListener('input', () => {
             // Debounced validation
-            clearTimeout((this as any).validateTimeout);
-            (this as any).validateTimeout = setTimeout(() => {
+            clearTimeout(this.validateTimeout);
+            this.validateTimeout = setTimeout(() => {
                 this.validate();
             }, 500);
         });

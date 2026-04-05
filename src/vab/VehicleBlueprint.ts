@@ -422,8 +422,12 @@ export function deserializeBlueprint(json: string): VehicleBlueprint | null {
  * Save blueprints to localStorage
  */
 export function saveBlueprints(blueprints: VehicleBlueprint[]): void {
-    const data = blueprints.map(serializeBlueprint);
-    localStorage.setItem('vab-blueprints', JSON.stringify(data));
+    try {
+        const data = blueprints.map(serializeBlueprint);
+        localStorage.setItem('vab-blueprints', JSON.stringify(data));
+    } catch (e) {
+        console.error('Failed to save blueprints:', e);
+    }
 }
 
 /**
@@ -440,7 +444,6 @@ export function loadBlueprints(): VehicleBlueprint[] {
         }
         return jsons.map(deserializeBlueprint).filter((b): b is VehicleBlueprint => b !== null);
     } catch (e) {
-        console.error('Failed to load blueprints:', e);
-        return [];
+        throw new Error(`Failed to load blueprints: ${e instanceof Error ? e.message : String(e)}`);
     }
 }

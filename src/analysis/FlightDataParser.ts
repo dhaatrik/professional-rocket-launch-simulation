@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Flight Data Parser
  *
@@ -35,7 +34,7 @@ export class FlightDataParser {
                 const values = line.split(',');
                 if (values.length !== headers.length) continue;
 
-                const frame: any = {};
+                const frame: Partial<FlightFrame> = {};
 
                 headers.forEach((header, index) => {
                     const val = values[index]?.trim();
@@ -89,26 +88,58 @@ export class FlightDataParser {
 
             return frames;
         } catch (e) {
-            console.error('Failed to parse flight data CSV:', e);
-            return [];
+            throw new Error(`Failed to parse flight data CSV: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 
-    public static parseJSON(jsonContent: string): FlightFrame[] | null {
+    public static parseJSON(jsonContent: string): FlightFrame[] {
         try {
-            const data = JSON.parse(jsonContent);
+            const data: unknown = JSON.parse(jsonContent);
             if (!data || typeof data !== 'object') {
                 return [];
             }
+
+            let rawFrames: unknown[] = [];
             if (Array.isArray(data)) {
-                return data as FlightFrame[];
-            } else if ('frames' in data && Array.isArray((data as any).frames)) {
-                return (data as any).frames as FlightFrame[];
+                rawFrames = data;
+            } else if ('frames' in data && Array.isArray((data as Record<string, unknown>).frames)) {
+                rawFrames = (data as Record<string, unknown>).frames as unknown[];
             }
-            return [];
+
+            const validFrames: FlightFrame[] = [];
+            const numFields = [
+                'timestamp',
+                'altitude',
+                'velocity',
+                'fuel',
+                'throttle',
+                'q',
+                'gForce',
+                'angle',
+                'posX',
+                'posY'
+            ];
+
+            for (const item of rawFrames) {
+                if (
+                    item &&
+                    typeof item === 'object' &&
+                    typeof (item as Record<string, unknown>).missionTime === 'number'
+                ) {
+                    const recordItem = item as Record<string, unknown>;
+                    const frame: Partial<FlightFrame> = { missionTime: recordItem.missionTime as number };
+                    for (const field of numFields) {
+                        if (typeof recordItem[field] === 'number')
+                            (frame as Record<string, unknown>)[field] = recordItem[field];
+                    }
+                    if (typeof recordItem.event === 'string') frame.event = recordItem.event;
+                    validFrames.push(frame as FlightFrame);
+                }
+            }
+
+            return validFrames;
         } catch (e) {
-            console.error('Failed to parse flight data JSON:', e);
-            return null;
+            throw new Error(`Failed to parse flight data JSON: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 }
