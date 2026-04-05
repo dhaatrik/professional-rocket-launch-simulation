@@ -136,22 +136,22 @@
         </div>
 
         <div id="navball-container">
-            <canvas id="navball" width="140" height="140"></canvas>
+            <canvas id="navball" width="140" height="140" role="img" aria-label="Navball attitude indicator"></canvas>
         </div>
         <div id="graph-container">
-            <canvas id="graph-canvas"></canvas>
+            <canvas id="graph-canvas" role="img" aria-label="Telemetry altitude and velocity graph"></canvas>
         </div>
 
         <!-- IMPROVEMENT #10: Camera Panel -->
-        <div id="camera-panel">
+        <div id="camera-panel" role="group" aria-label="Camera Modes">
             <button data-cam="1" class="active" title="Follow Camera [1]" aria-pressed="true">Follow</button>
             <button data-cam="2" title="Orbit Camera [2]" aria-pressed="false">Orbit</button>
             <button data-cam="3" title="Cinema Camera [3]" aria-pressed="false">Cinema</button>
         </div>
 
         <!-- SAS Controls - Enhanced -->
-        <div id="sas-controls">
-            <div class="sas-title">SAS CONTROL</div>
+        <div id="sas-controls" role="group" aria-labelledby="sas-title-label">
+            <div class="sas-title" id="sas-title-label">SAS CONTROL</div>
             <div class="sas-group">
                 <button id="sas-off" class="sas-btn active" title="SAS Off [T]" aria-pressed="true">OFF</button>
                 <button id="sas-stability" class="sas-btn" title="Stability Assist [T]" aria-pressed="false">STABILITY</button>
@@ -176,7 +176,7 @@
         <div id="mission-log">
             <h3>
                 MISSION LOG
-                <button id="log-toggle" title="Toggle Mission Log" aria-label="Toggle Mission Log">−</button>
+                <button id="log-toggle" title="Toggle Mission Log" aria-label="Toggle Mission Log" aria-expanded="true" aria-controls="log-list">−</button>
             </h3>
             <ul id="log-list" aria-live="polite" aria-relevant="additions">
             </ul>
@@ -233,7 +233,7 @@
     <!-- Fault Injection System Panel (Instructor) -->
     <div id="fis-panel" class="hidden"></div>
 
-    <canvas id="canvas"></canvas>
+    <canvas id="canvas" role="application" aria-label="Main simulation view"></canvas>
 
     <!-- TypeScript Compiled Bundle -->
     <script type="module" src="dist/bundle.js"></script>
