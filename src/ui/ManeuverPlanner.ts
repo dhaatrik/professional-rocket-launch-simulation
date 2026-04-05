@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Maneuver Planner UI
  *
@@ -388,11 +387,11 @@ export class ManeuverPlanner {
 
                 this.renderHohmannPlan(hResult, targetAltKm, resultDiv);
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             resultDiv.textContent = '';
             this.createElement('span', resultDiv, {
                 className: 'maneuver-error',
-                text: `Error: ${e.message}`
+                text: `Error: ${e instanceof Error ? e.message : String(e)}`
             });
         }
     }
@@ -426,7 +425,11 @@ export class ManeuverPlanner {
         });
     }
 
-    private renderHohmannPlan(hResult: any, targetAltKm: number, container: HTMLElement): void {
+    private renderHohmannPlan(
+        hResult: { deltaV1: number; deltaV2: number; transferTime: number; burnTime1: number },
+        targetAltKm: number,
+        container: HTMLElement
+    ): void {
         this.createElement('strong', container, {
             text: `Hohmann Transfer to ${targetAltKm} km`
         });
