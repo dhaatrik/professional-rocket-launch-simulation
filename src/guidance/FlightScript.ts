@@ -325,34 +325,42 @@ export function parseScriptLine(line: string, lineNumber: number): ParseResult {
  * Parse a complete mission script
  */
 export function parseMissionScript(scriptText: string, name: string = 'Unnamed Script'): ScriptParseResult {
-    const lines = scriptText.split('\n');
-    const commands: ScriptCommand[] = [];
-    const errors: ParseResult[] = [];
+    try {
+        const lines = scriptText.split('\n');
+        const commands: ScriptCommand[] = [];
+        const errors: ParseResult[] = [];
 
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        if (line === undefined) continue;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line === undefined) continue;
 
-        const result = parseScriptLine(line, i + 1);
+            const result = parseScriptLine(line, i + 1);
 
-        if (!result.success) {
-            errors.push(result);
-        } else if (result.command) {
-            commands.push(result.command);
+            if (!result.success) {
+                errors.push(result);
+            } else if (result.command) {
+                commands.push(result.command);
+            }
         }
+
+        if (errors.length > 0) {
+            return { success: false, errors };
+        }
+
+        const script: MissionScript = {
+            name,
+            commands,
+            createdAt: Date.now()
+        };
+
+        return { success: true, script, errors: [] };
+    } catch (error) {
+        console.error('Error parsing mission script:', error);
+        return {
+            success: false,
+            errors: [{ success: false, error: 'Internal parsing error' }]
+        };
     }
-
-    if (errors.length > 0) {
-        return { success: false, errors };
-    }
-
-    const script: MissionScript = {
-        name,
-        commands,
-        createdAt: Date.now()
-    };
-
-    return { success: true, script, errors: [] };
 }
 
 /**
