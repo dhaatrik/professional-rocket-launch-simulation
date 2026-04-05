@@ -498,42 +498,42 @@ export class ScriptEditor {
             if (!stored) return {};
 
             const parsed = JSON.parse(stored);
-            return this.isValidSavedScripts(parsed) ? parsed : {};
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                return {};
+            }
+
+            const validScripts: SavedScriptsRecord = {};
+
+            for (const key of Object.keys(parsed)) {
+                const entry = parsed[key];
+                if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+
+                if (typeof entry.text !== 'string') continue;
+
+                const rawScript = entry.script;
+                if (!rawScript || typeof rawScript !== 'object' || Array.isArray(rawScript)) continue;
+                if (typeof rawScript.name !== 'string') continue;
+                if (typeof rawScript.createdAt !== 'number') continue;
+
+                // Re-parse the text to safely reconstruct the script object
+                // This prevents prototype pollution and ensures absolute schema validity
+                const parseResult = parseMissionScript(entry.text, rawScript.name);
+                if (parseResult.success && parseResult.script) {
+                    validScripts[key] = {
+                        text: entry.text,
+                        script: {
+                            name: rawScript.name,
+                            commands: parseResult.script.commands,
+                            createdAt: rawScript.createdAt
+                        }
+                    };
+                }
+            }
+
+            return validScripts;
         } catch {
             return {};
         }
-    }
-
-    /**
-     * Basic type validation for saved scripts payload
-     */
-    private isValidSavedScripts(data: unknown): data is SavedScriptsRecord {
-        if (!data || typeof data !== 'object' || Array.isArray(data)) {
-            return false;
-        }
-
-        return Object.values(data).every((entry: unknown) => {
-            if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-                return false;
-            }
-
-            const recordEntry = entry as Record<string, unknown>;
-            if (typeof recordEntry.text !== 'string') {
-                return false;
-            }
-
-            const script = recordEntry.script;
-            if (!script || typeof script !== 'object' || Array.isArray(script)) {
-                return false;
-            }
-
-            const scriptObj = script as Record<string, unknown>;
-            return (
-                typeof scriptObj.name === 'string' &&
-                Array.isArray(scriptObj.commands) &&
-                typeof scriptObj.createdAt === 'number'
-            );
-        });
     }
 
     /**
