@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Orbital Mechanics Module
  *
@@ -6,7 +5,7 @@
  * Includes Keplerian element calculation, Vis-Viva equation, and maneuver planning algorithms.
  */
 
-import type { Vector2D, PhysicsState } from '../types/index';
+import type { Vector2D } from '../types/index';
 import { Vec2 } from '../types/index';
 import { R_EARTH, GRAVITY } from '../config/Constants';
 
