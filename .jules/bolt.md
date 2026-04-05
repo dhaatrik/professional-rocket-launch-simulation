@@ -12,3 +12,6 @@
 ## 2025-03-02 - LaunchChecklist.getCompletionCount Array Reduce Overhead
 **Learning:** Using `Array.prototype.reduce()` creates closure overhead and allocates a new accumulator object (or constantly mutates an object within a callback) which puts pressure on garbage collection when called frequently.
 **Action:** When calculating statistics from arrays in hot paths or frequently updated UI components, prefer a standard `for` loop with local primitive counters over `.reduce()` to minimize object allocation.
+## 2024-05-24 - VAB Editor Event Delegation
+**Learning:** Attaching complex DOM event listeners repeatedly on every render cycle (via `querySelectorAll` and `addEventListener`) within an interactive component like `VABEditor.ts` causes massive performance degradation and risks memory leaks, especially when the component handles frequent user inputs (like typing or part selections).
+**Action:** Always employ Event Delegation on the root container in the constructor for UI components. Use a single generic listener per event type (`click`, `change`, `keydown`) and leverage `target.closest(".class")` to cleanly manage child element interactions without rebinding.
