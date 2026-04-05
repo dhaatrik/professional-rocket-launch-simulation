@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 /**
  * Main Entry Point
  *
@@ -10,7 +9,6 @@ import { Game } from './core/Game';
 import { CONFIG, PIXELS_PER_METER } from './config/Constants';
 import { state } from './core/State';
 import { SASModes } from './utils/SAS';
-import { FullStack } from './physics/RocketComponents';
 import { ScriptEditor } from './ui/ScriptEditor';
 import { exportFlightData } from './telemetry/TelemetryExporter';
 import { VABEditor } from './ui/VABEditor';
@@ -26,10 +24,11 @@ try {
         console.error('Game initialization failed:', e);
         alert(`Game Init Error: ${e.message}`);
     });
-} catch (e: any) {
+} catch (e: unknown) {
     console.error('Game constructor failed:', e);
+    const errorMessage = e instanceof Error ? e.message : String(e);
     alert(
-        `Critical Error: ${e.message}\n\nThis application looks for SharedArrayBuffer support. Please ensure you are running with COOP/COEP headers.`
+        `Critical Error: ${errorMessage}\n\nThis application looks for SharedArrayBuffer support. Please ensure you are running with COOP/COEP headers.`
     );
     throw e;
 }
@@ -233,12 +232,6 @@ sasBtns.forEach((btn) => {
 
         // Update SAS mode indicator
         const modeText = uiCache.sasModeText;
-        const modeIcons: Record<string, string> = {
-            OFF: '',
-            STABILITY: '',
-            PROGRADE: '',
-            RETROGRADE: ''
-        };
 
         if (modeText) {
             modeText.textContent = mode;
