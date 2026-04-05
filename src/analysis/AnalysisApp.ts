@@ -118,12 +118,18 @@ export class AnalysisApp {
             const target = e.target as FileReader;
             if (!target) return;
             const content = target.result as string;
-            if (file.name.endsWith('.csv')) {
-                this.frames = FlightDataParser.parseCSV(content);
-            } else if (file.name.endsWith('.json')) {
-                this.frames = FlightDataParser.parseJSON(content) || [];
-            } else {
-                alert('Unsupported file type');
+            try {
+                if (file.name.endsWith('.csv')) {
+                    this.frames = FlightDataParser.parseCSV(content);
+                } else if (file.name.endsWith('.json')) {
+                    this.frames = FlightDataParser.parseJSON(content);
+                } else {
+                    alert('Unsupported file type');
+                    return;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to parse file: ' + (err instanceof Error ? err.message : String(err)));
                 return;
             }
 

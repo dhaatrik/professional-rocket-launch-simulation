@@ -89,12 +89,11 @@ export class FlightDataParser {
 
             return frames;
         } catch (e) {
-            console.error('Failed to parse flight data CSV:', e);
-            return [];
+            throw new Error(`Failed to parse flight data CSV: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 
-    public static parseJSON(jsonContent: string): FlightFrame[] | null {
+    public static parseJSON(jsonContent: string): FlightFrame[] {
         try {
             const data = JSON.parse(jsonContent);
             if (!data || typeof data !== 'object') {
@@ -137,8 +136,7 @@ export class FlightDataParser {
 
             return validFrames;
         } catch (e) {
-            console.error('Failed to parse flight data JSON:', e);
-            return null;
+            throw new Error(`Failed to parse flight data JSON: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 }
