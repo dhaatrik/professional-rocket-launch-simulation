@@ -59,15 +59,7 @@ describe('PhysicsProxy', () => {
             // Remove the mock for this specific test
             vi.stubGlobal('SharedArrayBuffer', undefined);
 
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-            expect(() => new PhysicsProxy()).toThrow();
-
-            expect(consoleSpy).toHaveBeenCalledWith(
-                'SharedArrayBuffer not supported! Ensure COOP/COEP headers are set.'
-            );
-
-            consoleSpy.mockRestore();
+            expect(() => new PhysicsProxy()).toThrow(/SharedArrayBuffer not supported! Ensure COOP\/COEP headers are set/);
         });
 
         it('should catch and rethrow the exact error from SharedArrayBuffer instantiation', () => {
@@ -78,15 +70,8 @@ describe('PhysicsProxy', () => {
                 }
             });
 
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            expect(() => new PhysicsProxy()).toThrow(/SharedArrayBuffer not supported! Ensure COOP\/COEP headers are set.*Dummy SharedArrayBuffer error/);
 
-            expect(() => new PhysicsProxy()).toThrow(dummyError);
-
-            expect(consoleSpy).toHaveBeenCalledWith(
-                'SharedArrayBuffer not supported! Ensure COOP/COEP headers are set.'
-            );
-
-            consoleSpy.mockRestore();
             vi.unstubAllGlobals(); // Restore globals so subsequent tests don't fail
 
             // Re-apply the mock that the describe block expects for all tests

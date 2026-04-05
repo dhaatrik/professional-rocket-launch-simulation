@@ -60,8 +60,7 @@ export class PhysicsProxy {
         try {
             this.sharedBuffer = new SharedArrayBuffer(BUFFER_SIZE * 8);
         } catch (e) {
-            console.error('SharedArrayBuffer not supported! Ensure COOP/COEP headers are set.');
-            throw e;
+            throw new Error('SharedArrayBuffer not supported! Ensure COOP/COEP headers are set. Original error: ' + (e instanceof Error ? e.message : String(e)));
         }
         this.sharedView = new Float64Array(this.sharedBuffer);
 

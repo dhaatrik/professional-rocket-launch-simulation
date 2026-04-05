@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { loadBlueprints, deserializeBlueprint, serializeBlueprint, createBlueprint, addStage, addPartToStage } from '../src/vab/VehicleBlueprint';
+import { saveBlueprints, loadBlueprints, deserializeBlueprint, serializeBlueprint, createBlueprint, addStage, addPartToStage } from '../src/vab/VehicleBlueprint';
 import { ENGINE_MERLIN_1D } from '../src/vab/PartsCatalog';
 
 describe('VehicleBlueprint Error Paths', () => {
@@ -151,52 +151,54 @@ describe('VehicleBlueprint Error Paths', () => {
         });
     });
 
-    describe('loadBlueprints', () => {
-        it('should return empty array and log error when localStorage contains a non-array JSON structure', () => {
-            localStorage.setItem('vab-blueprints', JSON.stringify({ not: 'an array' }));
-            const result = loadBlueprints();
-            expect(result).toEqual([]);
+    describe('saveBlueprints', () => {
+        it('should catch and log error when localStorage.setItem throws', () => {
+            const blueprint = createBlueprint('Test');
+
+            // Override the setItem mock for this specific test
+            localStorage.setItem = vi.fn().mockImplementation(() => {
+                throw new Error('Quota exceeded');
+            });
+
+            saveBlueprints([blueprint]);
+
             expect(consoleErrorSpy).toHaveBeenCalledWith(
-                'Failed to load blueprints:',
-                expect.objectContaining({ message: 'Stored blueprints data is not an array' })
+                'Failed to save blueprints:',
+                expect.any(Error)
             );
         });
+    });
+
+    describe('loadBlueprints', () => {
+        it('should throw an error when localStorage contains a non-array JSON structure', () => {
+            localStorage.setItem('vab-blueprints', JSON.stringify({ not: 'an array' }));
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: Stored blueprints data is not an array/);
+        });
+
         it('should return empty array when localStorage is empty', () => {
             const result = loadBlueprints();
             expect(result).toEqual([]);
         });
 
-        it('should return empty array and log error when localStorage contains invalid JSON', () => {
+        it('should throw an error when localStorage contains invalid JSON', () => {
             // This is the core test for the catch block in loadBlueprints.
             // When localStorage.getItem('vab-blueprints') returns a string that fails JSON.parse(data),
             // it triggers the catch block.
             localStorage.setItem('vab-blueprints', 'invalid json');
 
-            const result = loadBlueprints();
-
-            expect(result).toEqual([]);
-            expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to load blueprints:', expect.any(SyntaxError));
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints:/);
         });
 
-        it('should return empty array and log error when localStorage contains a non-array JSON', () => {
+        it('should throw an error when localStorage contains a non-array JSON', () => {
             localStorage.setItem('vab-blueprints', '{"some": "object"}');
 
-            const result = loadBlueprints();
-
-            expect(result).toEqual([]);
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
-                'Failed to load blueprints:',
-                expect.objectContaining({ message: 'Stored blueprints data is not an array' })
-            );
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: Stored blueprints data is not an array/);
         });
 
-        it('should handle native JSON.parse errors gracefully', () => {
+        it('should handle native JSON.parse errors gracefully by throwing', () => {
             localStorage.setItem('vab-blueprints', '{ invalid ]');
 
-            const result = loadBlueprints();
-
-            expect(result).toEqual([]);
-            expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to load blueprints:', expect.any(SyntaxError));
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints:/);
         });
 
         it('should successfully load valid blueprints and filter out invalid ones', () => {

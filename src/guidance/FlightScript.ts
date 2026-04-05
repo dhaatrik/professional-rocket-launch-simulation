@@ -325,34 +325,42 @@ export function parseScriptLine(line: string, lineNumber: number): ParseResult {
  * Parse a complete mission script
  */
 export function parseMissionScript(scriptText: string, name: string = 'Unnamed Script'): ScriptParseResult {
-    const lines = scriptText.split('\n');
-    const commands: ScriptCommand[] = [];
-    const errors: ParseResult[] = [];
+    try {
+        const lines = scriptText.split('\n');
+        const commands: ScriptCommand[] = [];
+        const errors: ParseResult[] = [];
 
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        if (line === undefined) continue;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line === undefined) continue;
 
-        const result = parseScriptLine(line, i + 1);
+            const result = parseScriptLine(line, i + 1);
 
-        if (!result.success) {
-            errors.push(result);
-        } else if (result.command) {
-            commands.push(result.command);
+            if (!result.success) {
+                errors.push(result);
+            } else if (result.command) {
+                commands.push(result.command);
+            }
         }
+
+        if (errors.length > 0) {
+            return { success: false, errors };
+        }
+
+        const script: MissionScript = {
+            name,
+            commands,
+            createdAt: Date.now()
+        };
+
+        return { success: true, script, errors: [] };
+    } catch (error) {
+        console.error('Error parsing mission script:', error);
+        return {
+            success: false,
+            errors: [{ success: false, error: 'Internal parsing error' }]
+        };
     }
-
-    if (errors.length > 0) {
-        return { success: false, errors };
-    }
-
-    const script: MissionScript = {
-        name,
-        commands,
-        createdAt: Date.now()
-    };
-
-    return { success: true, script, errors: [] };
 }
 
 /**
@@ -388,9 +396,21 @@ export function deserializeScript(json: string): MissionScript | null {
         if (!Array.isArray(script.commands)) return null;
         if (typeof script.createdAt !== 'number') return null;
 
-        // Note: For full robustness, we could also recursively validate every
-        // command, action, and condition here. For basic type safety of the
-        // top-level structure to prevent immediate crashes, this is sufficient.
+        for (const cmd of script.commands) {
+            if (!cmd || typeof cmd !== 'object') return null;
+            if (typeof cmd.id !== 'number') return null;
+            if (typeof cmd.rawText !== 'string') return null;
+            if (typeof cmd.oneShot !== 'boolean') return null;
+            if (cmd.state !== 'pending' && cmd.state !== 'active' && cmd.state !== 'completed') return null;
+
+            if (!cmd.action || typeof cmd.action !== 'object') return null;
+            if (typeof cmd.action.type !== 'string') return null;
+
+            if (!cmd.condition || typeof cmd.condition !== 'object') return null;
+            if (!Array.isArray(cmd.condition.clauses)) return null;
+            if (!Array.isArray(cmd.condition.logicalOperators)) return null;
+        }
+
         return script as unknown as MissionScript;
     } catch {
         return null;
