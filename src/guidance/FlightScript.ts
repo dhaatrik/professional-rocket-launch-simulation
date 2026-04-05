@@ -388,9 +388,21 @@ export function deserializeScript(json: string): MissionScript | null {
         if (!Array.isArray(script.commands)) return null;
         if (typeof script.createdAt !== 'number') return null;
 
-        // Note: For full robustness, we could also recursively validate every
-        // command, action, and condition here. For basic type safety of the
-        // top-level structure to prevent immediate crashes, this is sufficient.
+        for (const cmd of script.commands) {
+            if (!cmd || typeof cmd !== 'object') return null;
+            if (typeof cmd.id !== 'number') return null;
+            if (typeof cmd.rawText !== 'string') return null;
+            if (typeof cmd.oneShot !== 'boolean') return null;
+            if (cmd.state !== 'pending' && cmd.state !== 'active' && cmd.state !== 'completed') return null;
+
+            if (!cmd.action || typeof cmd.action !== 'object') return null;
+            if (typeof cmd.action.type !== 'string') return null;
+
+            if (!cmd.condition || typeof cmd.condition !== 'object') return null;
+            if (!Array.isArray(cmd.condition.clauses)) return null;
+            if (!Array.isArray(cmd.condition.logicalOperators)) return null;
+        }
+
         return script as unknown as MissionScript;
     } catch {
         return null;
