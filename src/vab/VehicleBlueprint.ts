@@ -422,8 +422,12 @@ export function deserializeBlueprint(json: string): VehicleBlueprint | null {
  * Save blueprints to localStorage
  */
 export function saveBlueprints(blueprints: VehicleBlueprint[]): void {
-    const data = blueprints.map(serializeBlueprint);
-    localStorage.setItem('vab-blueprints', JSON.stringify(data));
+    try {
+        const data = blueprints.map(serializeBlueprint);
+        localStorage.setItem('vab-blueprints', JSON.stringify(data));
+    } catch (e) {
+        console.error('Failed to save blueprints:', e);
+    }
 }
 
 /**
