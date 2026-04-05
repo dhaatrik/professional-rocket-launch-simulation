@@ -183,45 +183,17 @@ export function calculateStats(blueprint: VehicleBlueprint): VehicleStats {
 
     const stageDeltaV: number[] = [];
     const stageTWR: number[] = [];
+    let totalDeltaV = 0;
 
-    // Calculate totals
-    for (const stage of blueprint.stages) {
-        for (const inst of stage.parts) {
-            const part = inst.part;
-            dryMass += part.mass;
-            totalHeight += part.height;
-            totalCost += part.cost;
+    let runningMass = 0;
 
-            if (part.fuelCapacity) {
-                fuelMass += part.fuelCapacity;
-            }
-            if (part.sasCapable) {
-                hasAvionics = true;
-            }
-            if (part.category === 'fairing') {
-                hasFairing = true;
-            }
-        }
-
-        // Add decoupler mass
-        if (stage.hasDecoupler) {
-            dryMass += 50;
-            totalHeight += 5;
-            totalCost += 100;
-        }
-    }
-
-    const wetMass = dryMass + fuelMass;
-
-    // Calculate per-stage delta-V (Tsiolkovsky rocket equation)
-    // Process stages in reverse (top to bottom for delta-V calculation)
-    let remainingMass = wetMass;
-
-    for (let i = blueprint.stages.length - 1; i >= 0; i--) {
+    // Process stages forward (from 0 to length-1).
+    // This allows single-pass calculation matching the exact m0 logic of the original reverse pass
+    // without needing to pre-calculate total wetMass.
+    for (let i = 0; i < blueprint.stages.length; i++) {
         const stage = blueprint.stages[i];
         if (!stage) continue;
 
-        // Get stage propulsion
         let stageThrust = 0;
         let stageIsp = 0;
         let stageFuel = 0;
@@ -231,6 +203,8 @@ export function calculateStats(blueprint: VehicleBlueprint): VehicleStats {
         for (const inst of stage.parts) {
             const part = inst.part;
             stageDry += part.mass;
+            totalHeight += part.height;
+            totalCost += part.cost;
 
             if (part.thrust && part.ispVac) {
                 stageThrust += part.thrust;
@@ -240,40 +214,49 @@ export function calculateStats(blueprint: VehicleBlueprint): VehicleStats {
             if (part.fuelCapacity) {
                 stageFuel += part.fuelCapacity;
             }
+            if (part.sasCapable) {
+                hasAvionics = true;
+            }
+            if (part.category === 'fairing') {
+                hasFairing = true;
+            }
         }
 
-        // Average Isp for multiple engines
+        if (stage.hasDecoupler) {
+            stageDry += 50;
+            totalHeight += 5;
+            totalCost += 100;
+        }
+
+        dryMass += stageDry;
+        fuelMass += stageFuel;
+
         if (engineCount > 0) {
             stageIsp /= engineCount;
         }
 
-        // Calculate stage delta-V
-        const m0 = remainingMass;
-        const mf = remainingMass - stageFuel;
+        const stageTotal = stageDry + stageFuel;
+        runningMass += stageTotal;
 
+        const m0 = runningMass;
+        const mf = m0 - stageFuel;
+
+        let dv = 0;
         if (stageIsp > 0 && mf > 0 && m0 > mf) {
-            const dv = stageIsp * G * Math.log(m0 / mf);
-            stageDeltaV.unshift(dv);
-        } else {
-            stageDeltaV.unshift(0);
+            dv = stageIsp * G * Math.log(m0 / mf);
         }
 
-        // Calculate TWR at stage ignition
-        if (stageThrust > 0 && remainingMass > 0) {
-            const twr = stageThrust / (remainingMass * G);
-            stageTWR.unshift(twr);
-        } else {
-            stageTWR.unshift(0);
+        let twr = 0;
+        if (stageThrust > 0 && m0 > 0) {
+            twr = stageThrust / (m0 * G);
         }
 
-        // Subtract this stage's mass for next iteration
-        remainingMass -= stageDry + stageFuel;
-        if (stage.hasDecoupler) {
-            remainingMass -= 50;
-        }
+        stageDeltaV.push(dv);
+        stageTWR.push(twr);
+        totalDeltaV += dv;
     }
 
-    const totalDeltaV = stageDeltaV.reduce((sum, dv) => sum + dv, 0);
+    const wetMass = dryMass + fuelMass;
 
     return {
         dryMass,
