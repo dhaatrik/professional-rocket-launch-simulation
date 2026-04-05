@@ -70,6 +70,21 @@ abc,def`;
             expect(frames[0]!.missionTime).toBeNaN();
             expect(frames[0]!.altitude).toBeNaN();
         });
+
+        it('should return empty array when an error occurs during CSV parsing', () => {
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+            const splitSpy = vi.spyOn(String.prototype, 'split').mockImplementation(() => {
+                throw new Error('Split error');
+            });
+
+            const frames = FlightDataParser.parseCSV('any,csv');
+
+            expect(frames).toEqual([]);
+            expect(consoleSpy).toHaveBeenCalledWith('Failed to parse flight data CSV:', expect.any(Error));
+
+            splitSpy.mockRestore();
+            consoleSpy.mockRestore();
+        });
     });
 
     describe('parseJSON', () => {
