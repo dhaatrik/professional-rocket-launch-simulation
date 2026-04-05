@@ -440,7 +440,6 @@ export function loadBlueprints(): VehicleBlueprint[] {
         }
         return jsons.map(deserializeBlueprint).filter((b): b is VehicleBlueprint => b !== null);
     } catch (e) {
-        console.error('Failed to load blueprints:', e);
-        return [];
+        throw new Error(`Failed to load blueprints: ${e instanceof Error ? e.message : String(e)}`);
     }
 }
