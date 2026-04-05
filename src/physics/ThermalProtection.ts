@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Thermal Protection System (TPS) & Ablation
  *
@@ -6,7 +5,7 @@
  * and thermal damage for re-entry and high-speed flight.
  */
 
-import { getAtmosphericDensity, DT } from '../config/Constants';
+import { getAtmosphericDensity } from '../config/Constants';
 
 // ============================================================================
 // Constants
