@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 /**
  * Physics Proxy
  *
@@ -18,14 +17,17 @@ import {
     ENTITY_STRIDE,
     HeaderOffset,
     EntityOffset,
-    EntityType,
-    EngineStateCode
+    EntityType
 } from './PhysicsBuffer';
+import type { PhysicsEvent, FlightComputerStatusDTO } from '../types';
+import type { FTSStatus } from '../safety/FlightTermination';
+import type { EnvironmentState } from '../physics/Environment';
 
 export interface PhysicsState {
     missionTime: number; // From Payload or Buffer
     trackedIndex: number;
-    fts?: any;
+    fts?: FTSStatus;
+    fc?: FlightComputerStatusDTO;
     // entities removed from payload
 }
 
@@ -46,7 +48,7 @@ export class PhysicsProxy {
     // Mapping from index/ID to local view instance
     private viewEntities: Vessel[] = [];
 
-    private eventListeners: ((event: any) => void)[] = [];
+    private eventListeners: ((event: PhysicsEvent) => void)[] = [];
 
     // Interpolation state
     private currentPhysicsTime: number = 0;
@@ -93,12 +95,12 @@ export class PhysicsProxy {
         });
     }
 
-    step(dt: number, inputs: any) {
-        this.worker.postMessage({ type: 'STEP', payload: { dt, ...inputs } });
+    step(dt: number, inputs: unknown) {
+        this.worker.postMessage({ type: 'STEP', payload: { dt, ...(inputs as object) } });
     }
 
-    command(type: string, payload: any) {
-        this.worker.postMessage({ type: 'COMMAND', payload: { type, ...payload } });
+    command(type: string, payload: unknown) {
+        this.worker.postMessage({ type: 'COMMAND', payload: { type, ...(payload as object) } });
     }
 
     getEntities(): Vessel[] {
@@ -113,11 +115,11 @@ export class PhysicsProxy {
         return this.latestState ? this.latestState.trackedIndex : 0;
     }
 
-    getFTSStatus(): any {
-        return this.latestState ? this.latestState.fts : { state: 'SAFE', armTime: 0, enabled: true };
+    getFTSStatus(): FTSStatus | { state: 'SAFE'; armTime: number; enabled: boolean } {
+        return this.latestState && this.latestState.fts ? this.latestState.fts : { state: 'SAFE', armTime: 0, enabled: true };
     }
 
-    getEnvironmentState(): any {
+    getEnvironmentState(): Partial<EnvironmentState> | null {
         if (!this.sharedView) return null;
 
         // Construct from buffer
@@ -140,15 +142,15 @@ export class PhysicsProxy {
         };
     }
 
-    getFlightComputerStatus(): any {
-        return (this.latestState as any)?.fc || { status: 'FC: ---', command: '' };
+    getFlightComputerStatus(): FlightComputerStatusDTO {
+        return this.latestState?.fc || { status: 'FC: ---', command: '' };
     }
 
-    onEvent(callback: (event: any) => void) {
+    onEvent(callback: (event: PhysicsEvent) => void) {
         this.eventListeners.push(callback);
     }
 
-    private handleEvent(event: any) {
+    private handleEvent(event: PhysicsEvent) {
         this.eventListeners.forEach((cb) => cb(event));
     }
 
@@ -222,12 +224,12 @@ export class PhysicsProxy {
                 view.isAeroStable = this.sharedView[base + EntityOffset.IS_AERO_STABLE] === 1;
 
                 if (typeCode === EntityType.UPPER_STAGE) {
-                    (view as any).fairingsDeployed = this.sharedView[base + EntityOffset.FAIRING_DEP] === 1;
+                    (view as UpperStage).fairingsDeployed = this.sharedView[base + EntityOffset.FAIRING_DEP] === 1;
                 }
 
                 const engStateCode = this.sharedView[base + EntityOffset.ENGINE_STATE] || 0;
-                (view as any).engineState = engStateCode;
-                (view as any).ignitersRemaining = this.sharedView[base + EntityOffset.IGNITERS] || 0;
+                view.engineState = engStateCode;
+                view.ignitersRemaining = this.sharedView[base + EntityOffset.IGNITERS] || 0;
             }
         }
     }
