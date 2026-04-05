@@ -38,7 +38,12 @@ export class VABEditor {
         this.container = container;
         this.onLaunch = onLaunch;
         this.blueprint = createFalconPreset();
-        this.savedBlueprints = loadBlueprints();
+        try {
+            this.savedBlueprints = loadBlueprints();
+        } catch (e) {
+            console.error('VABEditor failed to load blueprints:', e);
+            this.savedBlueprints = [];
+        }
 
         // Event delegation for click, change, and keydown
         this.container.addEventListener('click', (e) => {
