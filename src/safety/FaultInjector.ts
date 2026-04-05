@@ -93,6 +93,15 @@ export const FAULT_CATALOG: FaultDefinition[] = [
     }
 ];
 
+const FAULT_CATALOG_BY_ID = new Map<string, FaultDefinition>(FAULT_CATALOG.map((f) => [f.id, f]));
+
+const FAULT_CATALOG_BY_CATEGORY = new Map<FaultCategory, FaultDefinition[]>();
+for (const fault of FAULT_CATALOG) {
+    const arr = FAULT_CATALOG_BY_CATEGORY.get(fault.category) || [];
+    arr.push(fault);
+    FAULT_CATALOG_BY_CATEGORY.set(fault.category, arr);
+}
+
 // ============================================================================
 // Fault Injector
 // ============================================================================
@@ -128,7 +137,7 @@ export class FaultInjector {
 
     /** Arm a fault for injection */
     armFault(faultId: string, triggerType: FaultTriggerType = 'immediate', delay: number = 0): void {
-        const def = FAULT_CATALOG.find((f) => f.id === faultId);
+        const def = FAULT_CATALOG_BY_ID.get(faultId);
         if (!def) return;
 
         // Remove existing instance of same fault
@@ -308,7 +317,7 @@ export class FaultInjector {
         const activeFaultsMap = new Map<string, ActiveFault>(this.activeFaults.map((f) => [f.definition.id, f]));
 
         const categoryEls = categories.map((cat) => {
-            const faults = FAULT_CATALOG.filter((f) => f.category === cat);
+            const faults = FAULT_CATALOG_BY_CATEGORY.get(cat) || [];
             const faultEls = faults.map((fault) => {
                 const active = activeFaultsMap.get(fault.id);
                 const statusClass =

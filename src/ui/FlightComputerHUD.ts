@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { FlightComputerStatusDTO } from '../types';
+
 /**
  * Updates the Flight Computer HUD element with current status and commands.
  * Uses secure DOM methods to prevent XSS vulnerabilities.
@@ -6,19 +7,19 @@
  * @param fcStatus The container element for the HUD
  * @param status The FlightComputer status object from Worker
  */
-export function updateFlightComputerHUD(fcStatus: HTMLElement, status: any): void {
+export function updateFlightComputerHUD(fcStatus: HTMLElement, status: FlightComputerStatusDTO | { getStatusString: () => string; getActiveCommandText: () => string }): void {
     if (!fcStatus) return;
 
     let statusStr: string;
     let commandStr: string;
 
     // Handle both data object (Worker/DTO) and class instance (Test/Legacy)
-    if (status && typeof status.getStatusString === 'function') {
+    if (status && 'getStatusString' in status && typeof status.getStatusString === 'function') {
         statusStr = status.getStatusString();
-        commandStr = status.getActiveCommandText();
+        commandStr = (status as { getActiveCommandText: () => string }).getActiveCommandText();
     } else {
-        statusStr = status.status || 'FC: ---';
-        commandStr = status.command || '';
+        statusStr = (status as FlightComputerStatusDTO).status || 'FC: ---';
+        commandStr = (status as FlightComputerStatusDTO).command || '';
     }
 
     const isActive = statusStr === 'FC: ACTIVE';

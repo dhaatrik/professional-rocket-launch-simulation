@@ -54,15 +54,11 @@ describe('MathUtils', () => {
             expect(val).toBeCloseTo(0.25);
         });
 
-        it('should fallback to Math.random if no crypto API is available', () => {
+        it('should throw an error if no crypto API is available', () => {
             vi.stubGlobal('crypto', undefined);
             vi.stubGlobal('window', undefined);
 
-            Math.random = vi.fn(() => 0.75);
-
-            const val = MathUtils.secureRandom();
-            expect(Math.random).toHaveBeenCalledTimes(1);
-            expect(val).toBe(0.75);
+            expect(() => MathUtils.secureRandom()).toThrow('Secure random number generation is not supported in this environment.');
         });
     });
 });

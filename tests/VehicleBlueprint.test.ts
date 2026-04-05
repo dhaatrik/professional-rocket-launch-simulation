@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { loadBlueprints, deserializeBlueprint, serializeBlueprint, createBlueprint, addStage, addPartToStage } from '../src/vab/VehicleBlueprint';
+import { saveBlueprints, loadBlueprints, deserializeBlueprint, serializeBlueprint, createBlueprint, addStage, addPartToStage } from '../src/vab/VehicleBlueprint';
 import { ENGINE_MERLIN_1D } from '../src/vab/PartsCatalog';
 
 describe('VehicleBlueprint Error Paths', () => {
@@ -47,7 +47,7 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when stages is missing or not an array', () => {
-            const badData = { name: 'Bad Rocket', id: 'bad-1' };
+            const badData = { name: 'Bad Rocket', id: 'bad-1', createdAt: 123, modifiedAt: 123 };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -56,8 +56,48 @@ describe('VehicleBlueprint Error Paths', () => {
             );
         });
 
+        it('should return null and log error when name is missing or not a string', () => {
+            const badData = { id: '1', createdAt: 1, modifiedAt: 1, stages: [] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid blueprint format: name is not a string' })
+            );
+        });
+
+        it('should return null and log error when id is missing or not a string', () => {
+            const badData = { name: 'n', createdAt: 1, modifiedAt: 1, stages: [] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid blueprint format: id is not a string' })
+            );
+        });
+
+        it('should return null and log error when createdAt is missing or not a number', () => {
+            const badData = { name: 'n', id: '1', modifiedAt: 1, stages: [] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid blueprint format: createdAt is not a number' })
+            );
+        });
+
+        it('should return null and log error when modifiedAt is missing or not a number', () => {
+            const badData = { name: 'n', id: '1', createdAt: 1, stages: [] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid blueprint format: modifiedAt is not a number' })
+            );
+        });
+
         it('should return null and log error when a stage is not an object', () => {
-            const badData = { stages: [ "not a stage object" ] };
+            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ "not a stage object" ] };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -66,8 +106,28 @@ describe('VehicleBlueprint Error Paths', () => {
             );
         });
 
+        it('should return null and log error when stageNumber is missing or not a number', () => {
+            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { hasDecoupler: false, parts: [] } ] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid stage format: stageNumber is not a number' })
+            );
+        });
+
+        it('should return null and log error when hasDecoupler is missing or not a boolean', () => {
+            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, parts: [] } ] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid stage format: hasDecoupler is not a boolean' })
+            );
+        });
+
         it('should return null and log error when parts is not an array', () => {
-            const badData = { stages: [ { stageNumber: 0, parts: "not an array" } ] };
+            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: "not an array" } ] };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -77,7 +137,7 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when a part instance is not an object', () => {
-            const badData = { stages: [ { parts: [ "not an object" ] } ] };
+            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: [ "not an object" ] } ] };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -87,7 +147,7 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when partId is not a string', () => {
-            const badData = { stages: [ { parts: [ { partId: 123 } ] } ] };
+            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: [ { partId: 123 } ] } ] };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -96,8 +156,32 @@ describe('VehicleBlueprint Error Paths', () => {
             );
         });
 
+        it('should return null and log error when instanceId is not a string', () => {
+            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: [ { partId: 'id', instanceId: 123 } ] } ] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid part instance format: instanceId is not a string' })
+            );
+        });
+
+        it('should return null and log error when stageIndex is not a number', () => {
+            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: [ { partId: 'id', instanceId: 'id', stageIndex: '0' } ] } ] };
+            const result = deserializeBlueprint(JSON.stringify(badData));
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                'Failed to deserialize blueprint:',
+                expect.objectContaining({ message: 'Invalid part instance format: stageIndex is not a number' })
+            );
+        });
+
         it('should return null and log error when an unexpected error occurs during mapping', () => {
             const validData = {
+                name: 'n',
+                id: '1',
+                createdAt: 1,
+                modifiedAt: 1,
                 stages: []
             };
 
@@ -151,52 +235,54 @@ describe('VehicleBlueprint Error Paths', () => {
         });
     });
 
-    describe('loadBlueprints', () => {
-        it('should return empty array and log error when localStorage contains a non-array JSON structure', () => {
-            localStorage.setItem('vab-blueprints', JSON.stringify({ not: 'an array' }));
-            const result = loadBlueprints();
-            expect(result).toEqual([]);
+    describe('saveBlueprints', () => {
+        it('should catch and log error when localStorage.setItem throws', () => {
+            const blueprint = createBlueprint('Test');
+
+            // Override the setItem mock for this specific test
+            localStorage.setItem = vi.fn().mockImplementation(() => {
+                throw new Error('Quota exceeded');
+            });
+
+            saveBlueprints([blueprint]);
+
             expect(consoleErrorSpy).toHaveBeenCalledWith(
-                'Failed to load blueprints:',
-                expect.objectContaining({ message: 'Stored blueprints data is not an array' })
+                'Failed to save blueprints:',
+                expect.any(Error)
             );
         });
+    });
+
+    describe('loadBlueprints', () => {
+        it('should throw an error when localStorage contains a non-array JSON structure', () => {
+            localStorage.setItem('vab-blueprints', JSON.stringify({ not: 'an array' }));
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: Stored blueprints data is not an array/);
+        });
+
         it('should return empty array when localStorage is empty', () => {
             const result = loadBlueprints();
             expect(result).toEqual([]);
         });
 
-        it('should return empty array and log error when localStorage contains invalid JSON', () => {
+        it('should throw an error when localStorage contains invalid JSON', () => {
             // This is the core test for the catch block in loadBlueprints.
             // When localStorage.getItem('vab-blueprints') returns a string that fails JSON.parse(data),
             // it triggers the catch block.
             localStorage.setItem('vab-blueprints', 'invalid json');
 
-            const result = loadBlueprints();
-
-            expect(result).toEqual([]);
-            expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to load blueprints:', expect.any(SyntaxError));
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints:/);
         });
 
-        it('should return empty array and log error when localStorage contains a non-array JSON', () => {
+        it('should throw an error when localStorage contains a non-array JSON', () => {
             localStorage.setItem('vab-blueprints', '{"some": "object"}');
 
-            const result = loadBlueprints();
-
-            expect(result).toEqual([]);
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
-                'Failed to load blueprints:',
-                expect.objectContaining({ message: 'Stored blueprints data is not an array' })
-            );
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: Stored blueprints data is not an array/);
         });
 
-        it('should handle native JSON.parse errors gracefully', () => {
+        it('should handle native JSON.parse errors gracefully by throwing', () => {
             localStorage.setItem('vab-blueprints', '{ invalid ]');
 
-            const result = loadBlueprints();
-
-            expect(result).toEqual([]);
-            expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to load blueprints:', expect.any(SyntaxError));
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints:/);
         });
 
         it('should successfully load valid blueprints and filter out invalid ones', () => {

@@ -182,24 +182,22 @@ describe('TelemetryExporter', () => {
     });
 
     describe('exportFlightData', () => {
-        it('should warn and return if no frames', () => {
-            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        it('should return false if no frames', () => {
+            const result = exportFlightData([], mockSummary, 'csv');
 
-            exportFlightData([], mockSummary, 'csv');
-
-            expect(consoleSpy).toHaveBeenCalledWith('No flight data to export');
+            expect(result).toBe(false);
             expect(URL.createObjectURL).not.toHaveBeenCalled();
-
-            consoleSpy.mockRestore();
         });
 
-        it('should call exportToCSV when format is csv', () => {
-            exportFlightData(mockFrames, mockSummary, 'csv');
+        it('should call exportToCSV and return true when format is csv', () => {
+            const result = exportFlightData(mockFrames, mockSummary, 'csv');
+            expect(result).toBe(true);
             expect(URL.createObjectURL).toHaveBeenCalled();
         });
 
-        it('should call exportToJSON when format is json', () => {
-            exportFlightData(mockFrames, mockSummary, 'json');
+        it('should call exportToJSON and return true when format is json', () => {
+            const result = exportFlightData(mockFrames, mockSummary, 'json');
+            expect(result).toBe(true);
             expect(URL.createObjectURL).toHaveBeenCalled();
         });
     });

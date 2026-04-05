@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Orbital Mechanics Module
  *
@@ -6,7 +5,7 @@
  * Includes Keplerian element calculation, Vis-Viva equation, and maneuver planning algorithms.
  */
 
-import type { Vector2D, PhysicsState } from '../types/index';
+import type { Vector2D } from '../types/index';
 import { Vec2 } from '../types/index';
 import { R_EARTH, GRAVITY } from '../config/Constants';
 
@@ -306,7 +305,7 @@ export function calculateGroundTrack(downrange: number, time: number): { lat: nu
  * @param maxSteps Maximum integration steps
  */
 export function predictOrbitPath(
-    path: { phi: number; r: number; relX: number; relY: number }[],
+    path: { phi: number; r: number; relX?: number; relY?: number }[],
     r0: number,
     phi0: number,
     vr0: number,

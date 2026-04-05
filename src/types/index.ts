@@ -214,6 +214,24 @@ export interface ThrottleTouchState {
 }
 
 // ============================================================================
+// Shared DTOs & Events
+// ============================================================================
+
+export interface PhysicsEvent {
+    name: string;
+    x?: number;
+    y?: number;
+    success?: boolean;
+    errors?: string[];
+    [key: string]: unknown;
+}
+
+export interface FlightComputerStatusDTO {
+    status: string;
+    command: string;
+}
+
+// ============================================================================
 // Global State Interface
 // ============================================================================
 
@@ -317,7 +335,6 @@ export interface IParticle {
     decay: number;
 
     update(groundLevel: number, timeScale: number): void;
-    draw(ctx: CanvasRenderingContext2D): void;
 }
 
 /**

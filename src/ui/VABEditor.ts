@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * VAB Editor
  *
@@ -9,6 +8,7 @@ import { RocketPart, PartCategory, getPartById, getPartsByCategory } from '../va
 import { createElement } from './DOMUtils';
 import {
     VehicleBlueprint,
+    VehicleStage,
     VehicleStats,
     createBlueprint,
     addStage,
@@ -38,11 +38,18 @@ export class VABEditor {
         this.container = container;
         this.onLaunch = onLaunch;
         this.blueprint = createFalconPreset();
-        this.savedBlueprints = loadBlueprints();
+        try {
+            this.savedBlueprints = loadBlueprints();
+        } catch (e) {
+            console.error('VABEditor failed to load blueprints:', e);
+            this.savedBlueprints = [];
+        }
 
-        // Event delegation for part removal
+        // Event delegation for click, change, and keydown
         this.container.addEventListener('click', (e) => {
             const target = e.target as HTMLElement;
+
+            // Remove part
             const removeBtn = target.closest('.remove-part') as HTMLElement;
             if (removeBtn) {
                 e.stopPropagation();
@@ -50,6 +57,143 @@ export class VABEditor {
                 const instanceId = removeBtn.dataset.instance || '';
                 this.blueprint = removePartFromStage(this.blueprint, stageIndex, instanceId);
                 this.render();
+                return;
+            }
+
+            // Category tab
+            const tabBtn = target.closest('.vab-cat-tab') as HTMLElement;
+            if (tabBtn) {
+                this.selectedCategory = tabBtn.dataset.category as PartCategory;
+                this.selectedPartId = null;
+                this.render();
+                return;
+            }
+
+            // Part item
+            const partItem = target.closest('.vab-part-item') as HTMLElement;
+            if (partItem) {
+                const partId = partItem.dataset.partId;
+                if (partId) {
+                    this.selectedPartId = partId;
+                    this.render();
+                }
+                return;
+            }
+
+            // Add to stage
+            const addBtn = target.closest('.vab-add-to-stage') as HTMLElement;
+            if (addBtn) {
+                const stageIndex = parseInt(addBtn.dataset.stage || '0');
+                if (this.selectedPartId) {
+                    const part = getPartById(this.selectedPartId);
+                    if (part) {
+                        this.blueprint = addPartToStage(this.blueprint, stageIndex, part);
+                        this.render();
+                    }
+                }
+                return;
+            }
+
+            // Add stage
+            const addStageBtn = target.closest('.vab-add-stage-btn') as HTMLElement;
+            if (addStageBtn) {
+                this.blueprint = addStage(this.blueprint);
+                this.render();
+                return;
+            }
+
+            // Remove stage
+            const removeStageBtn = target.closest('.remove-stage') as HTMLElement;
+            if (removeStageBtn) {
+                e.stopPropagation();
+                const stageIndex = parseInt(removeStageBtn.dataset.stage || '0');
+                this.blueprint = removeStage(this.blueprint, stageIndex);
+                this.render();
+                return;
+            }
+
+            // Presets
+            const presetBtn = target.closest('.vab-preset-btn') as HTMLElement;
+            if (presetBtn) {
+                if (!window.confirm('This will replace your current vehicle. Are you sure you want to proceed?')) {
+                    return;
+                }
+                const preset = presetBtn.dataset.preset;
+                switch (preset) {
+                    case 'falcon':
+                        this.blueprint = createFalconPreset();
+                        break;
+                    case 'simple':
+                        this.blueprint = createSimplePreset();
+                        break;
+                    case 'new':
+                        this.blueprint = createBlueprint('New Rocket');
+                        this.blueprint = addStage(this.blueprint);
+                        break;
+                }
+                this.render();
+                return;
+            }
+
+            // Save button
+            const saveBtn = target.closest('.vab-save-btn') as HTMLElement;
+            if (saveBtn) {
+                const existing = this.savedBlueprints.findIndex((b) => b.id === this.blueprint.id);
+                if (existing >= 0) {
+                    this.savedBlueprints[existing] = this.blueprint;
+                } else {
+                    this.savedBlueprints.push(this.blueprint);
+                }
+                saveBlueprints(this.savedBlueprints);
+                alert('Blueprint saved!');
+                return;
+            }
+
+            // Cancel button
+            const cancelBtn = target.closest('.vab-cancel-btn') as HTMLElement;
+            if (cancelBtn) {
+                this.hide();
+                return;
+            }
+
+            // Close button
+            const closeBtn = target.closest('.script-close-btn') as HTMLElement;
+            if (closeBtn) {
+                this.hide();
+                return;
+            }
+
+            // Launch button
+            const launchBtn = target.closest('.vab-launch-btn') as HTMLElement;
+            if (launchBtn) {
+                this.hide();
+                this.onLaunch(this.blueprint);
+                return;
+            }
+        });
+
+        this.container.addEventListener('change', (e) => {
+            const target = e.target as HTMLElement;
+            const nameInput = target.closest('.vab-name-input') as HTMLInputElement;
+            if (nameInput) {
+                this.blueprint.name = nameInput.value;
+            }
+        });
+
+        this.container.addEventListener('keydown', (e) => {
+            const target = e.target as HTMLElement;
+            const partItem = target.closest('.vab-part-item') as HTMLElement;
+            if (partItem) {
+                const key = (e as KeyboardEvent).key;
+                if (key === 'Enter' || key === ' ') {
+                    e.preventDefault();
+                    partItem.classList.add('selected');
+                    const partId = partItem.dataset.partId;
+                    if (partId) {
+                        this.selectedPartId = partId;
+                        this.render();
+                    }
+                }
             }
         });
 
@@ -217,8 +361,6 @@ export class VABEditor {
         if (newPartsList) {
             newPartsList.scrollTop = scrollTop;
         }
-
-        this.attachEventListeners();
     }
 
     /**
@@ -466,7 +608,7 @@ export class VABEditor {
     /**
      * Get simple stats for a single stage
      */
-    private getStageStats(stage: any): { mass: number; deltaV: number } {
+    private getStageStats(stage: VehicleStage): { mass: number; deltaV: number } {
         let mass = 0;
         let fuel = 0;
         let isp = 0;
@@ -566,131 +708,5 @@ export class VABEditor {
         ]);
 
         return [massStat, dvStat, twrStat, stagesStat, costStat, indicatorsStat];
-    }
-
-    /**
-     * Attach event listeners
-     */
-    private attachEventListeners(): void {
-        // Category tabs
-        this.container.querySelectorAll('.vab-cat-tab').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                const target = e.currentTarget as HTMLElement;
-                this.selectedCategory = target.dataset.category as PartCategory;
-                this.selectedPartId = null;
-                this.render();
-            });
-        });
-
-        // Part items (select part)
-        this.container.querySelectorAll('.vab-part-item').forEach((item) => {
-            const selectPart = (target: HTMLElement) => {
-                const partId = target.dataset.partId;
-                if (partId) {
-                    this.selectedPartId = partId;
-                    this.render();
-                }
-            };
-
-            item.addEventListener('click', (e) => {
-                selectPart(e.currentTarget as HTMLElement);
-            });
-
-            item.addEventListener('keydown', (e) => {
-                const key = (e as KeyboardEvent).key;
-                if (key === 'Enter' || key === ' ') {
-                    e.preventDefault(); // Prevent scrolling for space
-                    (e.currentTarget as HTMLElement).classList.add('selected');
-                    selectPart(e.currentTarget as HTMLElement);
-                }
-            });
-        });
-
-        // Add to stage buttons
-        this.container.querySelectorAll('.vab-add-to-stage').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                const stageIndex = parseInt((e.currentTarget as HTMLElement).dataset.stage || '0');
-                if (this.selectedPartId) {
-                    const part = getPartById(this.selectedPartId);
-                    if (part) {
-                        this.blueprint = addPartToStage(this.blueprint, stageIndex, part);
-                        this.render();
-                    }
-                }
-            });
-        });
-
-        // Add stage button
-        this.container.querySelector('.vab-add-stage-btn')?.addEventListener('click', () => {
-            this.blueprint = addStage(this.blueprint);
-            this.render();
-        });
-
-        // Remove stage buttons
-        this.container.querySelectorAll('.remove-stage').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const stageIndex = parseInt((e.currentTarget as HTMLElement).dataset.stage || '0');
-                this.blueprint = removeStage(this.blueprint, stageIndex);
-                this.render();
-            });
-        });
-
-        // Preset buttons
-        this.container.querySelectorAll('.vab-preset-btn').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                if (!window.confirm('This will replace your current vehicle. Are you sure you want to proceed?')) {
-                    return;
-                }
-                const preset = (e.currentTarget as HTMLElement).dataset.preset;
-                switch (preset) {
-                    case 'falcon':
-                        this.blueprint = createFalconPreset();
-                        break;
-                    case 'simple':
-                        this.blueprint = createSimplePreset();
-                        break;
-                    case 'new':
-                        this.blueprint = createBlueprint('New Rocket');
-                        this.blueprint = addStage(this.blueprint);
-                        break;
-                }
-                this.render();
-            });
-        });
-
-        // Name input
-        this.container.querySelector('.vab-name-input')?.addEventListener('change', (e) => {
-            this.blueprint.name = (e.target as HTMLInputElement).value;
-        });
-
-        // Save button
-        this.container.querySelector('.vab-save-btn')?.addEventListener('click', () => {
-            // Update or add to saved blueprints
-            const existing = this.savedBlueprints.findIndex((b) => b.id === this.blueprint.id);
-            if (existing >= 0) {
-                this.savedBlueprints[existing] = this.blueprint;
-            } else {
-                this.savedBlueprints.push(this.blueprint);
-            }
-            saveBlueprints(this.savedBlueprints);
-            alert('Blueprint saved!');
-        });
-
-        // Cancel button
-        this.container.querySelector('.vab-cancel-btn')?.addEventListener('click', () => {
-            this.hide();
-        });
-
-        // Close button (X)
-        this.container.querySelector('.script-close-btn')?.addEventListener('click', () => {
-            this.hide();
-        });
-
-        // Launch button
-        this.container.querySelector('.vab-launch-btn')?.addEventListener('click', () => {
-            this.hide();
-            this.onLaunch(this.blueprint);
-        });
     }
 }

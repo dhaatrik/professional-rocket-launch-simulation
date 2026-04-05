@@ -36,6 +36,19 @@ describe('FlightScript', () => {
     });
 
     describe('parseMissionScript', () => {
+        it('should handle unexpected exceptions during parsing safely', () => {
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            // Pass an intentionally bad script string (null) to trigger the exception
+            const result = parseMissionScript(null as unknown as string);
+
+            expect(result.success).toBe(false);
+            expect(result.errors[0]?.error).toBe('Internal parsing error');
+            expect(consoleSpy).toHaveBeenCalledWith('Error parsing mission script:', expect.any(TypeError));
+
+            consoleSpy.mockRestore();
+        });
+
         it('should parse multi-line script', () => {
             const script = `
                 WHEN ALTITUDE > 1000 THEN PITCH 80

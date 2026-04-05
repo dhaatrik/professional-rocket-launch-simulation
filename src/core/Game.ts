@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+
 /**
  * Game
  *
@@ -6,10 +6,9 @@
  * Manages game loop, physics updates, rendering, and subsystems.
  */
 
-import { CameraMode, MissionState, OrbitalElements, IVessel } from '../types';
+import { CameraMode, MissionState, IVessel, PhysicsEvent, FlightComputerStatusDTO, OrbitalElements } from '../types';
 import { VehicleBlueprint } from '../vab/VehicleBlueprint';
 import {
-    CONFIG,
     PIXELS_PER_METER,
     R_EARTH,
     getAtmosphericDensity,
@@ -20,12 +19,10 @@ import {
     WIND_COLORS,
     WIND_DRAW_STEP
 } from '../config/Constants';
-import { MU, predictOrbitPath } from '../physics/OrbitalMechanics';
+import { predictOrbitPath } from '../physics/OrbitalMechanics';
 import {
     state,
     updateDimensions,
-    setAudioEngine,
-    setMissionLog,
     setAssetLoader,
     addParticle,
     clearParticles
@@ -38,7 +35,7 @@ import { MissionLog } from '../ui/MissionLog';
 import { Navball } from '../ui/Navball';
 import { TelemetrySystem } from '../ui/Telemetry';
 import { Particle } from '../physics/Particle';
-import { FullStack, Booster, UpperStage, Payload, Fairing } from '../physics/RocketComponents';
+import { Booster, UpperStage } from '../physics/RocketComponents';
 import { BlackBoxRecorder } from '../telemetry/BlackBoxRecorder';
 import { EnvironmentSystem, EnvironmentState, formatTimeOfDay, getWindDirectionString } from '../physics/Environment';
 import { setWindVelocity, setDensityMultiplier } from './State';
@@ -48,7 +45,6 @@ import { UI_COLORS } from '../ui/UIConstants';
 import { FlightTerminationSystem } from '../safety/FlightTermination';
 import { LaunchChecklist } from '../safety/LaunchChecklist';
 import { FaultInjector } from '../safety/FaultInjector';
-import { Vessel } from '../physics/Vessel';
 import { PhysicsProxy } from './PhysicsProxy';
 import { TelemetryTransmitter } from '../telemetry/TelemetryTransmitter';
 import { EngineStateCode } from './PhysicsBuffer';
@@ -329,7 +325,7 @@ export class Game {
     /**
      * Spawn a new vessel from a blueprint
      */
-    spawnVessel(blueprint: VehicleBlueprint): void {
+    spawnVessel(_blueprint: VehicleBlueprint): void {
         // For now, reset which triggers worker init to spawn default rocket
         this.reset();
     }
@@ -365,30 +361,30 @@ export class Game {
     /**
      * Physics Event Listeners
      */
-    private physicsEventListeners: ((e: any) => void)[] = [];
+    private physicsEventListeners: ((e: PhysicsEvent) => void)[] = [];
 
-    public addPhysicsEventListener(callback: (e: any) => void): void {
+    public addPhysicsEventListener(callback: (e: PhysicsEvent) => void): void {
         this.physicsEventListeners.push(callback);
     }
 
     /**
      * Send a command to the physics worker (e.g. Flight Computer)
      */
-    public command(type: string, payload: any): void {
+    public command(type: string, payload: unknown): void {
         this.physics.command(type, payload);
     }
 
     /**
      * Get Flight Computer status from Physics Worker
      */
-    public getFlightComputerStatus(): any {
+    public getFlightComputerStatus(): FlightComputerStatusDTO {
         return this.physics.getFlightComputerStatus();
     }
 
     /**
      * Handle events from physics worker
      */
-    private handlePhysicsEvent(e: any): void {
+    private handlePhysicsEvent(e: PhysicsEvent): void {
         // Dispatch to listeners
         this.physicsEventListeners.forEach((cb) => cb(e));
 
@@ -400,8 +396,8 @@ export class Game {
             for (let i = 0; i < 30; i++) {
                 addParticle(
                     Particle.create(
-                        e.x + (Math.random() - 0.5) * 20,
-                        e.y + 80,
+                        (e.x ?? 0) + (Math.random() - 0.5) * 20,
+                        (e.y ?? 0) + 80,
                         'smoke',
                         0, // velocity handled by particle logic?
                         0
@@ -497,9 +493,9 @@ export class Game {
             envState.isLaunchSafe = localEnv.isLaunchSafe;
             envState.maxQWindWarning = localEnv.maxQWindWarning;
 
-            setWindVelocity(envState.windVelocity);
-            setDensityMultiplier(envState.densityMultiplier);
-            this.lastEnvState = envState;
+            if (envState.windVelocity) setWindVelocity(envState.windVelocity);
+            if (envState.densityMultiplier !== undefined) setDensityMultiplier(envState.densityMultiplier);
+            this.lastEnvState = envState as EnvironmentState;
         } else {
             this.lastEnvState = this.environment.getState(0);
         }
@@ -587,7 +583,7 @@ export class Game {
         this.mainStack = this.trackedEntity; // Simplified assumption
 
         // Sync globals for legacy/UI
-        state.entities = this.entities as any;
+        state.entities = this.entities;
         window.trackedEntity = this.trackedEntity;
         window.mainStack = this.mainStack;
 
@@ -976,10 +972,8 @@ export class Game {
             // Clamp camera: Don't show below ground too much
             // Ground is at this.groundY.
             // If we want ground at bottom of screen: CamY = groundY - height/Zoom
-            const minCamY = this.groundY - (this.height - 50) / this.ZOOM;
 
             // Interpolate
-            const diff = targetCamY - this.cameraY;
             this.cameraY = targetCamY;
 
             // Hard clamp to not show under-ground void

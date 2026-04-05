@@ -7,7 +7,7 @@
 
 import { FlightDataParser, FlightFrame } from './FlightDataParser';
 
-class AnalysisApp {
+export class AnalysisApp {
     private frames: FlightFrame[] = [];
     private currentIndex: number = 0;
     private isPlaying: boolean = false;
@@ -15,12 +15,12 @@ class AnalysisApp {
     private animationFrameId: number | null = null;
 
     // UI Elements
-    private timeScrubber: HTMLInputElement;
-    private dispTime: HTMLElement;
-    private dispAlt: HTMLElement;
-    private dispVel: HTMLElement;
-    private canvases: { [key: string]: HTMLCanvasElement } = {};
-    private ctxs: { [key: string]: CanvasRenderingContext2D } = {};
+    public timeScrubber: HTMLInputElement;
+    public dispTime: HTMLElement;
+    public dispAlt: HTMLElement;
+    public dispVel: HTMLElement;
+    public canvases: { [key: string]: HTMLCanvasElement } = {};
+    public ctxs: { [key: string]: CanvasRenderingContext2D } = {};
 
     constructor() {
         this.timeScrubber = document.getElementById('time-scrubber') as HTMLInputElement;
@@ -118,12 +118,18 @@ class AnalysisApp {
             const target = e.target as FileReader;
             if (!target) return;
             const content = target.result as string;
-            if (file.name.endsWith('.csv')) {
-                this.frames = FlightDataParser.parseCSV(content);
-            } else if (file.name.endsWith('.json')) {
-                this.frames = FlightDataParser.parseJSON(content) || [];
-            } else {
-                alert('Unsupported file type');
+            try {
+                if (file.name.endsWith('.csv')) {
+                    this.frames = FlightDataParser.parseCSV(content);
+                } else if (file.name.endsWith('.json')) {
+                    this.frames = FlightDataParser.parseJSON(content);
+                } else {
+                    alert('Unsupported file type');
+                    return;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to parse file: ' + (err instanceof Error ? err.message : String(err)));
                 return;
             }
 
@@ -413,4 +419,7 @@ class AnalysisApp {
     }
 }
 
-new AnalysisApp();
+// Only auto-initialize if we're in a browser environment and not in a test
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
+    new AnalysisApp();
+}

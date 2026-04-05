@@ -255,42 +255,45 @@ export class LaunchChecklist {
 
         this.containerEl.textContent = '';
 
-        const checklistItems = Array.from(this.items.values()).map((item) => {
+        const checklistItems: HTMLElement[] = [];
+        for (const item of this.items.values()) {
             const statusClass = item.status === 'go' ? 'go' : item.status === 'no-go' ? 'no-go' : 'pending';
 
-            return createElement('div', { className: `checklist-row ${statusClass}` }, [
-                createElement('div', { className: 'checklist-station', textContent: item.station }),
-                createElement('div', { className: 'checklist-label', textContent: item.label }),
-                createElement(
-                    'div',
-                    { className: 'checklist-buttons', role: 'group', 'aria-label': `${item.station} Status` },
-                    [
-                        createElement(
-                            'button',
-                            {
-                                className: `cl-btn cl-go ${item.status === 'go' ? 'active' : ''}`,
-                                'data-item': item.id,
-                                'data-action': 'go',
-                                'aria-label': `Set ${item.station} to GO`,
-                                'aria-pressed': item.status === 'go' ? 'true' : 'false'
-                            },
-                            ['GO']
-                        ),
-                        createElement(
-                            'button',
-                            {
-                                className: `cl-btn cl-nogo ${item.status === 'no-go' ? 'active' : ''}`,
-                                'data-item': item.id,
-                                'data-action': 'no-go',
-                                'aria-label': `Set ${item.station} to NO GO`,
-                                'aria-pressed': item.status === 'no-go' ? 'true' : 'false'
-                            },
-                            ['NO GO']
-                        )
-                    ]
-                )
-            ]);
-        });
+            checklistItems.push(
+                createElement('div', { className: `checklist-row ${statusClass}` }, [
+                    createElement('div', { className: 'checklist-station', textContent: item.station }),
+                    createElement('div', { className: 'checklist-label', textContent: item.label }),
+                    createElement(
+                        'div',
+                        { className: 'checklist-buttons', role: 'group', 'aria-label': `${item.station} Status` },
+                        [
+                            createElement(
+                                'button',
+                                {
+                                    className: `cl-btn cl-go ${item.status === 'go' ? 'active' : ''}`,
+                                    'data-item': item.id,
+                                    'data-action': 'go',
+                                    'aria-label': `Set ${item.station} to GO`,
+                                    'aria-pressed': item.status === 'go' ? 'true' : 'false'
+                                },
+                                ['GO']
+                            ),
+                            createElement(
+                                'button',
+                                {
+                                    className: `cl-btn cl-nogo ${item.status === 'no-go' ? 'active' : ''}`,
+                                    'data-item': item.id,
+                                    'data-action': 'no-go',
+                                    'aria-label': `Set ${item.station} to NO GO`,
+                                    'aria-pressed': item.status === 'no-go' ? 'true' : 'false'
+                                },
+                                ['NO GO']
+                            )
+                        ]
+                    )
+                ])
+            );
+        }
 
         const checklistInner = createElement(
             'div',

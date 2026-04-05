@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * ScriptEditor - Flight Computer Script Editor UI
  *
@@ -13,6 +12,8 @@ import { createElement } from './DOMUtils';
 
 const STORAGE_KEY = 'rocket-sim-scripts';
 
+type SavedScriptsRecord = Record<string, { text: string; script: MissionScript }>;
+
 export class ScriptEditor {
     private modal: HTMLElement | null = null;
     private textarea: HTMLTextAreaElement | null = null;
@@ -21,6 +22,7 @@ export class ScriptEditor {
     private game: Game;
     private invokingElement: HTMLElement | null = null;
     private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
+    private validateTimeout?: ReturnType<typeof setTimeout>;
 
     constructor(game: Game) {
         this.game = game;
@@ -299,8 +301,8 @@ export class ScriptEditor {
         // Real-time validation on input
         this.textarea?.addEventListener('input', () => {
             // Debounced validation
-            clearTimeout((this as any).validateTimeout);
-            (this as any).validateTimeout = setTimeout(() => {
+            clearTimeout(this.validateTimeout);
+            this.validateTimeout = setTimeout(() => {
                 this.validate();
             }, 500);
         });
@@ -490,45 +492,48 @@ export class ScriptEditor {
     /**
      * Get saved scripts from localStorage
      */
-    private getSavedScripts(): Record<string, { text: string; script: MissionScript }> {
+    private getSavedScripts(): SavedScriptsRecord {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (!stored) return {};
 
             const parsed = JSON.parse(stored);
-            if (this.isValidSavedScripts(parsed)) {
-                return parsed;
-            } else {
-                console.warn('ScriptEditor: Invalid saved scripts format in localStorage');
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
                 return {};
             }
+
+            const validScripts: SavedScriptsRecord = {};
+
+            for (const key of Object.keys(parsed)) {
+                const entry = parsed[key];
+                if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+
+                if (typeof entry.text !== 'string') continue;
+
+                const rawScript = entry.script;
+                if (!rawScript || typeof rawScript !== 'object' || Array.isArray(rawScript)) continue;
+                if (typeof rawScript.name !== 'string') continue;
+                if (typeof rawScript.createdAt !== 'number') continue;
+
+                // Re-parse the text to safely reconstruct the script object
+                // This prevents prototype pollution and ensures absolute schema validity
+                const parseResult = parseMissionScript(entry.text, rawScript.name);
+                if (parseResult.success && parseResult.script) {
+                    validScripts[key] = {
+                        text: entry.text,
+                        script: {
+                            name: rawScript.name,
+                            commands: parseResult.script.commands,
+                            createdAt: rawScript.createdAt
+                        }
+                    };
+                }
+            }
+
+            return validScripts;
         } catch {
             return {};
         }
-    }
-
-    /**
-     * Basic type validation for saved scripts payload
-     */
-    private isValidSavedScripts(data: any): data is Record<string, { text: string; script: MissionScript }> {
-        if (!data || typeof data !== 'object' || Array.isArray(data)) {
-            return false;
-        }
-
-        for (const key in data) {
-            const entry = data[key];
-            // Each entry should be { text: string, script: MissionScript }
-            if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
-            if (typeof entry.text !== 'string') return false;
-
-            const script = entry.script;
-            if (!script || typeof script !== 'object' || Array.isArray(script)) return false;
-            if (typeof script.name !== 'string') return false;
-            if (!Array.isArray(script.commands)) return false;
-            if (typeof script.createdAt !== 'number') return false;
-        }
-
-        return true;
     }
 
     /**
