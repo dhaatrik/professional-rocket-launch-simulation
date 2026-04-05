@@ -15,3 +15,7 @@
 ## 2024-05-24 - VAB Editor Event Delegation
 **Learning:** Attaching complex DOM event listeners repeatedly on every render cycle (via `querySelectorAll` and `addEventListener`) within an interactive component like `VABEditor.ts` causes massive performance degradation and risks memory leaks, especially when the component handles frequent user inputs (like typing or part selections).
 **Action:** Always employ Event Delegation on the root container in the constructor for UI components. Use a single generic listener per event type (`click`, `change`, `keydown`) and leverage `target.closest(".class")` to cleanly manage child element interactions without rebinding.
+
+## 2024-05-24 - Static Catalog Map Lookups
+**Learning:** Using `Array.filter()` on static catalogs (like `PARTS_CATALOG`) inside UI render loops creates unnecessary O(N) array iterations and allocates new arrays constantly.
+**Action:** Pre-compute a `Map` organized by category when the module initializes, so `getPartsByCategory()` becomes an O(1) lookup that returns a reference to an existing array, eliminating both iteration and allocation overhead.
