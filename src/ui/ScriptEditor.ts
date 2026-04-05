@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * ScriptEditor - Flight Computer Script Editor UI
  *
@@ -23,6 +22,7 @@ export class ScriptEditor {
     private game: Game;
     private invokingElement: HTMLElement | null = null;
     private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
+    private validateTimeout?: ReturnType<typeof setTimeout>;
 
     constructor(game: Game) {
         this.game = game;
@@ -301,8 +301,8 @@ export class ScriptEditor {
         // Real-time validation on input
         this.textarea?.addEventListener('input', () => {
             // Debounced validation
-            clearTimeout((this as any).validateTimeout);
-            (this as any).validateTimeout = setTimeout(() => {
+            clearTimeout(this.validateTimeout);
+            this.validateTimeout = setTimeout(() => {
                 this.validate();
             }, 500);
         });
@@ -507,24 +507,33 @@ export class ScriptEditor {
     /**
      * Basic type validation for saved scripts payload
      */
-    private isValidSavedScripts(data: any): data is SavedScriptsRecord {
+    private isValidSavedScripts(data: unknown): data is SavedScriptsRecord {
         if (!data || typeof data !== 'object' || Array.isArray(data)) {
             return false;
         }
 
-        return Object.values(data).every(
-            (entry: any) =>
-                entry &&
-                typeof entry === 'object' &&
-                !Array.isArray(entry) &&
-                typeof entry.text === 'string' &&
-                entry.script &&
-                typeof entry.script === 'object' &&
-                !Array.isArray(entry.script) &&
-                typeof entry.script.name === 'string' &&
-                Array.isArray(entry.script.commands) &&
-                typeof entry.script.createdAt === 'number'
-        );
+        return Object.values(data).every((entry: unknown) => {
+            if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+                return false;
+            }
+
+            const recordEntry = entry as Record<string, unknown>;
+            if (typeof recordEntry.text !== 'string') {
+                return false;
+            }
+
+            const script = recordEntry.script;
+            if (!script || typeof script !== 'object' || Array.isArray(script)) {
+                return false;
+            }
+
+            const scriptObj = script as Record<string, unknown>;
+            return (
+                typeof scriptObj.name === 'string' &&
+                Array.isArray(scriptObj.commands) &&
+                typeof scriptObj.createdAt === 'number'
+            );
+        });
     }
 
     /**

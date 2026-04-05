@@ -317,7 +317,6 @@ export interface IParticle {
     decay: number;
 
     update(groundLevel: number, timeScale: number): void;
-    draw(ctx: CanvasRenderingContext2D): void;
 }
 
 /**

@@ -7,7 +7,7 @@
 
 import { FlightDataParser, FlightFrame } from './FlightDataParser';
 
-class AnalysisApp {
+export class AnalysisApp {
     private frames: FlightFrame[] = [];
     private currentIndex: number = 0;
     private isPlaying: boolean = false;
@@ -15,12 +15,12 @@ class AnalysisApp {
     private animationFrameId: number | null = null;
 
     // UI Elements
-    private timeScrubber: HTMLInputElement;
-    private dispTime: HTMLElement;
-    private dispAlt: HTMLElement;
-    private dispVel: HTMLElement;
-    private canvases: { [key: string]: HTMLCanvasElement } = {};
-    private ctxs: { [key: string]: CanvasRenderingContext2D } = {};
+    public timeScrubber: HTMLInputElement;
+    public dispTime: HTMLElement;
+    public dispAlt: HTMLElement;
+    public dispVel: HTMLElement;
+    public canvases: { [key: string]: HTMLCanvasElement } = {};
+    public ctxs: { [key: string]: CanvasRenderingContext2D } = {};
 
     constructor() {
         this.timeScrubber = document.getElementById('time-scrubber') as HTMLInputElement;
@@ -413,4 +413,7 @@ class AnalysisApp {
     }
 }
 
-new AnalysisApp();
+// Only auto-initialize if we're in a browser environment and not in a test
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
+    new AnalysisApp();
+}

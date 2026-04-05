@@ -142,6 +142,24 @@ abc,def`;
             expect(FlightDataParser.parseJSON('true')).toEqual([]);
         });
 
+        it('should strip extra properties and validate types for security', () => {
+            const json = `[
+                {
+                    "missionTime": 10.5,
+                    "altitude": 500.2,
+                    "maliciousPayload": "<script>alert(1)</script>",
+                    "velocity": "not-a-number"
+                }
+            ]`;
+            const frames = FlightDataParser.parseJSON(json);
+
+            expect(frames).toHaveLength(1);
+            expect(frames![0]!.missionTime).toBe(10.5);
+            expect(frames![0]!.altitude).toBe(500.2);
+            expect((frames![0] as any).maliciousPayload).toBeUndefined();
+            expect(frames![0]!.velocity).toBeUndefined();
+        });
+
         it('should return null when JSON.parse throws an error', () => {
             const json = `{"valid": "json"}`;
             const mockError = new Error('Mock JSON parse error');

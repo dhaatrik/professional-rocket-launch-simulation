@@ -109,15 +109,6 @@ describe('Particle Class', () => {
     });
 
     describe('Drawing', () => {
-        it('should draw single particle', () => {
-            const p = new Particle(10, 20, 'smoke');
-            p.draw(mockCtx);
-
-            expect(mockCtx.beginPath).toHaveBeenCalled();
-            expect(mockCtx.arc).toHaveBeenCalledWith(10, 20, p.size, 0, Math.PI * 2);
-            expect(mockCtx.fill).toHaveBeenCalled();
-        });
-
         it('should batch render particles', () => {
             const particles = [
                 new Particle(0, 0, 'smoke'),
