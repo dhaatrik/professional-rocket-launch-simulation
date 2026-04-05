@@ -168,10 +168,9 @@ export function exportFlightData(
     frames: readonly FlightDataFrame[],
     summary: FlightSummary,
     format: ExportFormat
-): void {
+): boolean {
     if (frames.length === 0) {
-        console.warn('No flight data to export');
-        return;
+        return false;
     }
 
     switch (format) {
@@ -182,4 +181,6 @@ export function exportFlightData(
             exportToJSON(frames, summary);
             break;
     }
+
+    return true;
 }
