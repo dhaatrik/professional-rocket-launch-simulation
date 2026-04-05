@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * VAB Editor
  *
@@ -9,6 +8,7 @@ import { RocketPart, PartCategory, getPartById, getPartsByCategory } from '../va
 import { createElement } from './DOMUtils';
 import {
     VehicleBlueprint,
+    VehicleStage,
     VehicleStats,
     createBlueprint,
     addStage,
@@ -603,7 +603,7 @@ export class VABEditor {
     /**
      * Get simple stats for a single stage
      */
-    private getStageStats(stage: any): { mass: number; deltaV: number } {
+    private getStageStats(stage: VehicleStage): { mass: number; deltaV: number } {
         let mass = 0;
         let fuel = 0;
         let isp = 0;
