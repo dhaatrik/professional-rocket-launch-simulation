@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Flight Data Parser
  *
@@ -35,7 +34,7 @@ export class FlightDataParser {
                 const values = line.split(',');
                 if (values.length !== headers.length) continue;
 
-                const frame: any = {};
+                const frame: Partial<FlightFrame> = {};
 
                 headers.forEach((header, index) => {
                     const val = values[index]?.trim();
@@ -96,14 +95,17 @@ export class FlightDataParser {
 
     public static parseJSON(jsonContent: string): FlightFrame[] | null {
         try {
-            const data = JSON.parse(jsonContent);
+            const data = JSON.parse(jsonContent) as unknown;
             if (!data || typeof data !== 'object') {
                 return [];
             }
             if (Array.isArray(data)) {
                 return data as FlightFrame[];
-            } else if ('frames' in data && Array.isArray((data as any).frames)) {
-                return (data as any).frames as FlightFrame[];
+            } else if ('frames' in data) {
+                const record = data as Record<string, unknown>;
+                if (Array.isArray(record.frames)) {
+                    return record.frames as FlightFrame[];
+                }
             }
             return [];
         } catch (e) {
