@@ -306,7 +306,7 @@ export function calculateGroundTrack(downrange: number, time: number): { lat: nu
  * @param maxSteps Maximum integration steps
  */
 export function predictOrbitPath(
-    path: { phi: number; r: number; relX: number; relY: number }[],
+    path: { phi: number; r: number; relX?: number; relY?: number }[],
     r0: number,
     phi0: number,
     vr0: number,
