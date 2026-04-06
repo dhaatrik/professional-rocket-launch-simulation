@@ -14,6 +14,7 @@ const mockDocument = {
                 textContent: '',
                 style: {},
                 className: '',
+                setAttribute: vi.fn(),
                 getContext: () => ({
                     clearRect: () => { },
                     save: () => { },
