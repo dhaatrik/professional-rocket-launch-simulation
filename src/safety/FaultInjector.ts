@@ -123,13 +123,12 @@ export class FaultInjector {
             this.containerEl = document.getElementById(containerId);
 
             if (this.containerEl) {
-                // Event delegation for faults
                 this.containerEl.addEventListener('click', (e) => {
                     const target = e.target as HTMLElement;
 
-                    const btn = target.closest('.fis-fault-btn') as HTMLElement;
-                    if (btn) {
-                        const faultId = btn.dataset.fault;
+                    const faultBtn = target.closest('.fis-fault-btn') as HTMLButtonElement;
+                    if (faultBtn) {
+                        const faultId = faultBtn.dataset.fault;
                         if (faultId) {
                             this.containerEl?.dispatchEvent(
                                 new CustomEvent('fis-toggle', {
@@ -141,9 +140,10 @@ export class FaultInjector {
                         return;
                     }
 
-                    const closeBtn = target.closest('#fis-close-btn') as HTMLElement;
+                    const closeBtn = target.closest('#fis-close-btn');
                     if (closeBtn) {
                         this.hide();
+                        return;
                     }
                 });
             }

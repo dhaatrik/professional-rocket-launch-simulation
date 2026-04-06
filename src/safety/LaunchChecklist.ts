@@ -51,7 +51,7 @@ export class LaunchChecklist {
             this.containerEl.addEventListener('click', (e) => {
                 const target = e.target as HTMLElement;
 
-                const btn = target.closest('.cl-btn') as HTMLElement;
+                const btn = target.closest('.cl-btn') as HTMLButtonElement;
                 if (btn) {
                     const itemId = btn.dataset.item;
                     const action = btn.dataset.action as ChecklistStatus;
@@ -61,9 +61,10 @@ export class LaunchChecklist {
                     return;
                 }
 
-                const closeBtn = target.closest('#checklist-close-btn') as HTMLElement;
+                const closeBtn = target.closest('#checklist-close-btn');
                 if (closeBtn) {
                     this.hide();
+                    return;
                 }
             });
         }
