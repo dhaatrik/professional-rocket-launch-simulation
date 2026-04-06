@@ -396,6 +396,8 @@ export function deserializeScript(json: string): MissionScript | null {
         if (!Array.isArray(script.commands)) return null;
         if (typeof script.createdAt !== 'number') return null;
 
+        const validCommands: ScriptCommand[] = [];
+
         for (const cmd of script.commands) {
             if (!cmd || typeof cmd !== 'object') return null;
             if (typeof cmd.id !== 'number') return null;
@@ -409,9 +411,55 @@ export function deserializeScript(json: string): MissionScript | null {
             if (!cmd.condition || typeof cmd.condition !== 'object') return null;
             if (!Array.isArray(cmd.condition.clauses)) return null;
             if (!Array.isArray(cmd.condition.logicalOperators)) return null;
+
+            const safeClauses: ConditionClause[] = [];
+            for (const clause of cmd.condition.clauses) {
+                if (!clause || typeof clause !== 'object') return null;
+                if (typeof clause.variable !== 'string') return null;
+                if (typeof clause.operator !== 'string') return null;
+                if (typeof clause.value !== 'number') return null;
+                safeClauses.push({
+                    variable: clause.variable as ConditionVariable,
+                    operator: clause.operator as ComparisonOperator,
+                    value: clause.value as number
+                });
+            }
+
+            const safeLogicalOperators: LogicalOperator[] = [];
+            for (const op of cmd.condition.logicalOperators) {
+                if (typeof op !== 'string') return null;
+                safeLogicalOperators.push(op as LogicalOperator);
+            }
+
+            const safeAction: ScriptAction = {
+                type: cmd.action.type as ActionType
+            };
+            if ('value' in cmd.action) {
+                if (typeof cmd.action.value === 'number') {
+                    safeAction.value = cmd.action.value;
+                } else if (typeof cmd.action.value === 'string') {
+                    safeAction.value = cmd.action.value as SASModeValue;
+                }
+            }
+
+            validCommands.push({
+                id: cmd.id as number,
+                condition: {
+                    clauses: safeClauses,
+                    logicalOperators: safeLogicalOperators
+                },
+                action: safeAction,
+                state: cmd.state as CommandState,
+                oneShot: cmd.oneShot as boolean,
+                rawText: cmd.rawText as string
+            });
         }
 
-        return script as unknown as MissionScript;
+        return {
+            name: script.name,
+            commands: validCommands,
+            createdAt: script.createdAt
+        } as MissionScript;
     } catch {
         return null;
     }
