@@ -302,8 +302,20 @@ export const PARTS_CATALOG: RocketPart[] = [
 ];
 
 export const PARTS_MAP = new Map<string, RocketPart>();
+export const PARTS_BY_CATEGORY = new Map<PartCategory, RocketPart[]>();
+
+// Initialize category arrays
+const categories: PartCategory[] = ['engine', 'tank', 'avionics', 'fairing', 'decoupler', 'srb'];
+for (const cat of categories) {
+    PARTS_BY_CATEGORY.set(cat, []);
+}
+
 for (const part of PARTS_CATALOG) {
     PARTS_MAP.set(part.id, part);
+    const catArray = PARTS_BY_CATEGORY.get(part.category);
+    if (catArray) {
+        catArray.push(part);
+    }
 }
 
 /**
@@ -317,7 +329,7 @@ export function getPartById(id: string): RocketPart | undefined {
  * Get all parts in a category
  */
 export function getPartsByCategory(category: PartCategory): RocketPart[] {
-    return PARTS_CATALOG.filter((p) => p.category === category);
+    return PARTS_BY_CATEGORY.get(category) || [];
 }
 
 /**
