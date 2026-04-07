@@ -144,21 +144,21 @@
 
         <!-- IMPROVEMENT #10: Camera Panel -->
         <div id="camera-panel" role="group" aria-label="Camera Modes">
-            <button data-cam="1" class="active" title="Follow Camera [1]" aria-pressed="true">Follow</button>
-            <button data-cam="2" title="Orbit Camera [2]" aria-pressed="false">Orbit</button>
-            <button data-cam="3" title="Cinema Camera [3]" aria-pressed="false">Cinema</button>
+            <button data-cam="1" class="active" title="Follow Camera [1]" aria-keyshortcuts="1" aria-pressed="true">Follow</button>
+            <button data-cam="2" title="Orbit Camera [2]" aria-keyshortcuts="2" aria-pressed="false">Orbit</button>
+            <button data-cam="3" title="Cinema Camera [3]" aria-keyshortcuts="3" aria-pressed="false">Cinema</button>
         </div>
 
         <!-- SAS Controls - Enhanced -->
         <div id="sas-controls" role="group" aria-labelledby="sas-title-label">
             <div class="sas-title" id="sas-title-label">SAS CONTROL</div>
             <div class="sas-group">
-                <button id="sas-off" class="sas-btn active" title="SAS Off [T]" aria-pressed="true">OFF</button>
-                <button id="sas-stability" class="sas-btn" title="Stability Assist [T]" aria-pressed="false">STABILITY</button>
+                <button id="sas-off" class="sas-btn active" title="SAS Off [T]" aria-keyshortcuts="T" aria-pressed="true">OFF</button>
+                <button id="sas-stability" class="sas-btn" title="Stability Assist [T]" aria-keyshortcuts="T" aria-pressed="false">STABILITY</button>
             </div>
             <div class="sas-group">
-                <button id="sas-prograde" class="sas-btn" title="Prograde [ []" aria-pressed="false">PROGRADE</button>
-                <button id="sas-retrograde" class="sas-btn" title="Retrograde [ ]]" aria-pressed="false">RETROGRADE</button>
+                <button id="sas-prograde" class="sas-btn" title="Prograde [ []" aria-keyshortcuts="[" aria-pressed="false">PROGRADE</button>
+                <button id="sas-retrograde" class="sas-btn" title="Retrograde [ ]]" aria-keyshortcuts="]" aria-pressed="false">RETROGRADE</button>
             </div>
             <div id="sas-mode-indicator" aria-live="polite" aria-atomic="true">
                 <span class="icon" aria-hidden="true"></span>
@@ -200,15 +200,15 @@
     </div>
 
     <div id="controls">
-        <button id="launch-btn" class="primary state-launch" title="Launch [SPACE]">INITIATE LAUNCH</button>
-        <button id="checklist-btn" title="Launch Checklist [C]" aria-haspopup="dialog">Checklist</button>
-        <button id="fts-destruct-btn" class="fts-destruct" title="FTS Destruct [Alt+T to arm]">FTS DESTRUCT</button>
-        <button id="maneuver-btn" title="Maneuver Planner [O]" aria-haspopup="dialog">Maneuver</button>
-        <button id="mission-control-btn" title="Mission Control [M]" aria-haspopup="dialog">CAPCOM</button>
-        <button id="fc-btn" title="Open Flight Computer Script Editor [F]" aria-haspopup="dialog">Flight PC</button>
-        <button id="telemetry-btn" title="Pop Out Telemetry [P]">Telemetry</button>
-        <button id="export-btn" title="Export Flight Data [E]">Export Data</button>
-        <button id="autopilot-btn" title="Toggle Auto-Land [A]" aria-pressed="false">Auto-Land: OFF</button>
+        <button id="launch-btn" class="primary state-launch" title="Launch [SPACE]" aria-keyshortcuts="Space">INITIATE LAUNCH</button>
+        <button id="checklist-btn" title="Launch Checklist [C]" aria-keyshortcuts="C" aria-haspopup="dialog">Checklist</button>
+        <button id="fts-destruct-btn" class="fts-destruct" title="FTS Destruct [Alt+T to arm]" aria-keyshortcuts="Alt+T">FTS DESTRUCT</button>
+        <button id="maneuver-btn" title="Maneuver Planner [O]" aria-keyshortcuts="O" aria-haspopup="dialog">Maneuver</button>
+        <button id="mission-control-btn" title="Mission Control [M]" aria-keyshortcuts="M" aria-haspopup="dialog">CAPCOM</button>
+        <button id="fc-btn" title="Open Flight Computer Script Editor [F]" aria-keyshortcuts="F" aria-haspopup="dialog">Flight PC</button>
+        <button id="telemetry-btn" title="Pop Out Telemetry [P]" aria-keyshortcuts="P">Telemetry</button>
+        <button id="export-btn" title="Export Flight Data [E]" aria-keyshortcuts="E">Export Data</button>
+        <button id="autopilot-btn" title="Toggle Auto-Land [A]" aria-keyshortcuts="A" aria-pressed="false">Auto-Land: OFF</button>
         <button id="audio-btn" class="disabled" aria-pressed="false">Enable Audio</button>
         <button id="reset-btn" title="Reset Simulation" aria-label="Reset Simulation">Reset</button>
     </div>

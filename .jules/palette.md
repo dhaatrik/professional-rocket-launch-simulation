@@ -40,3 +40,6 @@
 ## 2024-10-24 - Dynamic ARIA Attributes in Game Loop
 **Learning:** Adding dynamic ARIA attributes (like `aria-valuenow`) to UI elements that are updated inside the high-frequency game rendering loop (`src/core/Game.ts`) can break existing unit tests if the test suite uses simplified DOM mock objects that lack the `setAttribute` method.
 **Action:** When adding DOM manipulation methods (like `setAttribute`) to game loop logic, always inspect the corresponding performance or comprehensive unit tests (e.g., `tests/Performance.test.ts`, `tests/HUD_comprehensive.test.ts`) and ensure the mock DOM elements are updated to include spy functions for those methods (e.g., `setAttribute: vi.fn()`).
+## 2025-05-14 - Use aria-keyshortcuts for Keyboard Hints
+**Learning:** [a11y: Screen readers do not reliably announce keyboard shortcuts when they are only included within `title` attributes. Users navigating with assistive technologies may miss these crucial interaction hints.]
+**Action:** [Always add `aria-keyshortcuts` to buttons that have defined hotkeys so that screen readers can natively announce them to the user (e.g., `aria-keyshortcuts="Space"`, `aria-keyshortcuts="Alt+T"`).]
