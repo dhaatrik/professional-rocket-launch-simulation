@@ -7,3 +7,8 @@
 **Vulnerability:** Directly casting untrusted JSON data to interfaces bypassing validation.
 **Learning:** Found insecure parsing in `FlightDataParser.ts` where returning `data as FlightFrame[]` allowed potentially untrusted structures.
 **Prevention:** Ensured the code validates arrays through the field-by-field manual object reconstruction loop.
+
+## 2024-06-05 - Insecure Deserialization in FlightScript
+**Vulnerability:** Deserializing `MissionScript` from JSON returned the parsed object directly using `as unknown as MissionScript`, which could allow untrusted or malicious properties, including prototype pollution.
+**Learning:** Found insecure parsing in `FlightScript.ts` where returning the parsed object directly bypasses structural integrity.
+**Prevention:** Ensured the code validates and manually reconstructs the `MissionScript` object, its `commands`, `condition`, and `action` structures.
