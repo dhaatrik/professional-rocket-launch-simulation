@@ -12,3 +12,8 @@
 **Vulnerability:** Deserializing `MissionScript` from JSON returned the parsed object directly using `as unknown as MissionScript`, which could allow untrusted or malicious properties, including prototype pollution.
 **Learning:** Found insecure parsing in `FlightScript.ts` where returning the parsed object directly bypasses structural integrity.
 **Prevention:** Ensured the code validates and manually reconstructs the `MissionScript` object, its `commands`, `condition`, and `action` structures.
+
+## 2024-06-06 - Reverse Tabnabbing Vulnerability
+**Vulnerability:** Using window.open() without noopener and noreferrer features exposes the application to reverse tabnabbing vulnerabilities, where the newly opened tab can control the original window.
+**Learning:** Found a window.open call in src/main.ts that lacked the necessary security features.
+**Prevention:** Always append 'noopener,noreferrer' to the features string when calling window.open() to open untrusted or even trusted but potentially compromised URLs.
