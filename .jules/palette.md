@@ -37,3 +37,6 @@
 ## 2025-04-10 - String Booleans for DOMUtils ARIA Attributes
 **Learning:** [a11y: When using `DOMUtils.createElement` to set ARIA attributes like `aria-pressed`, boolean values (`true` / `false`) were being incorrectly translated to empty strings `""` or completely omitted. This broke screen reader semantics for toggle buttons.]
 **Action:** [Always explicitly pass string equivalents (`"true"` or `"false"`) when evaluating conditions for ARIA attributes in `DOMUtils.createElement` to ensure they are rendered correctly in the DOM.]
+## 2024-10-24 - Dynamic ARIA Attributes in Game Loop
+**Learning:** Adding dynamic ARIA attributes (like `aria-valuenow`) to UI elements that are updated inside the high-frequency game rendering loop (`src/core/Game.ts`) can break existing unit tests if the test suite uses simplified DOM mock objects that lack the `setAttribute` method.
+**Action:** When adding DOM manipulation methods (like `setAttribute`) to game loop logic, always inspect the corresponding performance or comprehensive unit tests (e.g., `tests/Performance.test.ts`, `tests/HUD_comprehensive.test.ts`) and ensure the mock DOM elements are updated to include spy functions for those methods (e.g., `setAttribute: vi.fn()`).

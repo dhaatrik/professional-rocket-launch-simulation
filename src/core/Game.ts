@@ -160,6 +160,8 @@ export class Game {
     private hudApogee: HTMLElement | null = null;
     private gaugeFuel: HTMLElement | null = null;
     private gaugeThrust: HTMLElement | null = null;
+    private gaugeFuelContainer: HTMLElement | null = null;
+    private gaugeThrustContainer: HTMLElement | null = null;
     private hudAoa: HTMLElement | null = null;
     private hudStability: HTMLElement | null = null;
     private hudSkinTemp: HTMLElement | null = null;
@@ -237,6 +239,8 @@ export class Game {
         this.hudApogee = document.getElementById('hud-apogee');
         this.gaugeFuel = document.getElementById('gauge-fuel');
         this.gaugeThrust = document.getElementById('gauge-thrust');
+        this.gaugeFuelContainer = document.getElementById('fuel-gauge-container');
+        this.gaugeThrustContainer = document.getElementById('thrust-gauge-container');
         this.hudAoa = document.getElementById('hud-aoa');
         this.hudStability = document.getElementById('hud-stability');
         this.hudSkinTemp = document.getElementById('hud-skin-temp');
@@ -1149,6 +1153,9 @@ export class Game {
             if (Math.abs(last.fuelPct - fuelPct) > 0.001) {
                 last.fuelPct = fuelPct;
                 gaugeFuel.style.height = fuelPct * 100 + '%';
+                if (this.gaugeFuelContainer) {
+                    this.gaugeFuelContainer.setAttribute('aria-valuenow', Math.round(fuelPct * 100).toString());
+                }
             }
         }
 
@@ -1157,6 +1164,9 @@ export class Game {
             if (Math.abs(last.thrustPct - thrustPct) > 0.001) {
                 last.thrustPct = thrustPct;
                 gaugeThrust.style.height = thrustPct * 100 + '%';
+                if (this.gaugeThrustContainer) {
+                    this.gaugeThrustContainer.setAttribute('aria-valuenow', Math.round(thrustPct * 100).toString());
+                }
             }
         }
 

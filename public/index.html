@@ -121,17 +121,17 @@
         </div>
 
         <div id="hud-gauges">
-            <div class="gauge-container">
-                <div class="gauge-bar-bg">
+            <div id="fuel-gauge-container" class="gauge-container" role="meter" aria-label="Fuel Gauge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+                <div class="gauge-bar-bg" aria-hidden="true">
                     <div id="gauge-fuel" class="gauge-bar-fill bg-warning"></div>
                 </div>
-                <div class="gauge-label">FUEL</div>
+                <div class="gauge-label" aria-hidden="true">FUEL</div>
             </div>
-            <div class="gauge-container">
-                <div class="gauge-bar-bg">
+            <div id="thrust-gauge-container" class="gauge-container" role="meter" aria-label="Thrust Gauge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="gauge-bar-bg" aria-hidden="true">
                     <div id="gauge-thrust" class="gauge-bar-fill bg-danger"></div>
                 </div>
-                <div class="gauge-label">THRUST</div>
+                <div class="gauge-label" aria-hidden="true">THRUST</div>
             </div>
         </div>
 

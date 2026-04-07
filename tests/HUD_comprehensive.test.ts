@@ -35,6 +35,7 @@ const createMockElement = (id: string) => {
         textContent: '',
         className: '',
         addEventListener: vi.fn(),
+        setAttribute: vi.fn(),
         getContext: undefined
     };
     if (id === 'navball' || id === 'graph-canvas') {
