@@ -298,7 +298,7 @@ uiCache.fcBtn?.addEventListener('click', () => {
 
 // --- Telemetry Pop-out Button ---
 document.getElementById('telemetry-btn')?.addEventListener('click', () => {
-    window.open('telemetry.html', 'Telemetry', 'width=800,height=600');
+    window.open('telemetry.html', 'Telemetry', 'width=800,height=600,noopener,noreferrer');
     game.missionLog.log('Telemetry Link Established', 'success');
 });
 
