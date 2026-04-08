@@ -438,6 +438,16 @@ window.addEventListener('keydown', (e) => {
         document.getElementById('sas-retrograde')?.click();
     }
 
+    // O - Toggle Maneuver Planner
+    if (e.key === 'o' || e.key === 'O') {
+        game.maneuverPlanner.toggle();
+    }
+
+    // M - Toggle Mission Control
+    if (e.key === 'm' || e.key === 'M') {
+        game.missionControl.toggle();
+    }
+
     // C - Toggle Checklist
     if (e.key === 'c' || e.key === 'C') {
         game.checklist.toggle();
