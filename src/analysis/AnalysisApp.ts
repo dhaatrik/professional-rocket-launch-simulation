@@ -349,43 +349,52 @@ export class AnalysisApp {
         // Find range
         const dataMin = min ?? 0;
         let dataMax = max ?? -Infinity;
+
+        const len = this.frames.length;
         if (max === undefined) {
-            this.frames.forEach((f) => {
-                const val = f[metric] as number;
+            for (let i = 0; i < len; i++) {
+                const val = this.frames[i]![metric] as number;
                 if (val > dataMax) dataMax = val;
-            });
+            }
             // Add padding
             dataMax *= 1.1;
         }
 
         const range = dataMax - dataMin || 1;
+        const xStep = len > 1 ? w / (len - 1) : 0;
 
         ctx.beginPath();
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
 
-        this.frames.forEach((f, i) => {
-            const x = (i / (this.frames.length - 1)) * w;
+        const eventXs: number[] = [];
+
+        for (let i = 0; i < len; i++) {
+            const f = this.frames[i]!;
+            const x = i * xStep;
             const val = f[metric] as number;
             const normalized = (val - dataMin) / range;
             const y = h - normalized * h;
 
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
-        });
+
+            if (f.event) {
+                eventXs.push(x);
+            }
+        }
 
         ctx.stroke();
 
         // Checkpoints/Events overlay
-        this.frames.forEach((f, i) => {
-            if (f.event) {
-                const x = (i / (this.frames.length - 1)) * w;
-                ctx.fillStyle = 'white';
-                ctx.globalAlpha = 0.5;
-                ctx.fillRect(x, 0, 1, h);
-                ctx.globalAlpha = 1.0;
+        if (eventXs.length > 0) {
+            ctx.fillStyle = 'white';
+            ctx.globalAlpha = 0.5;
+            for (let i = 0; i < eventXs.length; i++) {
+                ctx.fillRect(eventXs[i]!, 0, 1, h);
             }
-        });
+            ctx.globalAlpha = 1.0;
+        }
     }
 
     private drawChartCursors(index: number) {
