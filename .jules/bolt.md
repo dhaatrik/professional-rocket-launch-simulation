@@ -19,3 +19,7 @@
 ## 2024-05-24 - Static Catalog Map Lookups
 **Learning:** Using `Array.filter()` on static catalogs (like `PARTS_CATALOG`) inside UI render loops creates unnecessary O(N) array iterations and allocates new arrays constantly.
 **Action:** Pre-compute a `Map` organized by category when the module initializes, so `getPartsByCategory()` becomes an O(1) lookup that returns a reference to an existing array, eliminating both iteration and allocation overhead.
+
+## 2026-04-08 - Optimize AnalysisApp Chart Rendering
+**Learning:** Multiple `forEach` passes over large arrays during continuous rendering loops create significant overhead, allocating closures and causing redundant iterations.
+**Action:** When rendering multi-layered chart data (like lines and overlays), combine iterations into a single standard `for` loop and track overlay positions in a pre-allocated array to minimize GC pressure and O(N) passes.
