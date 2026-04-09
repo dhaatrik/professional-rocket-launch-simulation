@@ -5,7 +5,7 @@
  * Manages game loop, physics updates, rendering, and subsystems.
  */
 
-import { CameraMode, MissionState, IVessel, PhysicsEvent, FlightComputerStatusDTO, OrbitalElements } from '../types';
+import { CameraMode, MissionState, IVessel, PhysicsEvent, FlightComputerStatusDTO } from '../types';
 import { VehicleBlueprint } from '../vab/VehicleBlueprint';
 import {
     PIXELS_PER_METER,
