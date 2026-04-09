@@ -120,10 +120,12 @@ class TelemetryReceiver {
         ctx.beginPath();
         ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)'; // Blue trace
         ctx.lineWidth = 2;
-        this.path.forEach((p, i) => {
+        // Optimization: Standard for loop avoids closure allocation in continuous render loop
+        for (let i = 0; i < this.path.length; i++) {
+            const p = this.path[i]!;
             if (i === 0) ctx.moveTo(p.x, p.y);
             else ctx.lineTo(p.x, p.y);
-        });
+        }
         ctx.stroke();
 
         // Rocket Icon
