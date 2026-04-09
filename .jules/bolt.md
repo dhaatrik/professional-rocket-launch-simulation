@@ -23,3 +23,6 @@
 ## 2026-04-08 - Optimize AnalysisApp Chart Rendering
 **Learning:** Multiple `forEach` passes over large arrays during continuous rendering loops create significant overhead, allocating closures and causing redundant iterations.
 **Action:** When rendering multi-layered chart data (like lines and overlays), combine iterations into a single standard `for` loop and track overlay positions in a pre-allocated array to minimize GC pressure and O(N) passes.
+## 2026-04-08 - Optimize AnalysisApp Chart Rendering
+**Learning:** Multiple `forEach` passes over large arrays during continuous rendering loops create significant overhead, allocating closures and causing redundant iterations.
+**Action:** When rendering multi-layered chart data (like lines and overlays), combine iterations into a single standard `for` loop and track overlay positions in a pre-allocated array to minimize GC pressure and O(N) passes.

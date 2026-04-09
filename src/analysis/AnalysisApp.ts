@@ -327,73 +327,148 @@ export class AnalysisApp {
         ctx.restore();
     }
 
+    // Performance Optimization: Combine iterations into a single standard for loop
+    // to minimize GC pressure and redundant O(N) passes.
     private renderCharts() {
         if (this.frames.length === 0) return;
 
-        this.drawSingleChart('chart-alt', 'altitude', '#3b82f6', 0);
-        this.drawSingleChart('chart-vel', 'velocity', '#10b981', 0);
-        this.drawSingleChart('chart-throttle', 'throttle', '#f59e0b', 0, 1);
-        this.drawSingleChart('chart-q', 'q', '#8b5cf6', 0);
-    }
+        const canvasAlt = this.canvases['chart-alt'];
+        const canvasVel = this.canvases['chart-vel'];
+        const canvasThr = this.canvases['chart-throttle'];
+        const canvasQ = this.canvases['chart-q'];
 
-    private drawSingleChart(canvasId: string, metric: keyof FlightFrame, color: string, min?: number, max?: number) {
-        const ctx = this.ctxs[canvasId];
-        const canvas = this.canvases[canvasId];
-        if (!ctx || !canvas) return;
+        const ctxAlt = this.ctxs['chart-alt'];
+        const ctxVel = this.ctxs['chart-vel'];
+        const ctxThr = this.ctxs['chart-throttle'];
+        const ctxQ = this.ctxs['chart-q'];
 
-        const w = canvas.width;
-        const h = canvas.height;
+        if (!ctxAlt || !ctxVel || !ctxThr || !ctxQ || !canvasAlt || !canvasVel || !canvasThr || !canvasQ) return;
 
-        ctx.clearRect(0, 0, w, h);
+        const wAlt = canvasAlt.width,
+            hAlt = canvasAlt.height;
+        const wVel = canvasVel.width,
+            hVel = canvasVel.height;
+        const wThr = canvasThr.width,
+            hThr = canvasThr.height;
+        const wQ = canvasQ.width,
+            hQ = canvasQ.height;
 
-        // Find range
-        const dataMin = min ?? 0;
-        let dataMax = max ?? -Infinity;
+        ctxAlt.clearRect(0, 0, wAlt, hAlt);
+        ctxVel.clearRect(0, 0, wVel, hVel);
+        ctxThr.clearRect(0, 0, wThr, hThr);
+        ctxQ.clearRect(0, 0, wQ, hQ);
 
         const len = this.frames.length;
-        if (max === undefined) {
-            for (let i = 0; i < len; i++) {
-                const val = this.frames[i]![metric] as number;
-                if (val > dataMax) dataMax = val;
-            }
-            // Add padding
-            dataMax *= 1.1;
-        }
-
-        const range = dataMax - dataMin || 1;
-        const xStep = len > 1 ? w / (len - 1) : 0;
-
-        ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-
-        const eventXs: number[] = [];
+        let maxAlt = -Infinity;
+        let maxVel = -Infinity;
+        let maxQ = -Infinity;
 
         for (let i = 0; i < len; i++) {
             const f = this.frames[i]!;
-            const x = i * xStep;
-            const val = f[metric] as number;
-            const normalized = (val - dataMin) / range;
-            const y = h - normalized * h;
+            if (f.altitude > maxAlt) maxAlt = f.altitude;
+            if (f.velocity > maxVel) maxVel = f.velocity;
+            if (f.q > maxQ) maxQ = f.q;
+        }
 
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
+        maxAlt *= 1.1;
+        maxVel *= 1.1;
+        maxQ *= 1.1;
+
+        const rangeAlt = maxAlt || 1;
+        const rangeVel = maxVel || 1;
+        const rangeThr = 1; // max is fixed at 1 for throttle
+        const rangeQ = maxQ || 1;
+
+        const xStepAlt = len > 1 ? wAlt / (len - 1) : 0;
+        const xStepVel = len > 1 ? wVel / (len - 1) : 0;
+        const xStepThr = len > 1 ? wThr / (len - 1) : 0;
+        const xStepQ = len > 1 ? wQ / (len - 1) : 0;
+
+        ctxAlt.beginPath();
+        ctxAlt.strokeStyle = '#3b82f6';
+        ctxAlt.lineWidth = 2;
+
+        ctxVel.beginPath();
+        ctxVel.strokeStyle = '#10b981';
+        ctxVel.lineWidth = 2;
+
+        ctxThr.beginPath();
+        ctxThr.strokeStyle = '#f59e0b';
+        ctxThr.lineWidth = 2;
+
+        ctxQ.beginPath();
+        ctxQ.strokeStyle = '#8b5cf6';
+        ctxQ.lineWidth = 2;
+
+        const eventXsAlt: number[] = [];
+        const eventXsVel: number[] = [];
+        const eventXsThr: number[] = [];
+        const eventXsQ: number[] = [];
+
+        for (let i = 0; i < len; i++) {
+            const f = this.frames[i]!;
+
+            const xAlt = i * xStepAlt;
+            const normAlt = f.altitude / rangeAlt;
+            const yAlt = hAlt - normAlt * hAlt;
+
+            const xVel = i * xStepVel;
+            const normVel = f.velocity / rangeVel;
+            const yVel = hVel - normVel * hVel;
+
+            const xThr = i * xStepThr;
+            const normThr = f.throttle / rangeThr;
+            const yThr = hThr - normThr * hThr;
+
+            const xQ = i * xStepQ;
+            const normQ = f.q / rangeQ;
+            const yQ = hQ - normQ * hQ;
+
+            if (i === 0) {
+                ctxAlt.moveTo(xAlt, yAlt);
+                ctxVel.moveTo(xVel, yVel);
+                ctxThr.moveTo(xThr, yThr);
+                ctxQ.moveTo(xQ, yQ);
+            } else {
+                ctxAlt.lineTo(xAlt, yAlt);
+                ctxVel.lineTo(xVel, yVel);
+                ctxThr.lineTo(xThr, yThr);
+                ctxQ.lineTo(xQ, yQ);
+            }
 
             if (f.event) {
-                eventXs.push(x);
+                eventXsAlt.push(xAlt);
+                eventXsVel.push(xVel);
+                eventXsThr.push(xThr);
+                eventXsQ.push(xQ);
             }
         }
 
-        ctx.stroke();
+        ctxAlt.stroke();
+        ctxVel.stroke();
+        ctxThr.stroke();
+        ctxQ.stroke();
 
-        // Checkpoints/Events overlay
-        if (eventXs.length > 0) {
-            ctx.fillStyle = 'white';
-            ctx.globalAlpha = 0.5;
-            for (let i = 0; i < eventXs.length; i++) {
-                ctx.fillRect(eventXs[i]!, 0, 1, h);
-            }
-            ctx.globalAlpha = 1.0;
+        if (eventXsAlt.length > 0) {
+            ctxAlt.fillStyle = 'white';
+            ctxAlt.globalAlpha = 0.5;
+            for (let i = 0; i < eventXsAlt.length; i++) ctxAlt.fillRect(eventXsAlt[i]!, 0, 1, hAlt);
+            ctxAlt.globalAlpha = 1.0;
+
+            ctxVel.fillStyle = 'white';
+            ctxVel.globalAlpha = 0.5;
+            for (let i = 0; i < eventXsVel.length; i++) ctxVel.fillRect(eventXsVel[i]!, 0, 1, hVel);
+            ctxVel.globalAlpha = 1.0;
+
+            ctxThr.fillStyle = 'white';
+            ctxThr.globalAlpha = 0.5;
+            for (let i = 0; i < eventXsThr.length; i++) ctxThr.fillRect(eventXsThr[i]!, 0, 1, hThr);
+            ctxThr.globalAlpha = 1.0;
+
+            ctxQ.fillStyle = 'white';
+            ctxQ.globalAlpha = 0.5;
+            for (let i = 0; i < eventXsQ.length; i++) ctxQ.fillRect(eventXsQ[i]!, 0, 1, hQ);
+            ctxQ.globalAlpha = 1.0;
         }
     }
 
@@ -406,10 +481,12 @@ export class AnalysisApp {
 
         const xPct = index / (this.frames.length - 1);
 
-        ['chart-alt', 'chart-vel', 'chart-throttle', 'chart-q'].forEach((id) => {
+        const ids = ['chart-alt', 'chart-vel', 'chart-throttle', 'chart-q'];
+        for (let i = 0; i < ids.length; i++) {
+            const id = ids[i]!;
             const ctx = this.ctxs[id];
             const canvas = this.canvases[id];
-            if (!ctx || !canvas) return;
+            if (!ctx || !canvas) continue;
 
             const w = canvas.width;
             const h = canvas.height;
@@ -424,7 +501,7 @@ export class AnalysisApp {
             ctx.lineTo(x, h);
             ctx.stroke();
             ctx.setLineDash([]);
-        });
+        }
     }
 }
 
