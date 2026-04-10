@@ -160,7 +160,13 @@ class TelemetryReceiver {
         ctx.clearRect(0, 0, width, height);
 
         // Auto scale
-        const max = Math.max(...this.altHistory, 100);
+        // Performance Optimization: Standard for loop avoids O(N) spread operator allocation in render loop
+        let max = 100;
+        for (let i = 0; i < this.MAX_POINTS; i++) {
+            if (this.altHistory[i] !== undefined && this.altHistory[i] > max) {
+                max = this.altHistory[i];
+            }
+        }
         const min = 0;
 
         ctx.beginPath();
