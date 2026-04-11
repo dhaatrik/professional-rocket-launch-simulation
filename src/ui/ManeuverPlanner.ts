@@ -67,6 +67,7 @@ export class ManeuverPlanner {
                         className: 'script-close-btn',
                         'aria-label': 'Close Maneuver Planner',
                         'aria-keyshortcuts': 'Escape',
+                        title: 'Close [Esc]',
                         textContent: '×'
                     })
                 ]),

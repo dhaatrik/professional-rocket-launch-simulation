@@ -108,7 +108,7 @@ export class ScriptEditor {
                 className: 'script-close-btn',
                 'aria-label': 'Close script editor',
                 'aria-keyshortcuts': 'Escape',
-                title: 'Close',
+                title: 'Close [Esc]',
                 textContent: '×'
             })
         ]);

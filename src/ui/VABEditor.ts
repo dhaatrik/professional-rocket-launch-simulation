@@ -279,7 +279,7 @@ export class VABEditor {
                 className: 'script-close-btn',
                 'aria-label': 'Close Vehicle Assembly Building',
                 'aria-keyshortcuts': 'Escape',
-                title: 'Close',
+                title: 'Close [Esc]',
                 textContent: '×'
             })
         ]);
