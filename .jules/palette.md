@@ -43,3 +43,6 @@
 ## 2025-05-14 - Use aria-keyshortcuts for Keyboard Hints
 **Learning:** [a11y: Screen readers do not reliably announce keyboard shortcuts when they are only included within `title` attributes. Users navigating with assistive technologies may miss these crucial interaction hints.]
 **Action:** [Always add `aria-keyshortcuts` to buttons that have defined hotkeys so that screen readers can natively announce them to the user (e.g., `aria-keyshortcuts="Space"`, `aria-keyshortcuts="Alt+T"`).]
+## 2026-04-11 - Added Escape Shortcut Hints to Modals
+**Learning:** Users who heavily rely on keyboards or screen readers might not realize that modals (ScriptEditor, VABEditor, ManeuverPlanner) can be closed using the Escape key since the shortcut was implemented globally without visual or semantic hints.
+**Action:** Add `aria-keyshortcuts='Escape'` to modal close buttons and append `[Esc]` to their `title` attributes to explicitly surface keyboard shortcuts to screen readers and mouse hover interactions.

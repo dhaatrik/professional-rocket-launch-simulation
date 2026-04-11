@@ -138,7 +138,8 @@ describe('ScriptEditor Accessibility', () => {
         const closeBtn = getById('script-editor-close');
         expect(closeBtn).toBeDefined();
         expect(closeBtn?.getAttribute('aria-label')).toBe('Close script editor');
-        expect(closeBtn?.getAttribute('title')).toBe('Close');
+        expect(closeBtn?.getAttribute('title')).toBe('Close [Esc]');
+        expect(closeBtn?.getAttribute('aria-keyshortcuts')).toBe('Escape');
 
         // 2. Preset Select
         const presetSelect = getById('script-preset-select');
