@@ -66,6 +66,8 @@ export class PhysicsProxy {
         this.worker = new Worker(new URL('./physics.worker.js', import.meta.url), { type: 'module' });
 
         this.worker.onmessage = (e) => {
+            if (e.origin && e.origin !== window.location.origin) return;
+
             const { type, payload } = e.data;
             if (type === 'STATE') {
                 this.latestState = payload;
