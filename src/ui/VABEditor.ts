@@ -278,6 +278,7 @@ export class VABEditor {
             createElement('button', {
                 className: 'script-close-btn',
                 'aria-label': 'Close Vehicle Assembly Building',
+                'aria-keyshortcuts': 'Escape',
                 title: 'Close',
                 textContent: '×'
             })
