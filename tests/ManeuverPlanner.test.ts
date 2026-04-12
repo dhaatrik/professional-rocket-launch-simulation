@@ -121,4 +121,25 @@ describe('ManeuverPlanner Logic', () => {
         expect(errorEl).not.toBeNull();
         expect(errorEl?.textContent).toContain('Error: Test Error');
     });
+
+    it('should display an error message if hohmann calculation fails', () => {
+        // Mock calculateHohmannTransfer so it throws an error on subsequent calls
+        vi.mocked(OrbitalMechanics.calculateHohmannTransfer).mockImplementation(() => {
+            throw new Error('Hohmann Test Error');
+        });
+
+        // Initialize planner
+        planner.show();
+
+        const select = document.getElementById('maneuver-type-select') as HTMLSelectElement;
+        select.value = 'hohmann';
+        select.dispatchEvent(new Event('change'));
+
+        const resultDiv = document.getElementById('planner-results');
+
+        const errorEl = resultDiv?.querySelector('.maneuver-error');
+
+        expect(errorEl).not.toBeNull();
+        expect(errorEl?.textContent).toContain('Error: Hohmann Test Error');
+    });
 });
