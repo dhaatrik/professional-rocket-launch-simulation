@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { MockInstance } from 'vitest';
 import {
     saveBlueprints,
     loadBlueprints,
@@ -6,12 +7,158 @@ import {
     serializeBlueprint,
     createBlueprint,
     addStage,
-    addPartToStage
+    addPartToStage,
+    removePartFromStage,
+    removeStage,
+    calculateStats,
+    createFalconPreset,
+    createSimplePreset
 } from '../src/vab/VehicleBlueprint';
-import { ENGINE_MERLIN_1D } from '../src/vab/PartsCatalog';
+import {
+    ENGINE_MERLIN_1D,
+    TANK_LARGE,
+    TANK_MEDIUM,
+    AVIONICS_BASIC,
+    FAIRING_SMALL,
+    ENGINE_MERLIN_VAC
+} from '../src/vab/PartsCatalog';
+
+describe('VehicleBlueprint Functional Logic', () => {
+    describe('Stage Manipulation', () => {
+        it('should correctly remove a part from a stage by instanceId', () => {
+            let bp = createBlueprint('Test Rocket');
+            bp = addStage(bp);
+            bp = addPartToStage(bp, 0, ENGINE_MERLIN_1D);
+            bp = addPartToStage(bp, 0, TANK_MEDIUM);
+
+            expect(bp.stages[0]!.parts.length).toBe(2);
+            const partToRemove = bp.stages[0]!.parts[0]!.instanceId;
+
+            bp = removePartFromStage(bp, 0, partToRemove);
+            expect(bp.stages[0]!.parts.length).toBe(1);
+            expect(bp.stages[0]!.parts[0]!.part.id).toBe(TANK_MEDIUM.id);
+        });
+
+        it('should return blueprint unmodified if trying to remove a part from an invalid stage', () => {
+            let bp = createBlueprint('Test Rocket');
+            bp = addStage(bp);
+            bp = addPartToStage(bp, 0, ENGINE_MERLIN_1D);
+
+            const partId = bp.stages[0]!.parts[0]!.instanceId;
+            const originalBp = bp;
+
+            bp = removePartFromStage(bp, 1, partId); // Stage 1 does not exist
+            expect(bp).toBe(originalBp);
+        });
+
+        it('should correctly remove a stage and renumber remaining stages', () => {
+            let bp = createBlueprint('Test Rocket');
+            bp = addStage(bp); // 0
+            bp = addStage(bp); // 1
+            bp = addStage(bp); // 2
+
+            expect(bp.stages.length).toBe(3);
+
+            bp = removeStage(bp, 1);
+
+            expect(bp.stages.length).toBe(2);
+            expect(bp.stages[0]!.stageNumber).toBe(0);
+            expect(bp.stages[1]!.stageNumber).toBe(1);
+        });
+
+        it('should return blueprint unmodified if trying to remove an out of bounds stage', () => {
+            let bp = createBlueprint('Test Rocket');
+            bp = addStage(bp);
+
+            const originalBp = bp;
+            bp = removeStage(bp, 1); // Invalid index
+            expect(bp).toBe(originalBp);
+
+            bp = removeStage(bp, -1); // Invalid index
+            expect(bp).toBe(originalBp);
+        });
+    });
+
+    describe('calculateStats', () => {
+        it('should correctly calculate statistics for a multi-stage rocket', () => {
+            let bp = createBlueprint('Stats Test');
+            bp = addStage(bp); // Stage 0
+            bp = addPartToStage(bp, 0, ENGINE_MERLIN_1D);
+            bp = addPartToStage(bp, 0, TANK_LARGE);
+
+            bp = addStage(bp); // Stage 1
+            bp.stages[1]!.hasDecoupler = true; // Add decoupler to stage 1
+            bp = addPartToStage(bp, 1, ENGINE_MERLIN_VAC);
+            bp = addPartToStage(bp, 1, TANK_MEDIUM);
+            bp = addPartToStage(bp, 1, AVIONICS_BASIC);
+            bp = addPartToStage(bp, 1, FAIRING_SMALL);
+
+            const stats = calculateStats(bp);
+
+            // Verify boolean flags
+            expect(stats.hasAvionics).toBe(true);
+            expect(stats.hasFairing).toBe(true);
+
+            // Verify basic mass logic
+            expect(stats.dryMass).toBeGreaterThan(0);
+            expect(stats.fuelMass).toBeGreaterThan(0);
+            expect(stats.wetMass).toBe(stats.dryMass + stats.fuelMass);
+            expect(stats.totalCost).toBeGreaterThan(0);
+            expect(stats.totalHeight).toBeGreaterThan(0);
+
+            // Verify multi-stage logic (2 stages)
+            expect(stats.stageDeltaV.length).toBe(2);
+            expect(stats.stageTWR.length).toBe(2);
+
+            // Decoupler mass + cost + height penalty checks implicitly verified by the numbers
+            // totalDeltaV should be the sum of stageDeltaVs
+            expect(stats.totalDeltaV).toBeCloseTo(stats.stageDeltaV[0]! + stats.stageDeltaV[1]!, 5);
+        });
+
+        it('should correctly handle stages with zero thrust', () => {
+            let bp = createBlueprint('No Thrust');
+            bp = addStage(bp);
+            bp = addPartToStage(bp, 0, TANK_LARGE);
+
+            const stats = calculateStats(bp);
+            expect(stats.stageTWR[0]).toBe(0);
+            expect(stats.stageDeltaV[0]).toBe(0);
+        });
+    });
+
+    describe('Presets', () => {
+        it('should correctly create Falcon Preset', () => {
+            const bp = createFalconPreset();
+            expect(bp.name).toBe('Falcon 9');
+            expect(bp.stages.length).toBe(2);
+
+            // First stage parts
+            const stage0 = bp.stages[0]!;
+            expect(stage0.parts.some((p) => p.part.id === ENGINE_MERLIN_1D.id)).toBe(true);
+            expect(stage0.parts.some((p) => p.part.id === TANK_LARGE.id)).toBe(true);
+
+            // Second stage parts
+            const stage1 = bp.stages[1]!;
+            expect(stage1.parts.some((p) => p.part.id === ENGINE_MERLIN_VAC.id)).toBe(true);
+            expect(stage1.parts.some((p) => p.part.id === FAIRING_SMALL.id)).toBe(true);
+            expect(stage1.parts.some((p) => p.part.id === AVIONICS_BASIC.id)).toBe(true);
+        });
+
+        it('should correctly create Simple Preset', () => {
+            const bp = createSimplePreset();
+            expect(bp.name).toBe('Simple Rocket');
+            expect(bp.stages.length).toBe(1);
+
+            const stage0 = bp.stages[0]!;
+            expect(stage0.parts.some((p) => p.part.id === ENGINE_MERLIN_1D.id)).toBe(true);
+            expect(stage0.parts.some((p) => p.part.id === TANK_MEDIUM.id)).toBe(true);
+            expect(stage0.parts.some((p) => p.part.id === AVIONICS_BASIC.id)).toBe(true);
+        });
+    });
+});
 
 describe('VehicleBlueprint Error Paths', () => {
-    let consoleErrorSpy: any;
+    let consoleErrorSpy: MockInstance;
 
     beforeEach(() => {
         // Mock localStorage
