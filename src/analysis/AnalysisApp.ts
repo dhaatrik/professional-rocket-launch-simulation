@@ -22,6 +22,9 @@ export class AnalysisApp {
     public canvases: { [key: string]: HTMLCanvasElement } = {};
     public ctxs: { [key: string]: CanvasRenderingContext2D } = {};
 
+    // Performance Optimization: Cache static chart image data
+    private chartImageCache: { [key: string]: ImageData } = {};
+
     constructor() {
         this.timeScrubber = document.getElementById('time-scrubber') as HTMLInputElement;
         this.dispTime = document.getElementById('disp-time') as HTMLElement;
@@ -470,15 +473,20 @@ export class AnalysisApp {
             for (let i = 0; i < eventXsQ.length; i++) ctxQ.fillRect(eventXsQ[i]!, 0, 1, hQ);
             ctxQ.globalAlpha = 1.0;
         }
+
+        // Cache the static rendered charts
+        const ids = ['chart-alt', 'chart-vel', 'chart-throttle', 'chart-q'];
+        for (let i = 0; i < ids.length; i++) {
+            const id = ids[i]!;
+            const ctx = this.ctxs[id];
+            const canvas = this.canvases[id];
+            if (ctx && canvas) {
+                this.chartImageCache[id] = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            }
+        }
     }
 
     private drawChartCursors(index: number) {
-        // Redraw charts cleanly first (could optimize to just save/restore image data)
-        // For now, let's just draw the cursor line on top, but valid point: clearing wipes chart.
-        // Actually, renderCharts() draws the lines. We should redraw them or use overlay canvas.
-        // Optimization: Just re-render everything for now, modern browsers can handle 4 simple paths.
-        this.renderCharts();
-
         const xPct = index / (this.frames.length - 1);
 
         const ids = ['chart-alt', 'chart-vel', 'chart-throttle', 'chart-q'];
@@ -487,6 +495,14 @@ export class AnalysisApp {
             const ctx = this.ctxs[id];
             const canvas = this.canvases[id];
             if (!ctx || !canvas) continue;
+
+            // Performance Optimization: Restore from ImageData cache instead of full re-render
+            const cachedImg = this.chartImageCache[id];
+            if (cachedImg) {
+                ctx.putImageData(cachedImg, 0, 0);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
 
             const w = canvas.width;
             const h = canvas.height;

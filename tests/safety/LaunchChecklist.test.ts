@@ -1,61 +1,22 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { LaunchChecklist } from '../../src/safety/LaunchChecklist';
 
-// Mock DOM
-class MockElement {
-    tagName: string;
-    innerHTML = '';
-    textContent = '';
-    className = '';
-    id = '';
-    style = {};
-    attributes: Record<string, string> = {};
-    children: MockElement[] = [];
-    classList = {
-        add: vi.fn(),
-        remove: vi.fn(),
-        toggle: vi.fn(),
-        contains: vi.fn(() => false)
-    };
-
-    constructor(tagName: string) {
-        this.tagName = tagName;
-    }
-
-    setAttribute(name: string, value: string) {
-        this.attributes[name] = value;
-    }
-
-    appendChild(child: MockElement) {
-        this.children.push(child);
-        this.innerHTML += child.tagName; // Rough approximation for tests
-    }
-
-    querySelector() {
-        return null;
-    }
-
-    querySelectorAll() {
-        return [];
-    }
-
-    dispatchEvent() {}
-    addEventListener() {}
-    removeEventListener() {}
-}
-
-const mockDoc = {
-    getElementById: vi.fn(() => new MockElement('div')),
-    createElement: vi.fn((tagName) => new MockElement(tagName)),
-    createTextNode: vi.fn((text) => text)
-};
-vi.stubGlobal('document', mockDoc);
-
 describe('LaunchChecklist', () => {
+    let container: HTMLElement;
     let checklist: LaunchChecklist;
 
     beforeEach(() => {
+        document.body.innerHTML = '';
+        container = document.createElement('div');
+        container.id = 'panel-id';
+        document.body.appendChild(container);
+
         checklist = new LaunchChecklist('panel-id');
+    });
+
+    afterEach(() => {
+        document.body.innerHTML = '';
+        vi.restoreAllMocks();
     });
 
     it('should initialize with items pending', () => {
@@ -80,9 +41,87 @@ describe('LaunchChecklist', () => {
         if (items.length > 0) {
             checklist.setItemStatus(items[0]!.id, 'go');
 
-            const logs = checklist.getAuditLog(); // Was dumpAuditLog
+            const logs = checklist.getAuditLog();
             expect(logs.length).toBeGreaterThan(0);
             expect(logs[0]!.newStatus).toBe('go');
         }
+    });
+
+    it('should handle DOM interactions for rendering', () => {
+        checklist.render();
+        expect(container.innerHTML).toContain('📋 LAUNCH READINESS POLL');
+    });
+
+    it('event listener for GO button sets status', () => {
+        checklist.show(); // trigger render and add listeners
+        const goBtn = container.querySelector('.cl-go') as HTMLButtonElement;
+        expect(goBtn).not.toBeNull();
+
+        goBtn.click();
+
+        const firstItem = checklist.getItems()[0];
+        expect(firstItem.status).toBe('go');
+    });
+
+    it('event listener for NO-GO button sets status', () => {
+        checklist.show();
+        const nogoBtn = container.querySelector('.cl-nogo') as HTMLButtonElement;
+
+        nogoBtn.click();
+
+        const firstItem = checklist.getItems()[0];
+        expect(firstItem.status).toBe('no-go');
+    });
+
+    it('close button hides checklist', () => {
+        checklist.show();
+        expect(checklist.visible).toBe(true);
+
+        const closeBtn = container.querySelector('#checklist-close-btn') as HTMLButtonElement;
+        closeBtn.click();
+
+        expect(checklist.visible).toBe(false);
+    });
+
+    it('runAutoChecks sets auto-checked items to go', () => {
+        // mock hud-launch-status
+        const hud = document.createElement('div');
+        hud.id = 'hud-launch-status';
+        hud.textContent = 'GO';
+        document.body.appendChild(hud);
+
+        checklist.runAutoChecks();
+
+        const wxItem = checklist.getItems().find(i => i.id === 'wx-winds');
+        expect(wxItem?.status).toBe('go');
+    });
+
+    it('toggle swaps visibility', () => {
+        expect(checklist.visible).toBe(false);
+        checklist.toggle();
+        expect(checklist.visible).toBe(true);
+        checklist.toggle();
+        expect(checklist.visible).toBe(false);
+    });
+
+    it('escape handler hides panel', () => {
+        checklist.show();
+        expect(checklist.visible).toBe(true);
+
+        const event = new KeyboardEvent('keydown', { key: 'Escape' });
+        document.dispatchEvent(event);
+
+        expect(checklist.visible).toBe(false);
+    });
+
+    it('reset sets all items to pending and clears audit log', () => {
+        checklist.setItemStatus(checklist.getItems()[0].id, 'go');
+        expect(checklist.getAuditLog().length).toBeGreaterThan(0);
+
+        checklist.reset();
+
+        const items = checklist.getItems();
+        expect(items.every(i => i.status === 'pending')).toBe(true);
+        expect(checklist.getAuditLog().length).toBe(0);
     });
 });
