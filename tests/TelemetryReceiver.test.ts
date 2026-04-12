@@ -132,7 +132,8 @@ describe('TelemetryReceiver', () => {
             data: {
                 type: 'TELEMETRY_UPDATE',
                 payload: packet
-            }
+            },
+            origin: window.location.origin
         });
 
         // Check UI updates
@@ -156,7 +157,8 @@ describe('TelemetryReceiver', () => {
             data: {
                 type: 'UNKNOWN_MSG',
                 payload: {}
-            }
+            },
+            origin: window.location.origin
         });
 
         // Check UI has not updated
