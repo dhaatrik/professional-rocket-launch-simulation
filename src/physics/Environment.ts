@@ -10,7 +10,7 @@
  * - Go/No-Go Launch Conditions: Wind limit evaluation
  */
 
-import { vec2, Vec2 } from '../types/index';
+import { Vec2 } from '../types/index';
 import type { Vector2D } from '../types/index';
 import { secureRandom } from '../utils/Security';
 
@@ -121,11 +121,12 @@ export class EnvironmentSystem {
     private simulationTime: number = 0;
     private gustPhaseX: number = secureRandom() * Math.PI * 2;
     private gustPhaseY: number = secureRandom() * Math.PI * 2;
-    private currentGust: Vector2D = vec2(0, 0);
+    private currentGust: Vector2D = { x: 0, y: 0 };
     private gustUpdateTimer: number = 0;
 
     // Pre-allocated objects to prevent garbage collection in hot paths
     private _windPolarResult = { speed: 0, direction: 0 };
+    private _tempWindVector = { x: 0, y: 0 };
 
     constructor(config: EnvironmentConfig = DEFAULT_ENVIRONMENT_CONFIG) {
         this.config = { ...config };
@@ -168,7 +169,7 @@ export class EnvironmentSystem {
             const gustY = Math.cos(t * 0.5 + this.gustPhaseY) * Math.sin(t * 0.4) * gustMagnitude;
 
             // Apply damping for smooth transitions
-            this.currentGust = vec2(this.currentGust.x * 0.7 + gustX * 0.3, this.currentGust.y * 0.7 + gustY * 0.3);
+            this.currentGust = { x: this.currentGust.x * 0.7 + gustX * 0.3, y: this.currentGust.y * 0.7 + gustY * 0.3 };
         }
     }
 
@@ -264,7 +265,7 @@ export class EnvironmentSystem {
             return out;
         }
 
-        return vec2(vx, vy);
+        return { x: vx, y: vy };
     }
 
     /**
@@ -312,7 +313,8 @@ export class EnvironmentSystem {
      * @param altitude - Check altitude (usually 0 for surface)
      */
     isLaunchSafe(altitude: number = 0): boolean {
-        const surfaceWind = this.getWindAtAltitude(altitude, { x: 0, y: 0 });
+        // Optimization: reuse pre-allocated vector to prevent GC pressure
+        const surfaceWind = this.getWindAtAltitude(altitude, this._launchSafeWindOut);
         const gustMag = Vec2.magnitude(this.currentGust);
         const totalWindSpeed = Vec2.magnitude(surfaceWind) + gustMag;
         return totalWindSpeed < this.config.launchWindLimit;
@@ -323,8 +325,8 @@ export class EnvironmentSystem {
      */
     hasMaxQWindWarning(): boolean {
         // Check wind speed at typical Max-Q altitudes (10-14km)
-        const wind10k = Vec2.magnitude(this.getWindAtAltitude(10000, { x: 0, y: 0 }));
-        const wind14k = Vec2.magnitude(this.getWindAtAltitude(14000, { x: 0, y: 0 }));
+        const wind10k = Vec2.magnitude(this.getWindAtAltitude(10000, this._tempWindVector));
+        const wind14k = Vec2.magnitude(this.getWindAtAltitude(14000, this._tempWindVector));
         // Warning if wind exceeds 30 m/s at Max-Q altitude
         return wind10k > 30 || wind14k > 30;
     }
@@ -334,10 +336,10 @@ export class EnvironmentSystem {
      * @param altitude - Altitude in meters
      */
     getState(altitude: number): EnvironmentState {
-        // Since we need to return this state and baseWind/surfaceWind are distinct,
-        // we can allocate here as it's not a hot loop (only called on HUD updates).
-        const baseWind = this.getWindAtAltitude(altitude, { x: 0, y: 0 });
-        const surfaceWind = this.getWindAtAltitude(0, { x: 0, y: 0 });
+        // Optimization: reuse pre-allocated vectors for wind to reduce object allocation
+        // and minimize GC pressure, especially when called frequently
+        const baseWind = this.getWindAtAltitude(altitude, this._baseWindOut);
+        const surfaceWind = this.getWindAtAltitude(0, this._surfaceWindOut);
         const surfaceSpeed = Vec2.magnitude(surfaceWind);
 
         // Gusts diminish with altitude (more stable upper atmosphere)
@@ -370,7 +372,7 @@ export class EnvironmentSystem {
         this.simulationTime = 0;
         this.gustPhaseX = secureRandom() * Math.PI * 2;
         this.gustPhaseY = secureRandom() * Math.PI * 2;
-        this.currentGust = vec2(0, 0);
+        this.currentGust = { x: 0, y: 0 };
         this.gustUpdateTimer = 0;
     }
 

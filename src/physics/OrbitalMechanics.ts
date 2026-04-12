@@ -304,6 +304,8 @@ export function calculateGroundTrack(downrange: number, time: number): { lat: nu
  * @param dtPred Time step (s)
  * @param maxSteps Maximum integration steps
  */
+const orbitPointPool: { phi: number; r: number; relX?: number; relY?: number }[] = [];
+
 export function predictOrbitPath(
     path: { phi: number; r: number; relX?: number; relY?: number }[],
     r0: number,
@@ -331,12 +333,21 @@ export function predictOrbitPath(
         p.relX = Math.sin(phi) * r;
         p.relY = -Math.cos(phi) * r;
     } else {
-        path.push({
-            phi: phi,
-            r: r,
-            relX: Math.sin(phi) * r,
-            relY: -Math.cos(phi) * r
-        });
+        const poolObj = orbitPointPool.pop();
+        if (poolObj) {
+            poolObj.phi = phi;
+            poolObj.r = r;
+            poolObj.relX = Math.sin(phi) * r;
+            poolObj.relY = -Math.cos(phi) * r;
+            path.push(poolObj);
+        } else {
+            path.push({
+                phi: phi,
+                r: r,
+                relX: Math.sin(phi) * r,
+                relY: -Math.cos(phi) * r
+            });
+        }
     }
     pathIdx++;
 
@@ -407,12 +418,21 @@ export function predictOrbitPath(
                 p.relX = Math.sin(phi) * r;
                 p.relY = -Math.cos(phi) * r;
             } else {
-                path.push({
-                    phi: phi,
-                    r: r,
-                    relX: Math.sin(phi) * r,
-                    relY: -Math.cos(phi) * r
-                });
+                const poolObj = orbitPointPool.pop();
+                if (poolObj) {
+                    poolObj.phi = phi;
+                    poolObj.r = r;
+                    poolObj.relX = Math.sin(phi) * r;
+                    poolObj.relY = -Math.cos(phi) * r;
+                    path.push(poolObj);
+                } else {
+                    path.push({
+                        phi: phi,
+                        r: r,
+                        relX: Math.sin(phi) * r,
+                        relY: -Math.cos(phi) * r
+                    });
+                }
             }
             pathIdx++;
         }
@@ -425,17 +445,29 @@ export function predictOrbitPath(
         p.relX = Math.sin(phi) * r;
         p.relY = -Math.cos(phi) * r;
     } else {
-        path.push({
-            phi: phi,
-            r: r,
-            relX: Math.sin(phi) * r,
-            relY: -Math.cos(phi) * r
-        });
+        const poolObj = orbitPointPool.pop();
+        if (poolObj) {
+            poolObj.phi = phi;
+            poolObj.r = r;
+            poolObj.relX = Math.sin(phi) * r;
+            poolObj.relY = -Math.cos(phi) * r;
+            path.push(poolObj);
+        } else {
+            path.push({
+                phi: phi,
+                r: r,
+                relX: Math.sin(phi) * r,
+                relY: -Math.cos(phi) * r
+            });
+        }
     }
     pathIdx++;
 
     // Trim excess points
     if (pathIdx < path.length) {
-        path.length = pathIdx;
+        while (path.length > pathIdx) {
+            const p = path.pop();
+            if (p) orbitPointPool.push(p);
+        }
     }
 }

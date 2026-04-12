@@ -139,6 +139,11 @@ describe('PhysicsProxy', () => {
                 fc: { status: 'FC: ACTIVE' }
             };
 
+            // Before message
+            expect(proxy.getTrackedIndex()).toBe(0);
+            expect(proxy.getFTSStatus()).toEqual({ state: 'SAFE', armTime: 0, enabled: true });
+            expect(proxy.getFlightComputerStatus()).toEqual({ status: 'FC: ---', command: '' });
+
             // Simulate worker message
             if (worker.onmessage) {
                 worker.onmessage({ data: { type: 'STATE', payload: statePayload }, origin: window.location.origin });
@@ -165,9 +170,31 @@ describe('PhysicsProxy', () => {
 
             expect(eventCallback).toHaveBeenCalledWith(eventPayload);
         });
+
+        it('should log an error on worker error event', () => {
+            const proxy = new PhysicsProxy();
+            const worker = (proxy as any).worker as MockWorker;
+
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            if (worker.onerror) {
+                worker.onerror(new Error('Test worker error'));
+            }
+
+            expect(consoleSpy).toHaveBeenCalledWith('Physics Worker Error:', expect.any(Error));
+
+            consoleSpy.mockRestore();
+        });
     });
 
     describe('State Retrieval (Buffer)', () => {
+        it('should return null when sharedView is falsey', () => {
+            const proxy = new PhysicsProxy();
+            // Delete sharedView to simulate initialization failure or teardown
+            (proxy as any).sharedView = null;
+            expect(proxy.getEnvironmentState()).toBeNull();
+        });
+
         it('should return default values when buffer is empty', () => {
             const proxy = new PhysicsProxy();
             expect(proxy.getMissionTime()).toBe(0);
@@ -228,6 +255,41 @@ describe('PhysicsProxy', () => {
             expect(booster.x).toBe(100);
             expect(booster.y).toBe(200);
             expect((booster as any).engineState).toBe(EngineStateCode.RUNNING);
+        });
+
+        it('should correctly instantiate different entity types using createViewEntity', () => {
+            const proxy = new PhysicsProxy();
+            const sharedView = (proxy as any).sharedView as Float64Array;
+
+            // Setup buffer for 4 entities of different types
+            sharedView[HeaderOffset.TIMESTAMP] = 10.0;
+            sharedView[HeaderOffset.ENTITY_COUNT] = 5;
+
+            let base = HEADER_SIZE;
+            sharedView[base + EntityOffset.TYPE] = EntityType.FULLSTACK;
+
+            base += ENTITY_STRIDE;
+            sharedView[base + EntityOffset.TYPE] = EntityType.UPPER_STAGE;
+
+            base += ENTITY_STRIDE;
+            sharedView[base + EntityOffset.TYPE] = EntityType.FAIRING;
+
+            base += ENTITY_STRIDE;
+            sharedView[base + EntityOffset.TYPE] = EntityType.PAYLOAD;
+
+            base += ENTITY_STRIDE;
+            sharedView[base + EntityOffset.TYPE] = 999; // Unknown type to hit default
+
+            proxy.syncView(0.016, 1.0);
+
+            const entities = proxy.getEntities();
+            expect(entities.length).toBe(5);
+
+            expect(entities[0]!.type).toBe(EntityType.FULLSTACK);
+            expect(entities[1]!.type).toBe(EntityType.UPPER_STAGE);
+            expect(entities[2]!.type).toBe(EntityType.FAIRING);
+            expect(entities[3]!.type).toBe(EntityType.PAYLOAD);
+            expect(entities[4]!.type).toBe(EntityType.FULLSTACK); // Default fallback
         });
 
         it('should resize entities array if count drops', () => {
