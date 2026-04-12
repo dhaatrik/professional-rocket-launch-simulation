@@ -17,3 +17,8 @@
 **Vulnerability:** Using window.open() without noopener and noreferrer features exposes the application to reverse tabnabbing vulnerabilities, where the newly opened tab can control the original window.
 **Learning:** Found a window.open call in src/main.ts that lacked the necessary security features.
 **Prevention:** Always append 'noopener,noreferrer' to the features string when calling window.open() to open untrusted or even trusted but potentially compromised URLs.
+
+## 2024-05-20 - Unvalidated JSON Parsing of Storage Data
+**Vulnerability:** `loadBlueprints` parsed JSON array elements but didn't guarantee that the items inside the array were actually strings before treating them as strings during deserialization.
+**Learning:** `JSON.parse` returns `any` (or `unknown`). Checking `Array.isArray(jsons)` is not enough if the expected items are specific types (like strings), which can lead to exceptions or prototype pollution depending on subsequent mapping loops.
+**Prevention:** Always validate elements of arrays parsed from user-controlled JSON or localStorage iteratively using `Array.prototype.every` before treating them as known types.

@@ -455,9 +455,12 @@ export function loadBlueprints(): VehicleBlueprint[] {
     if (!data) return [];
 
     try {
-        const jsons = JSON.parse(data) as string[];
+        const jsons = JSON.parse(data) as unknown;
         if (!Array.isArray(jsons)) {
             throw new Error('Stored blueprints data is not an array');
+        }
+        if (!jsons.every((item) => typeof item === 'string')) {
+            throw new Error('Stored blueprints data contains non-string items');
         }
         return jsons.map(deserializeBlueprint).filter((b): b is VehicleBlueprint => b !== null);
     } catch (e) {

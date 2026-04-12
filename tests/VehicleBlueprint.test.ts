@@ -259,6 +259,11 @@ describe('VehicleBlueprint Error Paths', () => {
             expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: Stored blueprints data is not an array/);
         });
 
+        it('should throw an error when localStorage contains non-string items in the array', () => {
+            localStorage.setItem('vab-blueprints', JSON.stringify([{ evil: "data" }]));
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: Stored blueprints data contains non-string items/);
+        });
+
         it('should return empty array when localStorage is empty', () => {
             const result = loadBlueprints();
             expect(result).toEqual([]);
