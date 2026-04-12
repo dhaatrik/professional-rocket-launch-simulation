@@ -59,7 +59,7 @@ class TelemetryReceiver {
     }
 
     private handleMessage(event: MessageEvent) {
-        if (event.origin && event.origin !== window.location.origin) return;
+        if (event.origin !== window.location.origin) return;
 
         if (event.data.type === 'TELEMETRY_UPDATE') {
             this.updateUI(event.data.payload);
