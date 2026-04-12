@@ -126,6 +126,7 @@ export class EnvironmentSystem {
 
     // Pre-allocated objects to prevent garbage collection in hot paths
     private _windPolarResult = { speed: 0, direction: 0 };
+    private _surfaceWindResult: Vector2D = { x: 0, y: 0 };
 
     constructor(config: EnvironmentConfig = DEFAULT_ENVIRONMENT_CONFIG) {
         this.config = { ...config };
@@ -312,7 +313,7 @@ export class EnvironmentSystem {
      * @param altitude - Check altitude (usually 0 for surface)
      */
     isLaunchSafe(altitude: number = 0): boolean {
-        const surfaceWind = this.getWindAtAltitude(altitude, { x: 0, y: 0 });
+        const surfaceWind = this.getWindAtAltitude(altitude, this._surfaceWindResult);
         const gustMag = Vec2.magnitude(this.currentGust);
         const totalWindSpeed = Vec2.magnitude(surfaceWind) + gustMag;
         return totalWindSpeed < this.config.launchWindLimit;
@@ -323,8 +324,8 @@ export class EnvironmentSystem {
      */
     hasMaxQWindWarning(): boolean {
         // Check wind speed at typical Max-Q altitudes (10-14km)
-        const wind10k = Vec2.magnitude(this.getWindAtAltitude(10000, { x: 0, y: 0 }));
-        const wind14k = Vec2.magnitude(this.getWindAtAltitude(14000, { x: 0, y: 0 }));
+        const wind10k = Vec2.magnitude(this.getWindAtAltitude(10000, this._surfaceWindResult));
+        const wind14k = Vec2.magnitude(this.getWindAtAltitude(14000, this._surfaceWindResult));
         // Warning if wind exceeds 30 m/s at Max-Q altitude
         return wind10k > 30 || wind14k > 30;
     }

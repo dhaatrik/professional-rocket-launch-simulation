@@ -27,3 +27,7 @@
 ## 2026-04-10 - Telemetry Receiver Spread Operator Overhead
 **Learning:** Using the spread operator with `Math.max(...array)` inside high-frequency render loops (e.g., triggered by `requestAnimationFrame` or 10Hz telemetry updates) causes severe memory allocation overhead. V8 has to allocate a new arguments array every time it executes, leading to rapid garbage collection cycles and potential `RangeError` if the array exceeds call stack limits.
 **Action:** When finding min/max values or aggregating data inside a continuous loop, strictly avoid the array spread operator (`...`). Use a standard `for` loop to compute the aggregate value inline.
+
+## 2024-05-18 - Reduce GC Allocations in Environment Wind Checks
+**Learning:** Returning object literals or relying on factory functions inside high-frequency loops (like checking launch safety or wind calculations) causes substantial garbage collection pressure.
+**Action:** Replace inline object creations (`{ x: 0, y: 0 }`) with pre-allocated private class members (e.g., `private _surfaceWindResult = { x: 0, y: 0 };`) when the returned data is immediately consumed and not retained, being careful to use simple literals rather than assuming factory function availability without verification.
