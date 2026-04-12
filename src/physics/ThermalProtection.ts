@@ -327,3 +327,15 @@ export function createInitialThermalState(): ThermalState {
 export function tempToCelsius(tempK: number): number {
     return tempK - 273.15;
 }
+
+/**
+ * Get temperature status color for HUD
+ */
+export function getTempStatusColor(skinTemp: number, maxTemp: number): string {
+    const ratio = skinTemp / maxTemp;
+
+    if (ratio > 0.9) return '#e74c3c'; // Red - critical
+    if (ratio > 0.7) return '#e67e22'; // Orange - warning
+    if (ratio > 0.5) return '#f1c40f'; // Yellow - elevated
+    return '#2ecc71'; // Green - nominal
+}

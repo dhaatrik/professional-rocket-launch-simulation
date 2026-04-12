@@ -1,5 +1,6 @@
 
 import { EnvironmentSystem, WindLayer, DEFAULT_WIND_LAYERS } from '../src/physics/Environment';
+import { vec2 } from '../src/types/index';
 
 // --- OPTIMIZED IMPLEMENTATION ---
 class OptimizedEnvironmentSystem extends EnvironmentSystem {
