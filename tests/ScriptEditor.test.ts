@@ -202,6 +202,17 @@ describe('ScriptEditor Syntax Highlighting Error Path', () => {
         expect(mockLocalStorage.getItem).toHaveBeenCalledWith('rocket-sim-scripts');
     });
 
+    it('should test error path when JSON.parse throws', () => {
+        mockLocalStorage.getItem.mockReturnValue('{invalid-json-to-trigger-parse-error}');
+
+        let newEditor: ScriptEditor | null = null;
+        expect(() => {
+            newEditor = new ScriptEditor((editor as any).game);
+        }).not.toThrow();
+
+        expect((newEditor as any).getSavedScripts()).toEqual({});
+    });
+
     it('should handle valid JSON but invalid schema in localStorage', () => {
         // Mock localStorage to return valid JSON but invalid schema (e.g., an array instead of a Record)
         mockLocalStorage.getItem.mockReturnValue(JSON.stringify(['this', 'is', 'not', 'a', 'record']));
