@@ -460,9 +460,9 @@ export function loadBlueprints(): VehicleBlueprint[] {
             throw new Error('Stored blueprints data is not an array');
         }
         if (!jsons.every((item) => typeof item === 'string')) {
-            throw new Error('Stored blueprints data contains non-string entries');
+            throw new Error('Stored blueprints data contains non-string items');
         }
-        return jsons.map((item: string) => deserializeBlueprint(item)).filter((b): b is VehicleBlueprint => b !== null);
+        return jsons.map(deserializeBlueprint).filter((b): b is VehicleBlueprint => b !== null);
     } catch (e) {
         throw new Error(`Failed to load blueprints: ${e instanceof Error ? e.message : String(e)}`);
     }

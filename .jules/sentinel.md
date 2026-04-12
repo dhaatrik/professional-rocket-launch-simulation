@@ -18,7 +18,7 @@
 **Learning:** Found a window.open call in src/main.ts that lacked the necessary security features.
 **Prevention:** Always append 'noopener,noreferrer' to the features string when calling window.open() to open untrusted or even trusted but potentially compromised URLs.
 
-## 2025-02-14 - Unvalidated JSON Parsing of Storage Data
-**Vulnerability:** The `loadBlueprints` function parsed `localStorage` data directly using an `as string[]` type assertion and only checked `Array.isArray()`, allowing an attacker to inject objects or non-string elements which could break `deserializeBlueprint` assumptions.
-**Learning:** Data retrieved from untrusted sources like `localStorage` must have every element of its parsed array strictly type-checked at runtime before being processed.
-**Prevention:** Use `unknown` type for parsed JSON and apply runtime element-wise validation (e.g., `every(item => typeof item === 'string')`) instead of blindly trusting type assertions on array items.
+## 2024-05-20 - Unvalidated JSON Parsing of Storage Data
+**Vulnerability:** `loadBlueprints` parsed JSON array elements but didn't guarantee that the items inside the array were actually strings before treating them as strings during deserialization.
+**Learning:** `JSON.parse` returns `any` (or `unknown`). Checking `Array.isArray(jsons)` is not enough if the expected items are specific types (like strings), which can lead to exceptions or prototype pollution depending on subsequent mapping loops.
+**Prevention:** Always validate elements of arrays parsed from user-controlled JSON or localStorage iteratively using `Array.prototype.every` before treating them as known types.
