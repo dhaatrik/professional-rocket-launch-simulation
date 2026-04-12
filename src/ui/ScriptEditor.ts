@@ -94,12 +94,14 @@ export class ScriptEditor {
         const presetSelect = document.getElementById('script-preset-select') as HTMLSelectElement;
         if (!presetSelect) return;
 
+        const fragment = document.createDocumentFragment();
         Object.keys(PRESET_SCRIPTS).forEach((name) => {
             const option = document.createElement('option');
             option.value = name;
             option.textContent = name;
-            presetSelect.appendChild(option);
+            fragment.appendChild(option);
         });
+        presetSelect.appendChild(fragment);
     }
 
     /**
@@ -559,13 +561,15 @@ export class ScriptEditor {
             this.saveSelect.remove(1);
         }
 
+        const fragment = document.createDocumentFragment();
         // Add saved scripts
         names.forEach((name) => {
             const option = document.createElement('option');
             option.value = name;
             option.textContent = name;
-            this.saveSelect!.appendChild(option);
+            fragment.appendChild(option);
         });
+        this.saveSelect.appendChild(fragment);
     }
 
     /**
