@@ -37,6 +37,7 @@ export interface ChecklistAuditEntry {
 
 export class LaunchChecklist {
     private items: Map<string, ChecklistItem> = new Map();
+    private itemsArrayCache: ChecklistItem[] | null = null;
     private auditLog: ChecklistAuditEntry[] = [];
     private containerEl: HTMLElement | null = null;
     private _visible: boolean = false;
@@ -117,14 +118,22 @@ export class LaunchChecklist {
         ];
 
         this.items.clear();
+        this.itemsArrayCache = null;
         for (const item of defaultItems) {
             this.items.set(item.id, item);
         }
     }
 
+    private get cachedItems(): ChecklistItem[] {
+        if (!this.itemsArrayCache) {
+            this.itemsArrayCache = Array.from(this.items.values());
+        }
+        return this.itemsArrayCache;
+    }
+
     /** Get all items */
     getItems(): readonly ChecklistItem[] {
-        return Array.from(this.items.values());
+        return this.cachedItems;
     }
 
     /** Get audit log */
@@ -134,8 +143,9 @@ export class LaunchChecklist {
 
     /** Check if all items are GO */
     isReadyForLaunch(): boolean {
-        for (const item of this.items.values()) {
-            if (item.status !== 'go') return false;
+        const items = this.cachedItems;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].status !== 'go') return false;
         }
         return true;
     }
@@ -146,14 +156,16 @@ export class LaunchChecklist {
         let noGo = 0;
         let pending = 0;
 
-        for (const item of this.items.values()) {
-            const status = item.status;
+        // Optimization: use cached array and standard for loop to avoid Map.values() iterator overhead
+        const items = this.cachedItems;
+        for (let i = 0; i < items.length; i++) {
+            const status = items[i].status;
             if (status === 'go') go++;
             else if (status === 'no-go') noGo++;
             else if (status === 'pending') pending++;
         }
 
-        return { go, noGo, pending, total: this.items.size };
+        return { go, noGo, pending, total: items.length };
     }
 
     /** Set item status */
@@ -187,7 +199,9 @@ export class LaunchChecklist {
 
     /** Run auto-checks for items that have autoCheck functions */
     runAutoChecks(): void {
-        for (const item of this.items.values()) {
+        const items = this.cachedItems;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
             if (item.autoCheck && item.status === 'pending') {
                 const result = item.autoCheck();
                 if (result) {
@@ -261,8 +275,9 @@ export class LaunchChecklist {
 
     /** Reset all items to pending */
     reset(): void {
-        for (const i of this.items.values()) {
-            i.status = 'pending';
+        const items = this.cachedItems;
+        for (let i = 0; i < items.length; i++) {
+            items[i].status = 'pending';
         }
         this.auditLog = [];
         this.render();
@@ -278,7 +293,9 @@ export class LaunchChecklist {
         this.containerEl.textContent = '';
 
         const checklistItems: HTMLElement[] = [];
-        for (const item of this.items.values()) {
+        const items = this.cachedItems;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
             const statusClass = item.status === 'go' ? 'go' : item.status === 'no-go' ? 'no-go' : 'pending';
 
             checklistItems.push(
