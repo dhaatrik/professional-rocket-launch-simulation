@@ -27,6 +27,6 @@
 ## 2026-04-10 - Telemetry Receiver Spread Operator Overhead
 **Learning:** Using the spread operator with `Math.max(...array)` inside high-frequency render loops (e.g., triggered by `requestAnimationFrame` or 10Hz telemetry updates) causes severe memory allocation overhead. V8 has to allocate a new arguments array every time it executes, leading to rapid garbage collection cycles and potential `RangeError` if the array exceeds call stack limits.
 **Action:** When finding min/max values or aggregating data inside a continuous loop, strictly avoid the array spread operator (`...`). Use a standard `for` loop to compute the aggregate value inline.
-## 2026-04-12 - AudioEngine Voice Loading Regression
-**Learning:** `window.speechSynthesis.getVoices()` populates asynchronously in some browsers, initially returning an empty array. Caching the result without verifying it is non-empty can cause a permanent failure to find the preferred voice.
-**Action:** Always verify `voices.length > 0` before caching the result of `getVoices()` to handle the asynchronous loading behavior of the Web Speech API.
+## 2025-02-12 - Optimize event dispatch loop in PhysicsProxy
+**Learning:** High-frequency event dispatch loops (like those in `PhysicsProxy` that run on every game loop tick or worker message) suffer from measurable garbage collection pressure and closure allocation overhead when using `.forEach`.
+**Action:** Always prefer standard `for` loops (e.g., `for (let i = 0; i < arr.length; i++)`) over array methods like `.forEach` when iterating over listeners in high-frequency event emitters or game loops to prevent unnecessary allocations.
