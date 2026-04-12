@@ -83,18 +83,23 @@ export class ScriptEditor {
         this.errorDisplay = document.getElementById('script-errors');
         this.saveSelect = document.getElementById('script-save-select') as HTMLSelectElement;
 
-        // Safely populate preset scripts
-        const presetSelect = document.getElementById('script-preset-select') as HTMLSelectElement;
-        if (presetSelect) {
-            Object.keys(PRESET_SCRIPTS).forEach((name) => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                presetSelect.appendChild(option);
-            });
-        }
-
+        this.populatePresetScripts();
         this.updateSavedScriptsList();
+    }
+
+    /**
+     * Safely populate preset scripts
+     */
+    private populatePresetScripts(): void {
+        const presetSelect = document.getElementById('script-preset-select') as HTMLSelectElement;
+        if (!presetSelect) return;
+
+        Object.keys(PRESET_SCRIPTS).forEach((name) => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            presetSelect.appendChild(option);
+        });
     }
 
     /**

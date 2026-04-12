@@ -40,6 +40,8 @@ describe('AnalysisApp', () => {
             fill: vi.fn(),
             stroke: vi.fn(),
             setLineDash: vi.fn(),
+            getImageData: vi.fn().mockReturnValue({ data: new Uint8ClampedArray(4) }),
+            putImageData: vi.fn(),
         } as unknown as CanvasRenderingContext2D);
     });
 
