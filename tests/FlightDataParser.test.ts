@@ -76,7 +76,21 @@ abc,def`;
                 throw new Error('Split error');
             });
 
-            expect(() => FlightDataParser.parseCSV('any,csv')).toThrowError('Failed to parse flight data CSV: Split error');
+            expect(() => FlightDataParser.parseCSV('any,csv')).toThrowError(
+                'Failed to parse flight data CSV: Split error'
+            );
+
+            splitSpy.mockRestore();
+        });
+
+        it('should handle non-Error objects thrown during CSV parsing', () => {
+            const splitSpy = vi.spyOn(String.prototype, 'split').mockImplementation(() => {
+                throw 'Plain string error';
+            });
+
+            expect(() => FlightDataParser.parseCSV('any,csv')).toThrowError(
+                'Failed to parse flight data CSV: Plain string error'
+            );
 
             splitSpy.mockRestore();
         });
@@ -138,7 +152,24 @@ abc,def`;
             });
 
             try {
-                expect(() => FlightDataParser.parseJSON(json)).toThrowError('Failed to parse flight data JSON: Mock JSON parse error');
+                expect(() => FlightDataParser.parseJSON(json)).toThrowError(
+                    'Failed to parse flight data JSON: Mock JSON parse error'
+                );
+            } finally {
+                parseSpy.mockRestore();
+            }
+        });
+
+        it('should handle non-Error objects thrown during JSON parsing', () => {
+            const json = `{"valid": "json"}`;
+            const parseSpy = vi.spyOn(JSON, 'parse').mockImplementation(() => {
+                throw 'Mock string JSON parse error';
+            });
+
+            try {
+                expect(() => FlightDataParser.parseJSON(json)).toThrowError(
+                    'Failed to parse flight data JSON: Mock string JSON parse error'
+                );
             } finally {
                 parseSpy.mockRestore();
             }

@@ -11,14 +11,13 @@ import {
     MU
 } from '../src/physics/OrbitalMechanics';
 import { R_EARTH } from '../src/config/Constants';
-import { vec2 } from '../src/types';
 
 describe('OrbitalMechanics', () => {
     describe('Orbital Elements', () => {
         it('should calculate circular orbit correctly', () => {
             const rMag = R_EARTH + 400000;
             const vMag = calculateCircularVelocity(rMag);
-            const elements = calculateOrbitalElements(vec2(rMag, 0), vec2(0, vMag));
+            const elements = calculateOrbitalElements({ x: rMag, y: 0 }, { x: 0, y: vMag });
 
             expect(elements.eccentricity).toBeCloseTo(0, 5);
             expect(elements.semiMajorAxis).toBeCloseTo(rMag, 0);
@@ -28,7 +27,7 @@ describe('OrbitalMechanics', () => {
             const altitude = 400000;
             const rMag = R_EARTH + altitude;
             const vMag = calculateCircularVelocity(rMag) * 1.1;
-            const elements = calculateOrbitalElements(vec2(rMag, 0), vec2(0, vMag));
+            const elements = calculateOrbitalElements({ x: rMag, y: 0 }, { x: 0, y: vMag });
 
             expect(elements.eccentricity).toBeGreaterThan(0);
             expect(elements.eccentricity).toBeLessThan(1);
