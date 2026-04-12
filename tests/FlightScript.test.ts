@@ -32,6 +32,11 @@ describe('FlightScript', () => {
         it('should handle logic errors in syntax', () => {
             expect(parseScriptLine('INVALID', 1).success).toBe(false);
             expect(parseScriptLine('WHEN ALTITUDE > 100', 1).success).toBe(false); // No action
+            expect(parseScriptLine('WHEN ALTITUDE > 100 THEN INVALID_ACTION', 1).success).toBe(false); // Invalid action
+            expect(parseScriptLine('WHEN UNKNOWN_VAR > 100 THEN STAGE', 1).success).toBe(false); // Invalid variable
+            expect(parseScriptLine('WHEN ALTITUDE INVALID_OP 100 THEN STAGE', 1).success).toBe(false); // Regex fail for condition clause
+            expect(parseScriptLine('WHEN ALTITUDE > NOT_A_NUMBER THEN STAGE', 1).success).toBe(false); // Invalid number
+            expect(parseScriptLine('WHEN ALTITUDE > 100 AND THEN STAGE', 1).success).toBe(false); // Malformed condition syntax
         });
     });
 
