@@ -23,6 +23,20 @@ describe('Thermal Protection Module', () => {
             expect(c2).toBeCloseTo(c1 * ratio, 2);
         });
 
+        it('should use decreasing ambient temperature for altitudes below 100km', () => {
+            const area = 1.0;
+            const emissivity = 1.0;
+            const temp = 1000;
+            const altitude = 50000; // 50km
+            const altKm = 50;
+            const expectedAmbientTemp = AMBIENT_TEMP - altKm * 2;
+
+            const cooling = calculateRadiativeCooling(temp, emissivity, area, altitude);
+
+            const expected = STEFAN_BOLTZMANN * area * emissivity * (Math.pow(temp, 4) - Math.pow(expectedAmbientTemp, 4));
+            expect(cooling).toBeCloseTo(expected, 2);
+        });
+
         it('should use space temperature at high altitudes', () => {
             const area = 1.0;
             const emissivity = 1.0;
@@ -71,6 +85,19 @@ describe('Thermal Protection Module', () => {
             expect(nextState.thermalDamage).toBeGreaterThan(0);
         });
 
+        it('should accumulate slow damage near maxTemp', () => {
+            const config = DEFAULT_TPS_CONFIG; // maxTemp: 1800
+            // 0.95 * 1800 = 1710
+            const state = {
+                ...createInitialThermalState(),
+                skinTemp: 1710
+            };
+            const dt = 1.0;
+
+            const nextState = updateThermalState(config, state, 0, 0, 0, dt);
+            expect(nextState.thermalDamage).toBe(0.5 * dt);
+        });
+
         it('should set isCritical flag near maxTemp', () => {
             const config = DEFAULT_TPS_CONFIG; // maxTemp: 1800
             // 0.85 * 1800 = 1530
@@ -86,6 +113,20 @@ describe('Thermal Protection Module', () => {
     });
 
     describe('getThermalDamageRate', () => {
+        it('should return minor damage near maxTemp', () => {
+            const config = DEFAULT_TPS_CONFIG; // maxTemp: 1800
+            const state = { ...createInitialThermalState(), skinTemp: 1710 }; // tempRatio = 0.95
+            const rate = getThermalDamageRate(state, config);
+            expect(rate).toBeCloseTo((0.95 - 0.9) * 10, 2);
+        });
+
+        it('should return 0 when exactly at or slightly below 0.9 maxTemp', () => {
+            const config = DEFAULT_TPS_CONFIG; // maxTemp: 1800
+            const state = { ...createInitialThermalState(), skinTemp: 1620 }; // exactly 0.9
+            const rate = getThermalDamageRate(state, config);
+            expect(rate).toBe(0);
+        });
+
         it('should return 0 for nominal temperatures', () => {
             const state = { ...createInitialThermalState(), skinTemp: 300 };
             expect(getThermalDamageRate(state, DEFAULT_TPS_CONFIG)).toBe(0);
