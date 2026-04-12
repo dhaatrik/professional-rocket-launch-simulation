@@ -5,6 +5,7 @@ import * as ThermalProtection from '../../src/physics/ThermalProtection';
 import * as Aerodynamics from '../../src/physics/Aerodynamics';
 import * as StateModule from '../../src/core/State';
 import { Particle } from '../../src/physics/Particle';
+import { EngineStateCode } from '../../src/core/PhysicsBuffer';
 
 // Concrete implementation for abstract Vessel class
 class TestVessel extends Vessel {
@@ -59,6 +60,15 @@ vi.mock('../../src/physics/Particle', () => {
             create: vi.fn(() => ({})), // Return dummy object
             release: vi.fn()
         }
+    };
+});
+
+// Mock Aerodynamics module
+vi.mock('../../src/physics/Aerodynamics', async (importOriginal) => {
+    const actual = await importOriginal<typeof Aerodynamics>();
+    return {
+        ...actual,
+        calculateAerodynamicDamageRate: vi.fn(),
     };
 });
 
