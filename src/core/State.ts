@@ -5,7 +5,7 @@
  * Now backed by SimulationStore for strict state management.
  */
 
-import { GameState, IVessel, IParticle, IAudioEngine, IMissionLog, IAssetLoader, Vector2D, vec2 } from '../types';
+import { GameState, IVessel, IParticle, IAudioEngine, IMissionLog, IAssetLoader, Vector2D } from '../types';
 import { SimulationStore } from './SimulationStore';
 
 // Initialize the store
@@ -45,7 +45,7 @@ export const state: GameState = {
 /**
  * Current wind velocity - updated by store subscription
  */
-export let currentWindVelocity: Vector2D = vec2(0, 0);
+export let currentWindVelocity: Vector2D = { x: 0, y: 0 };
 export let currentDensityMultiplier: number = 1.0;
 
 // Sync state with store
