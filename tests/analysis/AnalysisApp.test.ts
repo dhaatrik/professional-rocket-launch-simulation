@@ -40,6 +40,8 @@ describe('AnalysisApp', () => {
             fill: vi.fn(),
             stroke: vi.fn(),
             setLineDash: vi.fn(),
+            getImageData: vi.fn().mockReturnValue({ data: new Uint8ClampedArray(4) }),
+            putImageData: vi.fn(),
         } as unknown as CanvasRenderingContext2D);
     });
 
@@ -348,6 +350,50 @@ describe('AnalysisApp', () => {
 
             expect(() => app.seekToFrame(1)).not.toThrow();
             expect(() => app.seekToPercentage(50)).not.toThrow();
+        });
+    });
+
+    describe('Rendering and UI State', () => {
+        it('should correctly render frames and update DOM metrics', () => {
+            const app = new AnalysisApp() as any;
+            app.frames = [
+                { missionTime: 65, altitude: 123.4, velocity: 45.6, throttle: 1, q: 10, event: 'launch' }
+            ];
+
+            // Render index 0
+            app.renderFrame(0);
+
+            // 65 seconds = 01:05
+            expect(app.dispTime.textContent).toBe('01:05');
+            expect(app.dispAlt.textContent).toBe('123'); // toFixed(0)
+            expect(app.dispVel.textContent).toBe('46'); // toFixed(0)
+        });
+
+        it('should resize canvases correctly', () => {
+            const app = new AnalysisApp() as any;
+
+            // Mock parent element bounding client rect
+            Object.values(app.canvases).forEach((canvas: any) => {
+                Object.defineProperty(canvas, 'parentElement', {
+                    value: {
+                        getBoundingClientRect: () => ({ width: 800, height: 600 })
+                    }
+                });
+            });
+
+            app.resizeCanvases();
+
+            Object.values(app.canvases).forEach((canvas: any) => {
+                expect(canvas.width).toBe(800);
+                expect(canvas.height).toBe(600);
+            });
+        });
+
+        it('should execute renderCharts without throwing with empty frames', () => {
+            const app = new AnalysisApp() as any;
+            app.frames = [];
+
+            expect(() => app.renderCharts()).not.toThrow();
         });
     });
 });

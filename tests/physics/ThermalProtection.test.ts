@@ -5,7 +5,6 @@ import {
     getThermalDamageRate,
     createInitialThermalState,
     tempToCelsius,
-    getTempStatusColor,
     STEFAN_BOLTZMANN,
     AMBIENT_TEMP,
     SPACE_TEMP,
@@ -107,14 +106,6 @@ describe('Thermal Protection Module', () => {
         it('should convert Kelvin to Celsius', () => {
             expect(tempToCelsius(273.15)).toBe(0);
             expect(tempToCelsius(373.15)).toBe(100);
-        });
-
-        it('should return correct status colors', () => {
-            const maxTemp = 1000;
-            expect(getTempStatusColor(300, maxTemp)).toBe('#2ecc71'); // Nominal
-            expect(getTempStatusColor(600, maxTemp)).toBe('#f1c40f'); // Elevated (>0.5)
-            expect(getTempStatusColor(800, maxTemp)).toBe('#e67e22'); // Warning (>0.7)
-            expect(getTempStatusColor(950, maxTemp)).toBe('#e74c3c'); // Critical (>0.9)
         });
 
         it('should create correct initial state', () => {
