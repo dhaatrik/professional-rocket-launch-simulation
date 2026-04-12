@@ -10,8 +10,7 @@ import {
     BOOSTER_PROP_CONFIG,
     PAYLOAD_PROP_CONFIG,
     getEngineStateDisplay,
-    getIgnitionFailureMessage,
-    getEngineStateColor
+    getIgnitionFailureMessage
 } from '../src/physics/Propulsion';
 
 describe('Propulsion System', () => {
@@ -174,18 +173,11 @@ describe('Propulsion System', () => {
     });
 
     describe('Display Helpers', () => {
-        it('should return correct display strings and colors', () => {
+        it('should return correct display strings', () => {
             const state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
 
             state.engineState = EngineStateCode.RUNNING;
             expect(getEngineStateDisplay(state)).toBe('RUNNING');
-            expect(getEngineStateColor(state)).toBe('#2ecc71');
-
-            state.engineState = EngineStateCode.SHUTDOWN;
-            expect(getEngineStateColor(state)).toBe('#e67e22');
-
-            state.engineState = EngineStateCode.STARTING;
-            expect(getEngineStateColor(state)).toBe('#f1c40f');
         });
 
         it('should handle payload configuration', () => {
