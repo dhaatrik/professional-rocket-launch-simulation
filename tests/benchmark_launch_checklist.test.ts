@@ -57,21 +57,18 @@ describe('LaunchChecklist getCompletionCount performance', () => {
 
         // Let's create a larger checklist to make the benchmark more meaningful
         // Note: We bypass private visibility to setup the test data
+        const originalItems = new Map((checklist as any).items);
         const largeItems = new Map();
-        const largeItemsArray = [];
         for (let i = 0; i < 1000; i++) {
             const status = i % 3 === 0 ? 'go' : (i % 3 === 1 ? 'no-go' : 'pending');
-            const item = {
+            largeItems.set(`item-${i}`, {
                 id: `item-${i}`,
                 label: `Item ${i}`,
                 station: 'TEST',
                 status: status as any
-            };
-            largeItems.set(`item-${i}`, item);
-            largeItemsArray.push(item);
+            });
         }
         (checklist as any).items = largeItems;
-        (checklist as any).itemsArray = largeItemsArray;
 
         const iterations = 10000;
 

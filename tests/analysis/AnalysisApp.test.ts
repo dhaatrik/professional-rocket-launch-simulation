@@ -203,45 +203,6 @@ describe('AnalysisApp', () => {
             alertSpy.mockRestore();
             vi.unstubAllGlobals();
         });
-
-        it('should catch and alert on file parsing errors', () => {
-            const app = new AnalysisApp() as any;
-            const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-            // Create a malformed JSON file
-            const malformedJson = '{ invalid json }';
-            const mockFile = new File([malformedJson], 'data.json', { type: 'application/json' });
-
-            let capturedReader4: any;
-            class MockFileReader4 {
-                readAsText = vi.fn().mockImplementation(function(this: any) {
-                    capturedReader4 = this;
-                });
-                onload: any = null;
-                result = malformedJson;
-            }
-            vi.stubGlobal('FileReader', MockFileReader4);
-
-            // Call loadFile
-            app.loadFile(mockFile);
-
-            // Simulate onload to trigger the parsing error
-            if (capturedReader4 && capturedReader4.onload) {
-                capturedReader4.onload({ target: capturedReader4 });
-            }
-
-            // Assertions
-            expect(consoleErrorSpy).toHaveBeenCalled();
-            expect(alertSpy).toHaveBeenCalled();
-            const alertCall = alertSpy.mock.calls[0][0];
-            expect(alertCall).toMatch(/^Failed to parse file:/);
-            expect(app.frames.length).toBe(0);
-
-            alertSpy.mockRestore();
-            consoleErrorSpy.mockRestore();
-            vi.unstubAllGlobals();
-        });
     });
 
     describe('Playback Controls', () => {

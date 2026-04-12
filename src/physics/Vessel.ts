@@ -29,7 +29,6 @@ import {
 import { state, currentWindVelocity, currentDensityMultiplier } from '../core/State';
 import { addParticle } from '../core/State';
 import { Particle } from './Particle';
-import { secureRandom } from '../utils/Security';
 import {
     AerodynamicsConfig,
     AerodynamicState,
@@ -400,7 +399,7 @@ export class Vessel implements IVessel {
             this.health -= thermalDamageRate * dt;
 
             // Spawn debris when taking thermal damage
-            if (secureRandom() > 0.9) {
+            if (Math.random() > 0.9) {
                 addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
             }
 
@@ -474,7 +473,7 @@ export class Vessel implements IVessel {
                 this.health -= damageRate * (1 / 60); // Assuming 60 FPS
 
                 // Spawn debris particles when taking damage
-                if (secureRandom() > 0.8) {
+                if (Math.random() > 0.8) {
                     addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
                 }
 
@@ -498,7 +497,7 @@ export class Vessel implements IVessel {
 
             if (this.q > 5000 && alpha > 0.2) {
                 this.health -= 100 * (1 / 60);
-                if (secureRandom() > 0.8) {
+                if (Math.random() > 0.8) {
                     addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
                 }
             }
@@ -552,7 +551,7 @@ export class Vessel implements IVessel {
         // Spawn explosion particles
         for (let i = 0; i < 30; i++) {
             addParticle(
-                Particle.create(this.x + secureRandom() * 20 - 10, this.y + this.h - secureRandom() * 20, 'fire')
+                Particle.create(this.x + Math.random() * 20 - 10, this.y + this.h - Math.random() * 20, 'fire')
             );
             addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
         }
@@ -639,14 +638,14 @@ export class Vessel implements IVessel {
 
             ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${intensity})`;
             ctx.beginPath();
-            ctx.arc(0, this.h, 20 + secureRandom() * 10 * intensity, 0, Math.PI * 2);
+            ctx.arc(0, this.h, 20 + Math.random() * 10 * intensity, 0, Math.PI * 2);
             ctx.fill();
 
             // Nose cone glow
             if (intensity > 0.3) {
                 ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${intensity * 0.6})`;
                 ctx.beginPath();
-                ctx.arc(0, -10, 15 + secureRandom() * 5, 0, Math.PI * 2);
+                ctx.arc(0, -10, 15 + Math.random() * 5, 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -657,10 +656,10 @@ export class Vessel implements IVessel {
             }
 
             // Ablation particles when shield is active
-            if (this.isAblating && secureRandom() > 0.7) {
+            if (this.isAblating && Math.random() > 0.7) {
                 ctx.fillStyle = `rgba(255, 255, 200, 0.8)`;
-                const sparkX = (secureRandom() - 0.5) * this.w;
-                const sparkY = secureRandom() * this.h;
+                const sparkX = (Math.random() - 0.5) * this.w;
+                const sparkY = Math.random() * this.h;
                 ctx.beginPath();
                 ctx.arc(sparkX, sparkY, 2, 0, Math.PI * 2);
                 ctx.fill();

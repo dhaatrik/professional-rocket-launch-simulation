@@ -510,10 +510,7 @@ export class ScriptEditor {
 
             const validScripts: SavedScriptsRecord = {};
 
-            // Use for...in to avoid allocating an array via Object.keys()
-            for (const key in parsed) {
-                if (!Object.prototype.hasOwnProperty.call(parsed, key)) continue;
-
+            for (const key of Object.keys(parsed)) {
                 const entry = parsed[key];
                 if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
 

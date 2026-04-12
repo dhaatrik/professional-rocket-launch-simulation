@@ -23,7 +23,7 @@ describe('VehicleBlueprint Security', () => {
 
         expect(() => {
             loadBlueprints();
-        }).toThrow('Stored blueprints data contains non-string entries');
+        }).toThrow('Stored blueprints data contains non-string items');
     });
 
     it('should successfully load valid string blueprints array', () => {

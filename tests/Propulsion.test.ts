@@ -3,6 +3,7 @@ import { EngineStateCode } from '../src/core/PhysicsBuffer';
 import {
     createInitialPropulsionState,
     updatePropulsionState,
+    updateUllageStatus,
     attemptIgnition,
     commandShutdown,
     FULLSTACK_PROP_CONFIG,
@@ -80,7 +81,7 @@ describe('Propulsion System', () => {
     describe('Ullage Logic', () => {
         it('should unsettle immediately in freefall if timer was 0', () => {
             let state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
-            state = updatePropulsionState(state, FULLSTACK_PROP_CONFIG, 0, true, 0, 0.1);
+            state = updateUllageStatus(state, FULLSTACK_PROP_CONFIG, 0, 0.1);
             expect(state.ullageSettled).toBe(false);
         });
 
@@ -89,7 +90,7 @@ describe('Propulsion System', () => {
             state.ullageSettled = false;
 
             for (let i = 0; i < 5; i++) {
-                state = updatePropulsionState(state, FULLSTACK_PROP_CONFIG, 0, true, 1.0, 0.1);
+                state = updateUllageStatus(state, FULLSTACK_PROP_CONFIG, 1.0, 0.1);
             }
             expect(state.ullageSettled).toBe(true);
         });
@@ -98,10 +99,10 @@ describe('Propulsion System', () => {
             let state = createInitialPropulsionState(FULLSTACK_PROP_CONFIG);
             // Charge up the timer first
             for (let i = 0; i < 5; i++) {
-                state = updatePropulsionState(state, FULLSTACK_PROP_CONFIG, 0, true, 1.0, 0.1);
+                state = updateUllageStatus(state, FULLSTACK_PROP_CONFIG, 1.0, 0.1);
             }
             // Freefall
-            state = updatePropulsionState(state, FULLSTACK_PROP_CONFIG, 0, true, 0, 0.1);
+            state = updateUllageStatus(state, FULLSTACK_PROP_CONFIG, 0, 0.1);
             expect(state.ullageSettled).toBe(true);
         });
     });

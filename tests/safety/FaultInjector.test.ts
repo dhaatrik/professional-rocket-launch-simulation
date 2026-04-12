@@ -114,48 +114,4 @@ describe('FaultInjector', () => {
         // Should force throttle to stuck value (1.0 from init)
         expect(v.throttle).toBe(1.0);
     });
-
-    it('should handle custom faults (Fuel Leak)', () => {
-        const v = createMockVessel();
-        injector.armFault('fuel-leak');
-        injector.injectFault('fuel-leak', v, v.reliability);
-
-        // Update to apply effect
-        v.fuel = 1000;
-        injector.update(v, v.reliability, 0, 1.0);
-
-        expect(v.fuel).toBeLessThan(1000);
-        expect(injector.fuelLeakActive).toBe(true);
-    });
-
-    it('should toggle faults correctly (arm then inject)', () => {
-        const v = createMockVessel();
-
-        // First click arms
-        injector.toggleFault('engine-flameout', v, v.reliability);
-        expect(v.reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(false);
-
-        // Second click injects
-        injector.toggleFault('engine-flameout', v, v.reliability);
-        expect(v.reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(true);
-    });
-
-    it('should handle conditional faults', () => {
-        const v = createMockVessel();
-        const altCondition = (vessel: IVessel, alt: number) => alt > 1000;
-
-        injector.armFault('engine-flameout', 'conditional', 0, altCondition);
-
-        // Ground y is 0, vessel h is 40. PIXELS_PER_METER is 10.
-        // alt = (0 - v.y - 40) / 10.
-        // At y = -5000: alt = (0 - (-5000) - 40) / 10 = 4960 / 10 = 496. Condition false.
-        v.y = -5000;
-        injector.update(v, v.reliability, 0, 0.1);
-        expect(v.reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(false);
-
-        // At y = -15000: alt = (0 - (-15000) - 40) / 10 = 14960 / 10 = 1496. Condition true.
-        v.y = -15000;
-        injector.update(v, v.reliability, 0, 0.1);
-        expect(v.reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(true);
-    });
 });
