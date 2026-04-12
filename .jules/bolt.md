@@ -27,3 +27,6 @@
 ## 2026-04-10 - Telemetry Receiver Spread Operator Overhead
 **Learning:** Using the spread operator with `Math.max(...array)` inside high-frequency render loops (e.g., triggered by `requestAnimationFrame` or 10Hz telemetry updates) causes severe memory allocation overhead. V8 has to allocate a new arguments array every time it executes, leading to rapid garbage collection cycles and potential `RangeError` if the array exceeds call stack limits.
 **Action:** When finding min/max values or aggregating data inside a continuous loop, strictly avoid the array spread operator (`...`). Use a standard `for` loop to compute the aggregate value inline.
+## $(date +%Y-%m-%d) - Object Iteration Allocation Avoidance
+**Learning:** Using `Object.keys()` allocates a temporary array of strings. In frequently executed loops or parsers handling large structures (like script loading from localStorage), this array allocation creates unnecessary garbage collection pressure and CPU overhead.
+**Action:** Replace `for (const key of Object.keys(obj))` with `for (const key in obj) { if (!Object.prototype.hasOwnProperty.call(obj, key)) continue; ... }` to avoid the array allocation entirely.
