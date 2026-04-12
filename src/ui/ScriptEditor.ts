@@ -551,13 +551,15 @@ export class ScriptEditor {
             this.saveSelect.remove(1);
         }
 
+        const fragment = document.createDocumentFragment();
         // Add saved scripts
         names.forEach((name) => {
             const option = document.createElement('option');
             option.value = name;
             option.textContent = name;
-            this.saveSelect!.appendChild(option);
+            fragment.appendChild(option);
         });
+        this.saveSelect.appendChild(fragment);
     }
 
     /**

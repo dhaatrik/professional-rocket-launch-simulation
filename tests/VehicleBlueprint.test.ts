@@ -240,16 +240,62 @@ describe('VehicleBlueprint Error Paths', () => {
             const blueprint = createBlueprint('Test');
 
             // Override the setItem mock for this specific test
+            const originalSetItem = localStorage.setItem;
             localStorage.setItem = vi.fn().mockImplementation(() => {
                 throw new Error('Quota exceeded');
             });
 
-            saveBlueprints([blueprint]);
+            try {
+                saveBlueprints([blueprint]);
 
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
-                'Failed to save blueprints:',
-                expect.any(Error)
-            );
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    'Failed to save blueprints:',
+                    expect.any(Error)
+                );
+            } finally {
+                localStorage.setItem = originalSetItem;
+            }
+        });
+
+        it('should catch and log QuotaExceededError (DOMException) when localStorage is full', () => {
+            const blueprint = createBlueprint('Test');
+
+            const originalSetItem = localStorage.setItem;
+            localStorage.setItem = vi.fn().mockImplementation(() => {
+                throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+            });
+
+            try {
+                saveBlueprints([blueprint]);
+
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    'Failed to save blueprints:',
+                    expect.any(DOMException)
+                );
+            } finally {
+                localStorage.setItem = originalSetItem;
+            }
+        });
+
+        it('should catch and log error when JSON.stringify throws before setItem', () => {
+            const blueprint = createBlueprint('Test');
+
+            // Mock JSON.stringify to throw an error, simulating a serialization failure
+            const originalStringify = JSON.stringify;
+            try {
+                JSON.stringify = vi.fn().mockImplementation(() => {
+                    throw new Error('Serialization failed');
+                });
+
+                saveBlueprints([blueprint]);
+
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    'Failed to save blueprints:',
+                    expect.objectContaining({ message: 'Serialization failed' })
+                );
+            } finally {
+                JSON.stringify = originalStringify;
+            }
         });
     });
 
