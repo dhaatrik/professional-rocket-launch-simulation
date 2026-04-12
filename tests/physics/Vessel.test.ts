@@ -4,6 +4,7 @@ import { state } from '../../src/core/State';
 import * as ThermalProtection from '../../src/physics/ThermalProtection';
 import * as Aerodynamics from '../../src/physics/Aerodynamics';
 import { Particle } from '../../src/physics/Particle';
+import { EngineStateCode } from '../../src/core/PhysicsBuffer';
 
 // Concrete implementation for abstract Vessel class
 class TestVessel extends Vessel {

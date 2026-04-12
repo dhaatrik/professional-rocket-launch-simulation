@@ -20,9 +20,10 @@ import { updateFlightComputerHUD } from './ui/FlightComputerHUD';
 let game: Game;
 try {
     game = new Game();
-    game.init().catch((e) => {
+    game.init().catch((e: unknown) => {
         console.error('Game initialization failed:', e);
-        alert(`Game Init Error: ${e.message}`);
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        alert(`Game Init Error: ${errorMessage}`);
     });
 } catch (e: unknown) {
     console.error('Game constructor failed:', e);
