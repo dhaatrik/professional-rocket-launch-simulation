@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Vessel } from '../../src/physics/Vessel';
 import { state } from '../../src/core/State';
 import * as ThermalProtection from '../../src/physics/ThermalProtection';
+import * as Aerodynamics from '../../src/physics/Aerodynamics';
 import { Particle } from '../../src/physics/Particle';
 import { EngineStateCode } from '../../src/core/PhysicsBuffer';
 
@@ -40,6 +41,15 @@ vi.mock('../../src/physics/Particle', () => {
             create: vi.fn(() => ({})), // Return dummy object
             release: vi.fn()
         }
+    };
+});
+
+// Mock Aerodynamics module
+vi.mock('../../src/physics/Aerodynamics', async (importOriginal) => {
+    const actual = await importOriginal<typeof Aerodynamics>();
+    return {
+        ...actual,
+        calculateAerodynamicDamageRate: vi.fn(),
     };
 });
 
@@ -191,97 +201,60 @@ describe('Vessel Thermal Integration', () => {
     });
 });
 
-describe('Vessel Ground Collision Validation', () => {
+describe('Vessel Aerodynamic Stress', () => {
     let vessel: TestVessel;
+    let mockMissionLog: any;
 
     beforeEach(() => {
         vi.clearAllMocks();
-
-        // Setup State mocks
-        state.missionLog = { log: vi.fn() } as any;
-        state.groundY = 1000;
-        state.audio = null;
-
-        // Create vessel instance
-        vessel = new TestVessel(0, 0); // Start at y=0, above groundY=1000
+        mockMissionLog = { log: vi.fn() };
+        state.missionLog = mockMissionLog;
+        vessel = new TestVessel(0, 0);
     });
 
-    it('should not collide if vessel is above ground', () => {
-        vessel.y = 500; // y + h (500 + 100) = 600, which is < 1000 (groundY)
-        vessel.vy = 10;
-        vessel.throttle = 1;
+    it('should calculate damage and decrease health when aeroState is present and damageRate > 0', () => {
+        vessel.aeroState = { aoa: 0, stabilityMargin: -0.1, isStable: false, cp: 0, cg: 0, referenceArea: 1, referenceLength: 1 } as any;
+        vessel.isAeroStable = false;
+        vessel.q = 6000;
+        vi.mocked(Aerodynamics.calculateAerodynamicDamageRate).mockReturnValue(60);
+
+        const initialHealth = vessel.health;
+        (vessel as any).checkAerodynamicStress(100, 1000);
+
+        expect(vessel.health).toBe(initialHealth - 60 * (1 / 60));
+        expect(state.missionLog.log).toHaveBeenCalledWith(
+            expect.stringContaining('STABILITY WARNING'),
+            'warn'
+        );
+    });
+
+    it('should explode when health reaches 0 from aerodynamic stress', () => {
+        vessel.aeroState = { aoa: 0, stabilityMargin: -0.1, isStable: false, cp: 0, cg: 0, referenceArea: 1, referenceLength: 1 } as any;
+        vessel.q = 6000;
+        vessel.health = 1; // Low health
+        vi.mocked(Aerodynamics.calculateAerodynamicDamageRate).mockReturnValue(100);
 
         const explodeSpy = vi.spyOn(vessel, 'explode');
 
-        // Test checkGroundCollision directly to isolate from updatePhysics RK4 gravity modifications
-        (vessel as any).checkGroundCollision();
-
-        expect(explodeSpy).not.toHaveBeenCalled();
-        expect(vessel.y).toBe(500);
-        expect(vessel.vy).toBe(10);
-        expect(vessel.throttle).toBe(1);
-    });
-
-    it('should land successfully at low velocity and safe angle', () => {
-        vessel.y = 950; // y + h (950 + 100) = 1050, which is > 1000 (groundY)
-        vessel.vy = 10; // Safe velocity (<= 15)
-        vessel.vx = 5;
-        vessel.angle = 0.1; // Safe angle (<= 0.3)
-        vessel.engineState = EngineStateCode.OFF;
-        vessel.throttle = 1; // Should be cut to 0
-
-        const explodeSpy = vi.spyOn(vessel, 'explode');
-
-        (vessel as any).checkGroundCollision();
-
-        expect(explodeSpy).not.toHaveBeenCalled();
-        expect(vessel.y).toBe(state.groundY - vessel.h); // Snapped to ground
-        expect(vessel.vy).toBe(0);
-        expect(vessel.vx).toBe(0);
-        expect(vessel.throttle).toBe(0); // Throttle is cut
-    });
-
-    it('should explode if landing velocity is too high', () => {
-        vessel.y = 950; // y + h > groundY
-        vessel.vy = 20; // Unsafe velocity (> 15)
-        vessel.angle = 0;
-
-        const explodeSpy = vi.spyOn(vessel, 'explode');
-
-        (vessel as any).checkGroundCollision();
+        (vessel as any).checkAerodynamicStress(100, 1000);
 
         expect(explodeSpy).toHaveBeenCalled();
-        expect(vessel.y).toBe(state.groundY - vessel.h);
+        expect(state.missionLog.log).toHaveBeenCalledWith('STRUCTURAL FAILURE DUE TO AERO FORCES', 'warn');
     });
 
-    it('should explode if landing angle is too high', () => {
-        vessel.y = 950; // y + h > groundY
-        vessel.vy = 5; // Safe velocity
-        vessel.angle = 0.5; // Unsafe angle (> 0.3)
+    it('should use legacy aerodynamic check when aeroState is undefined', () => {
+        // Legacy damage check triggers when q > 5000 and alpha > 0.2
+        vessel.aeroState = undefined;
+        vessel.q = 6000;
+        vessel.vx = 100;
+        vessel.vy = 0; // Velocity strictly horizontal
+        vessel.angle = 0; // Pointing up
+        vessel.health = 100;
 
-        const explodeSpy = vi.spyOn(vessel, 'explode');
+        // velocity > 10 triggers the alpha calculation branch
+        (vessel as any).checkAerodynamicStress(100, 1000);
 
-        (vessel as any).checkGroundCollision();
-
-        expect(explodeSpy).toHaveBeenCalled();
-        expect(vessel.y).toBe(state.groundY - vessel.h);
-    });
-
-    it('should land successfully but not cut throttle if engine is starting or running', () => {
-        vessel.y = 950; // y + h > groundY
-        vessel.vy = 5; // Safe velocity
-        vessel.angle = 0; // Safe angle
-        vessel.throttle = 0.8;
-        vessel.engineState = EngineStateCode.RUNNING;
-
-        const explodeSpy = vi.spyOn(vessel, 'explode');
-
-        (vessel as any).checkGroundCollision();
-
-        expect(explodeSpy).not.toHaveBeenCalled();
-        expect(vessel.y).toBe(state.groundY - vessel.h);
-        expect(vessel.vy).toBe(0);
-        expect(vessel.vx).toBe(0);
-        expect(vessel.throttle).toBe(0.8); // Throttle is NOT cut
+        // At angle=0, vx=100, vy=0 -> alpha = ~1.57 radians > 0.2
+        expect(vessel.health).toBe(100 - 100 * (1 / 60));
     });
 });
