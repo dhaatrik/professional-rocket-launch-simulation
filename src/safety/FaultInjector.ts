@@ -280,7 +280,8 @@ export class FaultInjector {
                 if (firstBtn) {
                     firstBtn.focus();
                 } else {
-                    const closeBtn = this.containerEl.querySelector('#fis-close-btn') as HTMLElement;
+                    // ⚡ Optimization: Use document.getElementById instead of querySelector for ID lookups to improve DOM query speed
+                    const closeBtn = document.getElementById('fis-close-btn') as HTMLElement;
                     if (closeBtn) closeBtn.focus();
                 }
 

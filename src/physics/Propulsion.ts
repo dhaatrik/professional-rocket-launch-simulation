@@ -353,26 +353,6 @@ export function getEngineStateDisplay(state: PropulsionState): string {
 }
 
 /**
- * Get color for engine state display
- */
-export function getEngineStateColor(state: PropulsionState): string {
-    switch (state.engineState) {
-        case EngineStateCode.OFF:
-            return '#95a5a6'; // Gray
-        case EngineStateCode.STARTING:
-            return '#f1c40f'; // Yellow
-        case EngineStateCode.RUNNING:
-            return '#2ecc71'; // Green
-        case EngineStateCode.SHUTDOWN:
-            return '#e67e22'; // Orange
-        case EngineStateCode.FLAMEOUT:
-            return '#e74c3c'; // Red
-        default:
-            return '#ffffff';
-    }
-}
-
-/**
  * Get ignition failure message
  */
 export function getIgnitionFailureMessage(state: PropulsionState): string | null {
