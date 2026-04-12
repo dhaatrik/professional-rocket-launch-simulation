@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { saveBlueprints, loadBlueprints, deserializeBlueprint, serializeBlueprint, createBlueprint, addStage, addPartToStage } from '../src/vab/VehicleBlueprint';
+import {
+    saveBlueprints,
+    loadBlueprints,
+    deserializeBlueprint,
+    serializeBlueprint,
+    createBlueprint,
+    addStage,
+    addPartToStage
+} from '../src/vab/VehicleBlueprint';
 import { ENGINE_MERLIN_1D } from '../src/vab/PartsCatalog';
 
 describe('VehicleBlueprint Error Paths', () => {
@@ -38,7 +46,7 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when parsed JSON is not an object', () => {
-            const result = deserializeBlueprint(JSON.stringify("just a string"));
+            const result = deserializeBlueprint(JSON.stringify('just a string'));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
                 'Failed to deserialize blueprint:',
@@ -97,7 +105,7 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when a stage is not an object', () => {
-            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ "not a stage object" ] };
+            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: ['not a stage object'] };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -107,7 +115,13 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when stageNumber is missing or not a number', () => {
-            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { hasDecoupler: false, parts: [] } ] };
+            const badData = {
+                name: 'n',
+                id: '1',
+                createdAt: 1,
+                modifiedAt: 1,
+                stages: [{ hasDecoupler: false, parts: [] }]
+            };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -117,7 +131,13 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when hasDecoupler is missing or not a boolean', () => {
-            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, parts: [] } ] };
+            const badData = {
+                name: 'n',
+                id: '1',
+                createdAt: 1,
+                modifiedAt: 1,
+                stages: [{ stageNumber: 0, parts: [] }]
+            };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -127,7 +147,13 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when parts is not an array', () => {
-            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: "not an array" } ] };
+            const badData = {
+                name: 'n',
+                id: '1',
+                createdAt: 1,
+                modifiedAt: 1,
+                stages: [{ stageNumber: 0, hasDecoupler: false, parts: 'not an array' }]
+            };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -137,7 +163,13 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when a part instance is not an object', () => {
-            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: [ "not an object" ] } ] };
+            const badData = {
+                name: 'n',
+                id: '1',
+                createdAt: 1,
+                modifiedAt: 1,
+                stages: [{ stageNumber: 0, hasDecoupler: false, parts: ['not an object'] }]
+            };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -147,7 +179,13 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when partId is not a string', () => {
-            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: [ { partId: 123 } ] } ] };
+            const badData = {
+                name: 'n',
+                id: '1',
+                createdAt: 1,
+                modifiedAt: 1,
+                stages: [{ stageNumber: 0, hasDecoupler: false, parts: [{ partId: 123 }] }]
+            };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -157,7 +195,13 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when instanceId is not a string', () => {
-            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: [ { partId: 'id', instanceId: 123 } ] } ] };
+            const badData = {
+                name: 'n',
+                id: '1',
+                createdAt: 1,
+                modifiedAt: 1,
+                stages: [{ stageNumber: 0, hasDecoupler: false, parts: [{ partId: 'id', instanceId: 123 }] }]
+            };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -167,7 +211,19 @@ describe('VehicleBlueprint Error Paths', () => {
         });
 
         it('should return null and log error when stageIndex is not a number', () => {
-            const badData = { name: 'n', id: '1', createdAt: 1, modifiedAt: 1, stages: [ { stageNumber: 0, hasDecoupler: false, parts: [ { partId: 'id', instanceId: 'id', stageIndex: '0' } ] } ] };
+            const badData = {
+                name: 'n',
+                id: '1',
+                createdAt: 1,
+                modifiedAt: 1,
+                stages: [
+                    {
+                        stageNumber: 0,
+                        hasDecoupler: false,
+                        parts: [{ partId: 'id', instanceId: 'id', stageIndex: '0' }]
+                    }
+                ]
+            };
             const result = deserializeBlueprint(JSON.stringify(badData));
             expect(result).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -214,15 +270,19 @@ describe('VehicleBlueprint Error Paths', () => {
                 id: 'bad-1',
                 createdAt: 123,
                 modifiedAt: 123,
-                stages: [{
-                    stageNumber: 0,
-                    hasDecoupler: false,
-                    parts: [{
-                        partId: 'non-existent-part-id',
-                        instanceId: 'inst-1',
-                        stageIndex: 0
-                    }]
-                }]
+                stages: [
+                    {
+                        stageNumber: 0,
+                        hasDecoupler: false,
+                        parts: [
+                            {
+                                partId: 'non-existent-part-id',
+                                instanceId: 'inst-1',
+                                stageIndex: 0
+                            }
+                        ]
+                    }
+                ]
             };
 
             const result = deserializeBlueprint(JSON.stringify(badData));
@@ -246,10 +306,7 @@ describe('VehicleBlueprint Error Paths', () => {
 
             saveBlueprints([blueprint]);
 
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
-                'Failed to save blueprints:',
-                expect.any(Error)
-            );
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to save blueprints:', expect.any(Error));
         });
     });
 
@@ -285,6 +342,25 @@ describe('VehicleBlueprint Error Paths', () => {
             expect(() => loadBlueprints()).toThrow(/Failed to load blueprints:/);
         });
 
+        it('should handle thrown exceptions that are not Error objects', () => {
+            localStorage.setItem('vab-blueprints', '[]');
+            const originalParse = JSON.parse;
+            JSON.parse = vi.fn(() => {
+                throw 'String error';
+            });
+
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: String error/);
+
+            JSON.parse = originalParse;
+        });
+
+        it('should throw an error when localStorage returns a non-array valid JSON string', () => {
+            // Rationale: Requires mocking localStorage to return a non-array valid JSON string (e.g., '{"key":"value"}') to trigger the array validation error.
+            localStorage.setItem('vab-blueprints', '{"key":"value"}');
+
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: Stored blueprints data is not an array/);
+        });
+
         it('should successfully load valid blueprints and filter out invalid ones', () => {
             // Create a valid blueprint
             let bp1 = createBlueprint('Good Rocket');
@@ -300,15 +376,19 @@ describe('VehicleBlueprint Error Paths', () => {
                 id: 'bad-1',
                 createdAt: 123,
                 modifiedAt: 123,
-                stages: [{
-                    stageNumber: 0,
-                    hasDecoupler: false,
-                    parts: [{
-                        partId: 'non-existent-part-id', // This will fail deserialization
-                        instanceId: 'inst-1',
-                        stageIndex: 0
-                    }]
-                }]
+                stages: [
+                    {
+                        stageNumber: 0,
+                        hasDecoupler: false,
+                        parts: [
+                            {
+                                partId: 'non-existent-part-id', // This will fail deserialization
+                                instanceId: 'inst-1',
+                                stageIndex: 0
+                            }
+                        ]
+                    }
+                ]
             };
             const invalidJson = JSON.stringify(badData);
 
