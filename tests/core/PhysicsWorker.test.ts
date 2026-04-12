@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
 
 describe('PhysicsWorker', () => {
     let workerOnMessage: ((e: MessageEvent) => void) | null = null;
     let postMessageSpy: ReturnType<typeof vi.fn>;
+
+    beforeAll(() => {
+        vi.stubGlobal('location', { origin: 'http://localhost:3000' });
+    });
 
     beforeEach(async () => {
         postMessageSpy = vi.fn();
@@ -10,7 +14,8 @@ describe('PhysicsWorker', () => {
         // Mock self environment for Web Worker
         vi.stubGlobal('self', {
             onmessage: null,
-            postMessage: postMessageSpy
+            postMessage: postMessageSpy,
+            location: { origin: 'http://localhost:3000' }
         });
 
         // Load the worker, caching its self.onmessage listener
@@ -33,8 +38,9 @@ describe('PhysicsWorker', () => {
                     width: 1920,
                     height: 1080,
                     groundY: 1000,
-                }
-            }
+                },
+            },
+            origin: 'http://localhost:3000'
         } as MessageEvent);
 
         expect(postMessageSpy).toHaveBeenCalledWith(expect.objectContaining({
@@ -48,7 +54,8 @@ describe('PhysicsWorker', () => {
             data: {
                 type: 'INIT',
                 payload: {}
-            }
+            },
+            origin: 'http://localhost:3000'
         } as MessageEvent);
         postMessageSpy.mockClear();
 
@@ -56,7 +63,8 @@ describe('PhysicsWorker', () => {
             data: {
                 type: 'STEP',
                 payload: { dt: 0.02, timeScale: 1, controls: { throttle: 1, ignition: true } }
-            }
+            },
+            origin: 'http://localhost:3000'
         } as MessageEvent);
 
         expect(postMessageSpy).toHaveBeenCalledWith(expect.objectContaining({
@@ -69,7 +77,8 @@ describe('PhysicsWorker', () => {
             data: {
                 type: 'INIT',
                 payload: {}
-            }
+            },
+            origin: 'http://localhost:3000'
         } as MessageEvent);
         postMessageSpy.mockClear();
 
@@ -77,7 +86,8 @@ describe('PhysicsWorker', () => {
             data: {
                 type: 'COMMAND',
                 payload: { type: 'STAGE' }
-            }
+            },
+            origin: 'http://localhost:3000'
         } as MessageEvent);
 
         expect(postMessageSpy).toHaveBeenCalledWith(expect.objectContaining({
@@ -93,7 +103,8 @@ describe('PhysicsWorker', () => {
             data: {
                 type: 'INIT',
                 payload: {}
-            }
+            },
+            origin: 'http://localhost:3000'
         } as MessageEvent);
         postMessageSpy.mockClear();
 
@@ -101,7 +112,8 @@ describe('PhysicsWorker', () => {
             data: {
                 type: 'COMMAND',
                 payload: { type: 'FC_LOAD_SCRIPT', script: 'WHEN ALTITUDE > 1000 THEN PITCH 45' }
-            }
+            },
+            origin: 'http://localhost:3000'
         } as MessageEvent);
 
         expect(postMessageSpy).toHaveBeenCalledWith(expect.objectContaining({
