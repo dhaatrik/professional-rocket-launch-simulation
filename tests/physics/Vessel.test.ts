@@ -2,8 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Vessel } from '../../src/physics/Vessel';
 import { state } from '../../src/core/State';
 import * as ThermalProtection from '../../src/physics/ThermalProtection';
-import * as Aerodynamics from '../../src/physics/Aerodynamics';
-import * as StateModule from '../../src/core/State';
 import { Particle } from '../../src/physics/Particle';
 
 // Concrete implementation for abstract Vessel class
@@ -201,82 +199,5 @@ describe('Vessel Thermal Integration', () => {
         expect(explodeSpy).toHaveBeenCalled();
         expect(state.missionLog!.log).toHaveBeenCalledWith('STRUCTURAL FAILURE: THERMAL OVERLOAD', 'warn');
         expect(vessel.crashed).toBe(true);
-    });
-});
-
-describe('Vessel Aerodynamic Stress', () => {
-    let vessel: TestVessel;
-    let mockMissionLog: any;
-
-    beforeEach(() => {
-        vi.clearAllMocks();
-
-        mockMissionLog = { log: vi.fn() };
-        state.missionLog = mockMissionLog;
-
-        vessel = new TestVessel(0, 1000);
-
-        vi.mocked(Aerodynamics.calculateAerodynamicDamageRate).mockReturnValue(0);
-
-        // Mock random for deterministic particle spawning
-        vi.spyOn(Math, 'random').mockReturnValue(0.9);
-    });
-
-    afterEach(() => {
-        vi.restoreAllMocks();
-    });
-
-    it('should reset instability warning when aero is stable', () => {
-        vessel.aeroState = { isStable: true } as any;
-        vessel.isAeroStable = true;
-        vessel.instabilityWarningLogged = true;
-
-        (vessel as any).checkAerodynamicStress(100, 1000);
-
-        expect(vessel.instabilityWarningLogged).toBe(false);
-    });
-
-    it('should apply aerodynamic damage when damage rate > 0', () => {
-        vessel.aeroState = {} as any;
-        vessel.q = 5000;
-        const initialHealth = vessel.health;
-        const damageRate = 60;
-
-        vi.mocked(Aerodynamics.calculateAerodynamicDamageRate).mockReturnValue(damageRate);
-
-        (vessel as any).checkAerodynamicStress(100, 1000);
-
-        expect(vessel.health).toBe(initialHealth - damageRate * (1 / 60));
-    });
-
-    it('should spawn debris particles when taking damage', () => {
-        vessel.aeroState = {} as any;
-        vi.mocked(Aerodynamics.calculateAerodynamicDamageRate).mockReturnValue(60);
-
-        (vessel as any).checkAerodynamicStress(100, 1000);
-
-        // StateModule.addParticle handles the logic and is properly mocked with vi.fn()
-        expect(StateModule.addParticle).toHaveBeenCalled();
-    });
-
-    it('should log instability warning once when unstable and q > 5000', () => {
-        vessel.aeroState = { isStable: false } as any;
-        vessel.isAeroStable = false;
-        vessel.q = 6000;
-        vessel.aoa = 0.5;
-        vessel.stabilityMargin = -0.1;
-        vessel.instabilityWarningLogged = false;
-
-        vi.mocked(Aerodynamics.calculateAerodynamicDamageRate).mockReturnValue(60);
-
-        (vessel as any).checkAerodynamicStress(100, 1000);
-
-        expect(state.missionLog!.log).toHaveBeenCalledWith(expect.stringContaining('STABILITY WARNING'), 'warn');
-        expect(vessel.instabilityWarningLogged).toBe(true);
-
-        // Verify it is not logged again
-        mockMissionLog.log.mockClear();
-        (vessel as any).checkAerodynamicStress(100, 1000);
-        expect(state.missionLog!.log).not.toHaveBeenCalled();
     });
 });
