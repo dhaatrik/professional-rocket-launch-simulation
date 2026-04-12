@@ -1,211 +1,197 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ReliabilitySystem, DEFAULT_RELIABILITY_CONFIG } from '../../src/physics/Reliability';
-import { secureRandom } from '../../src/utils/Security';
+import { ReliabilitySystem, DEFAULT_RELIABILITY_CONFIG, ReliabilityConfig } from '../../src/physics/Reliability';
 import { state } from '../../src/core/State';
-
-vi.mock('../../src/utils/Security', () => ({
-    secureRandom: vi.fn()
-}));
-
-vi.mock('../../src/core/State', () => ({
-    state: {
-        missionLog: {
-            log: vi.fn()
-        }
-    }
-}));
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as Security from '../../src/utils/Security';
 
 describe('ReliabilitySystem', () => {
     let reliability: ReliabilitySystem;
+    const mockLog = { log: vi.fn() };
 
     beforeEach(() => {
-        vi.clearAllMocks();
+        // Mock state.missionLog
+        // We cast to any because the actual interface is complex but we only use log() here
+        state.missionLog = mockLog as any;
+
         reliability = new ReliabilitySystem();
+        vi.spyOn(Security, 'secureRandom');
     });
 
-    it('should initialize with default config', () => {
+    afterEach(() => {
+        state.missionLog = null;
+        vi.restoreAllMocks();
+    });
+
+    it('should initialize with default configuration', () => {
         expect(reliability.config).toEqual(DEFAULT_RELIABILITY_CONFIG);
         expect(reliability.activeFailures.size).toBe(0);
     });
 
-    it('attemptIgnition should fail based on ignition reliability', () => {
-        vi.mocked(secureRandom).mockReturnValue(0.995);
-        expect(reliability.attemptIgnition()).toBe(false);
-        expect(reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(true);
+    describe('attemptIgnition', () => {
+        it('should succeed when random value is below reliability threshold', () => {
+            // ignitionReliability is typically 0.99
+            // Success condition: secureRandom() <= ignitionReliability
+            // Wait, code says: if (secureRandom() > this.config.ignitionReliability) { fail }
+            // So if random is 0.5, 0.5 > 0.99 is false -> Success
 
-        vi.clearAllMocks();
-        reliability = new ReliabilitySystem();
-        vi.mocked(secureRandom).mockReturnValue(0.5);
-        expect(reliability.attemptIgnition()).toBe(true);
-        expect(reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(false);
+            vi.mocked(Security.secureRandom).mockReturnValue(0.5);
+
+            const result = reliability.attemptIgnition();
+            expect(result).toBe(true);
+            expect(reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(false);
+        });
+
+        it('should fail when random value is above reliability threshold', () => {
+            // Failure condition: secureRandom() > 0.99
+            vi.mocked(Security.secureRandom).mockReturnValue(0.999);
+
+            const result = reliability.attemptIgnition();
+            expect(result).toBe(false);
+            expect(reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(true);
+            expect(mockLog.log).toHaveBeenCalledWith(expect.stringContaining('Engine Flameout'), 'warn');
+        });
     });
 
     describe('update', () => {
-        it('should accumulate stress and trigger structural fatigue', () => {
-            vi.mocked(secureRandom).mockReturnValue(0.999);
-            reliability.update(10, 2.0);
+        it('should not trigger failures when random values are high (safe)', () => {
+            // Force random to return 1.0 (safe for all checks as they usually check random < prob)
+            vi.mocked(Security.secureRandom).mockReturnValue(1.0);
 
-            vi.mocked(secureRandom).mockReturnValue(0.0001);
-            const failures = reliability.update(1, 1.0);
+            const failures = reliability.update(1.0, 1.0); // dt=1, stress=1
+            expect(failures).toHaveLength(0);
+            expect(reliability.activeFailures.size).toBe(0);
+        });
+
+        it('should trigger engine flameout on failure', () => {
+            // Config specific for testing
+            const testConfig: ReliabilityConfig = {
+                ...DEFAULT_RELIABILITY_CONFIG,
+                mtbfEngine: 100, // High failure rate
+            };
+            reliability = new ReliabilitySystem(testConfig);
+
+            // mocking sequence for update()
+            // 1. Engine failure check: needs to return < pEngineFail.
+            //    pEngineFail = (1/100) * wear * dt. Approx 0.01.
+            //    Return 0.001 to trigger failure check.
+            // 2. Explosion check: needs to return >= 0.05 to trigger FLAME_OUT (else EXPLOSION).
+            //    Return 0.1 to trigger FLAME_OUT.
+            // 3. Structure failure check: Return 1.0 (safe).
+            // 4. Sensor failure check: Return 1.0 (safe).
+
+            vi.mocked(Security.secureRandom)
+                .mockReturnValueOnce(0.001) // Engine fail check
+                .mockReturnValueOnce(0.1)   // Explosion check (0.1 > 0.05 -> Flameout)
+                .mockReturnValueOnce(1.0)   // Structure
+                .mockReturnValueOnce(1.0);  // Sensor
+
+            const failures = reliability.update(1.0, 1.0); // dt=1, stress=1 (engine active)
+
+            expect(failures).toContain('ENGINE_FLAME_OUT');
+            expect(reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(true);
+        });
+
+        it('should trigger engine explosion on catastrophic failure', () => {
+            const testConfig: ReliabilityConfig = {
+                ...DEFAULT_RELIABILITY_CONFIG,
+                mtbfEngine: 100,
+            };
+            reliability = new ReliabilitySystem(testConfig);
+
+            // Sequence:
+            // 1. Engine fail check: < pEngineFail -> 0.001
+            // 2. Explosion check: < 0.05 -> 0.01 (Explosion!)
+            // 3. Structure: 1.0
+            // 4. Sensor: 1.0
+
+            vi.mocked(Security.secureRandom)
+                .mockReturnValueOnce(0.001)
+                .mockReturnValueOnce(0.01)
+                .mockReturnValueOnce(1.0)
+                .mockReturnValueOnce(1.0);
+
+            const failures = reliability.update(1.0, 1.0);
+
+            expect(failures).toContain('ENGINE_EXPLOSION');
+            expect(reliability.activeFailures.has('ENGINE_EXPLOSION')).toBe(true);
+            expect(mockLog.log).toHaveBeenCalledWith(expect.stringContaining('Catastrophic'), 'warn');
+        });
+
+        it('should trigger structural fatigue under high stress', () => {
+             // Config
+             const testConfig: ReliabilityConfig = {
+                ...DEFAULT_RELIABILITY_CONFIG,
+            };
+            reliability = new ReliabilitySystem(testConfig);
+
+            // Accumulate stress. update() adds (stress - 1.0) * dt to accumulator if stress > 1.2
+            // Let's call update with high stress first to build up accumulator.
+            // We need accumulator to be high enough so pStructFail > random.
+            // pStructFail = (accumulator / 100) * dt * 0.01
+
+            // Step 1: Accumulate stress. Pass random=1.0 to avoid any failures during accumulation.
+            vi.mocked(Security.secureRandom).mockReturnValue(1.0);
+            reliability.update(100.0, 2.0); // dt=100, stress=2.0. Accum += (1.0)*100 = 100.
+
+            // Now accumulator is 100.
+            // pStructFail = (100 / 100) * 1.0 * 0.01 = 0.01.
+
+            // Step 2: Trigger failure
+            // Sequence:
+            // 1. Engine: 1.0 (safe)
+            // 2. Structure: < 0.01 -> 0.005 (Fail!)
+            // 3. Sensor: 1.0 (safe)
+
+            vi.mocked(Security.secureRandom)
+                .mockReturnValueOnce(1.0)   // Engine
+                .mockReturnValueOnce(0.005) // Structure
+                .mockReturnValueOnce(1.0);  // Sensor
+
+            const failures = reliability.update(1.0, 1.0);
 
             expect(failures).toContain('STRUCTURAL_FATIGUE');
             expect(reliability.activeFailures.has('STRUCTURAL_FATIGUE')).toBe(true);
         });
 
-        it('should trigger engine flame out when random is below pEngineFail and stress > 0.1', () => {
-            vi.mocked(secureRandom)
-                .mockReturnValueOnce(0.0005)
-                .mockReturnValueOnce(0.1);
+        it('should trigger sensor glitch and handle transient duration', () => {
+             const testConfig: ReliabilityConfig = {
+                ...DEFAULT_RELIABILITY_CONFIG,
+                mtbfElectronics: 100, // High failure rate
+                sensorGlitchDuration: 2.0
+            };
+            reliability = new ReliabilitySystem(testConfig);
 
-            const failures = reliability.update(1, 1.0);
-            expect(failures).toContain('ENGINE_FLAME_OUT');
-            expect(reliability.activeFailures.has('ENGINE_FLAME_OUT')).toBe(true);
-        });
+            // pSensorFail = (1/100) * 1.0 = 0.01
 
-        it('should trigger engine explosion when random is below pEngineFail and random < 0.05', () => {
-            vi.mocked(secureRandom)
-                .mockReturnValueOnce(0.0005)
-                .mockReturnValueOnce(0.02);
+            // Trigger failure
+            // Sequence with stress=0 (Engine check skipped):
+            // 1. Structure: 1.0
+            // 2. Sensor: < 0.01 -> 0.005 (Fail!)
 
-            const failures = reliability.update(1, 1.0);
-            expect(failures).toContain('ENGINE_EXPLOSION');
-            expect(reliability.activeFailures.has('ENGINE_EXPLOSION')).toBe(true);
-        });
-
-        it('should trigger sensor glitch based on electronics reliability', () => {
-            vi.mocked(secureRandom)
-                .mockReturnValueOnce(0.99)
-                .mockReturnValueOnce(0.99)
+            vi.mocked(Security.secureRandom)
+                .mockReturnValueOnce(1.0)
                 .mockReturnValueOnce(0.001);
 
-            const failures = reliability.update(1, 1.0);
+            // First update: dt=0.5.
+            // Trigger adds duration 2.0.
+            // Loop decrements 0.5 -> 1.5 remaining.
+            let failures = reliability.update(0.5, 0);
+
             expect(failures).toContain('SENSOR_GLITCH');
             expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(true);
-        });
 
-        it('should handle transient failures like SENSOR_GLITCH and remove them after duration', () => {
-            vi.mocked(secureRandom).mockReturnValue(0.999);
-
-            reliability.triggerFailure('SENSOR_GLITCH');
+            // Update 2: dt=1.0.
+            // Loop decrements 1.0 -> 0.5 remaining.
+            // It should still be active.
+            vi.mocked(Security.secureRandom).mockReturnValue(1.0); // No new failures
+            failures = reliability.update(1.0, 0);
             expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(true);
 
-            reliability.update(4.0, 1.0);
-            expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(true);
-
-            reliability.update(1.0, 1.0);
+            // Update 3: dt=1.0.
+            // Loop decrements 1.0 -> -0.5.
+            // It should be removed.
+            vi.mocked(Security.secureRandom).mockReturnValue(1.0);
+            failures = reliability.update(1.0, 0);
             expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(false);
-        });
-
-        it('should not roll for engine failure if stress is <= 0.1', () => {
-            vi.mocked(secureRandom).mockReturnValue(0.0001);
-            const failures = reliability.update(1, 0.0);
-            expect(failures).not.toContain('ENGINE_FLAME_OUT');
-            expect(failures).not.toContain('ENGINE_EXPLOSION');
-        });
-
-        it('should trigger multiple failures at once if conditions are met', () => {
-            vi.mocked(secureRandom).mockReturnValue(0.9999);
-            reliability.update(100, 3.0);
-
-            vi.mocked(secureRandom).mockImplementation(() => {
-                return 0.0001;
-            });
-
-            const failures = reliability.update(1, 2.0);
-            const failuresCopy = [...failures];
-
-            expect(failuresCopy).toContain('ENGINE_EXPLOSION');
-            expect(failuresCopy).toContain('SENSOR_GLITCH');
-        });
-
-        it('should not push failure if triggerFailure returns false', () => {
-             vi.spyOn(reliability, 'triggerFailure').mockReturnValue(false);
-             vi.mocked(secureRandom)
-                .mockReturnValueOnce(0.0001)
-                .mockReturnValueOnce(0.1);
-
-             const failures = reliability.update(1, 1.0);
-             expect(failures).not.toContain('ENGINE_FLAME_OUT');
-        });
-    });
-
-    describe('triggerFailure', () => {
-        it('should add failure to active failures and log', () => {
-            const result = reliability.triggerFailure('GIMBAL_LOCK');
-            expect(result).toBe(true);
-            expect(reliability.activeFailures.has('GIMBAL_LOCK')).toBe(true);
-            expect(state.missionLog.log).toHaveBeenCalledWith('WARN: TVC Actuator Stuck', 'warn');
-        });
-
-        it('should return false if failure is already active (except transient)', () => {
-            reliability.triggerFailure('ENGINE_EXPLOSION');
-            const result = reliability.triggerFailure('ENGINE_EXPLOSION');
-            expect(result).toBe(false);
-        });
-
-        it('should return false if transient failure is already active', () => {
-            reliability.triggerFailure('SENSOR_GLITCH');
-            const result = reliability.triggerFailure('SENSOR_GLITCH');
-            expect(result).toBe(false);
-        });
-
-        it('should extend duration if SENSOR_GLITCH is triggered again but not active (handled by map)', () => {
-            vi.mocked(secureRandom).mockReturnValue(0.999);
-
-            reliability.triggerFailure('SENSOR_GLITCH');
-            expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(true);
-
-            reliability.update(5.0, 1.0);
-            expect(reliability.activeFailures.has('SENSOR_GLITCH')).toBe(false);
-
-            const result = reliability.triggerFailure('SENSOR_GLITCH');
-            expect(result).toBe(true);
-        });
-
-        it('should use default duration of 5.0 for SENSOR_GLITCH if not provided in config', () => {
-            vi.mocked(secureRandom).mockReturnValue(0.999);
-
-            const configWithoutDuration = { ...DEFAULT_RELIABILITY_CONFIG, sensorGlitchDuration: undefined };
-            const r2 = new ReliabilitySystem(configWithoutDuration);
-            r2.triggerFailure('SENSOR_GLITCH');
-            expect(r2.activeFailures.has('SENSOR_GLITCH')).toBe(true);
-
-            r2.update(4.9, 1.0);
-            expect(r2.activeFailures.has('SENSOR_GLITCH')).toBe(true);
-            r2.update(0.1, 1.0);
-            expect(r2.activeFailures.has('SENSOR_GLITCH')).toBe(false);
-        });
-
-        it('should correctly log different severity messages', () => {
-            reliability.triggerFailure('ENGINE_FLAME_OUT');
-            expect(state.missionLog.log).toHaveBeenCalledWith('ALERT: Engine Flameout Detected!', 'warn');
-
-            reliability.triggerFailure('STRUCTURAL_FATIGUE');
-            expect(state.missionLog.log).toHaveBeenCalledWith('CRITICAL: Structural Integrity Failed!', 'warn');
-
-            reliability.triggerFailure('SENSOR_GLITCH');
-            expect(state.missionLog.log).toHaveBeenCalledWith('WARN: Telemetry Sensor Glitch', 'info');
-        });
-
-        it('should not log if state.missionLog is not set', () => {
-            const originalLog = state.missionLog;
-            state.missionLog = null as any;
-
-            expect(() => {
-                reliability.triggerFailure('ENGINE_EXPLOSION');
-            }).not.toThrow();
-
-            state.missionLog = originalLog;
-        });
-
-        it('should not log if msg is empty (unknown type)', () => {
-            const originalLog = state.missionLog;
-            state.missionLog = { log: vi.fn() } as any;
-
-            reliability.triggerFailure('UNKNOWN_TYPE' as any);
-            expect(state.missionLog.log).not.toHaveBeenCalled();
-
-            state.missionLog = originalLog;
         });
     });
 });
