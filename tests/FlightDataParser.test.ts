@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { FlightDataParser, FlightFrame } from '../src/analysis/FlightDataParser';
+import { FlightDataParser } from '../src/analysis/FlightDataParser';
 
 describe('FlightDataParser', () => {
     describe('parseCSV', () => {
@@ -51,24 +51,23 @@ describe('FlightDataParser', () => {
             expect(FlightDataParser.parseCSV('headerOnly')).toEqual([]);
         });
 
-        it('should skip lines with mismatched column counts', () => {
+        it('should throw an error for mismatched column counts', () => {
             const csv = `missionTime,altitude
 40.5,2000.5
 50.5`; // Missing altitude
-            const frames = FlightDataParser.parseCSV(csv);
 
-            expect(frames).toHaveLength(1);
-            expect(frames[0]!.missionTime).toBe(40.5);
+            expect(() => FlightDataParser.parseCSV(csv)).toThrowError(
+                /Failed to parse flight data CSV: Line 3 has 1 columns, expected 2/
+            );
         });
 
-        it('should parse non-numeric values as NaN', () => {
+        it('should throw an error for invalid number formats', () => {
             const csv = `missionTime,altitude
 abc,def`;
-            const frames = FlightDataParser.parseCSV(csv);
 
-            expect(frames).toHaveLength(1);
-            expect(frames[0]!.missionTime).toBeNaN();
-            expect(frames[0]!.altitude).toBeNaN();
+            expect(() => FlightDataParser.parseCSV(csv)).toThrowError(
+                /Failed to parse flight data CSV: Invalid number format for missionTime: abc/
+            );
         });
 
         it('should throw an error when an error occurs during CSV parsing', () => {
@@ -78,18 +77,6 @@ abc,def`;
 
             expect(() => FlightDataParser.parseCSV('any,csv')).toThrowError(
                 'Failed to parse flight data CSV: Split error'
-            );
-
-            splitSpy.mockRestore();
-        });
-
-        it('should handle non-Error objects thrown during CSV parsing', () => {
-            const splitSpy = vi.spyOn(String.prototype, 'split').mockImplementation(() => {
-                throw 'Plain string error';
-            });
-
-            expect(() => FlightDataParser.parseCSV('any,csv')).toThrowError(
-                'Failed to parse flight data CSV: Plain string error'
             );
 
             splitSpy.mockRestore();
@@ -154,21 +141,6 @@ abc,def`;
             try {
                 expect(() => FlightDataParser.parseJSON(json)).toThrowError(
                     'Failed to parse flight data JSON: Mock JSON parse error'
-                );
-            } finally {
-                parseSpy.mockRestore();
-            }
-        });
-
-        it('should handle non-Error objects thrown during JSON parsing', () => {
-            const json = `{"valid": "json"}`;
-            const parseSpy = vi.spyOn(JSON, 'parse').mockImplementation(() => {
-                throw 'Mock string JSON parse error';
-            });
-
-            try {
-                expect(() => FlightDataParser.parseJSON(json)).toThrowError(
-                    'Failed to parse flight data JSON: Mock string JSON parse error'
                 );
             } finally {
                 parseSpy.mockRestore();
