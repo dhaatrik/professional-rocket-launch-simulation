@@ -163,7 +163,10 @@ export class AnalysisApp {
     private togglePlayback() {
         this.isPlaying = !this.isPlaying;
         const btn = document.getElementById('btn-play');
-        if (btn) btn.textContent = this.isPlaying ? '⏸' : '▶';
+        if (btn) {
+            btn.textContent = this.isPlaying ? '⏸' : '▶';
+            btn.setAttribute('aria-pressed', String(this.isPlaying));
+        }
 
         if (this.isPlaying) {
             this.lastFrameTime = performance.now();
@@ -198,7 +201,10 @@ export class AnalysisApp {
     private stopPlayback() {
         this.isPlaying = false;
         const btn = document.getElementById('btn-play');
-        if (btn) btn.textContent = '▶';
+        if (btn) {
+            btn.textContent = '▶';
+            btn.setAttribute('aria-pressed', 'false');
+        }
         if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
     }
 

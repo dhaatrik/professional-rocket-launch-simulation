@@ -9,7 +9,7 @@ class TestVessel extends Vessel {
     constructor(x: number, y: number) {
         super(x, y);
     }
-    draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void { }
+    draw(ctx: CanvasRenderingContext2D, camY: number, alpha: number): void {}
 }
 
 // Mock ThermalProtection module
@@ -28,7 +28,25 @@ vi.mock('../../src/physics/ThermalProtection', async (importOriginal) => {
             isAblating: false,
             isCritical: false,
             thermalDamage: 0
-        })),
+        }))
+    };
+});
+
+// Mock Aerodynamics module
+vi.mock('../../src/physics/Aerodynamics', async (importOriginal) => {
+    const actual = await importOriginal<typeof Aerodynamics>();
+    return {
+        ...actual,
+        calculateAerodynamicDamageRate: vi.fn()
+    };
+});
+
+// Mock addParticle in core/State
+vi.mock('../../src/core/State', async (importOriginal) => {
+    const actual = await importOriginal<any>();
+    return {
+        ...actual,
+        addParticle: vi.fn()
     };
 });
 
@@ -145,10 +163,7 @@ describe('Vessel Thermal Integration', () => {
         (vessel as any).updatePhysics(0.1);
 
         expect(vessel.isThermalCritical).toBe(true);
-        expect(state.missionLog!.log).toHaveBeenCalledWith(
-            expect.stringContaining('THERMAL WARNING'),
-            'warn'
-        );
+        expect(state.missionLog!.log).toHaveBeenCalledWith(expect.stringContaining('THERMAL WARNING'), 'warn');
 
         // Verify throttle: call again immediately
         mockMissionLog.log.mockClear();
@@ -182,10 +197,7 @@ describe('Vessel Thermal Integration', () => {
 
         expect(vessel.health).toBeLessThanOrEqual(0);
         expect(explodeSpy).toHaveBeenCalled();
-        expect(state.missionLog!.log).toHaveBeenCalledWith(
-            'STRUCTURAL FAILURE: THERMAL OVERLOAD',
-            'warn'
-        );
+        expect(state.missionLog!.log).toHaveBeenCalledWith('STRUCTURAL FAILURE: THERMAL OVERLOAD', 'warn');
         expect(vessel.crashed).toBe(true);
     });
 });

@@ -122,6 +122,13 @@ export class LaunchChecklist {
         }
     }
 
+    private get cachedItems(): ChecklistItem[] {
+        if (!this.itemsArrayCache) {
+            this.itemsArrayCache = Array.from(this.items.values());
+        }
+        return this.itemsArrayCache;
+    }
+
     /** Get all items */
     getItems(): readonly ChecklistItem[] {
         return Array.from(this.items.values());
