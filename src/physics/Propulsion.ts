@@ -149,7 +149,7 @@ export function createInitialPropulsionState(config: PropulsionConfig): Propulsi
  * Check if ullage requirements are satisfied
  * Fuel settles when under acceleration (gravity or thrust)
  */
-export function updateUllageStatus(
+function updateUllageStatus(
     state: PropulsionState,
     config: PropulsionConfig,
     currentAcceleration: number,
