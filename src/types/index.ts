@@ -38,13 +38,6 @@ export interface Vector2D {
 }
 
 /**
- * Creates a new Vector2D
- */
-export function vec2(x: number, y: number): Vector2D {
-    return { x, y };
-}
-
-/**
  * Vector operations
  */
 export const Vec2 = {

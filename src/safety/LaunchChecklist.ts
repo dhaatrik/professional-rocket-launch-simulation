@@ -121,6 +121,7 @@ export class LaunchChecklist {
         this.itemsArrayCache = null;
         for (const item of defaultItems) {
             this.items.set(item.id, item);
+            this.itemsArray.push(item);
         }
     }
 

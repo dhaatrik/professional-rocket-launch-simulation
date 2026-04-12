@@ -162,7 +162,12 @@ export class FaultInjector {
     }
 
     /** Arm a fault for injection */
-    armFault(faultId: string, triggerType: FaultTriggerType = 'immediate', delay: number = 0): void {
+    armFault(
+        faultId: string,
+        triggerType: FaultTriggerType = 'immediate',
+        delay: number = 0,
+        condition?: (vessel: IVessel, alt: number) => boolean
+    ): void {
         const def = FAULT_CATALOG_BY_ID.get(faultId);
         if (!def) return;
 
@@ -174,7 +179,8 @@ export class FaultInjector {
             status: 'armed',
             triggerType,
             delay,
-            elapsed: 0
+            elapsed: 0,
+            condition
         });
 
         this.render();
@@ -280,7 +286,8 @@ export class FaultInjector {
                 if (firstBtn) {
                     firstBtn.focus();
                 } else {
-                    const closeBtn = this.containerEl.querySelector('#fis-close-btn') as HTMLElement;
+                    // ⚡ Optimization: Use document.getElementById instead of querySelector for ID lookups to improve DOM query speed
+                    const closeBtn = document.getElementById('fis-close-btn') as HTMLElement;
                     if (closeBtn) closeBtn.focus();
                 }
 
