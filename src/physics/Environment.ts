@@ -10,7 +10,7 @@
  * - Go/No-Go Launch Conditions: Wind limit evaluation
  */
 
-import { vec2, Vec2 } from '../types/index';
+import { Vec2 } from '../types/index';
 import type { Vector2D } from '../types/index';
 import { secureRandom } from '../utils/Security';
 
@@ -121,7 +121,7 @@ export class EnvironmentSystem {
     private simulationTime: number = 0;
     private gustPhaseX: number = secureRandom() * Math.PI * 2;
     private gustPhaseY: number = secureRandom() * Math.PI * 2;
-    private currentGust: Vector2D = vec2(0, 0);
+    private currentGust: Vector2D = { x: 0, y: 0 };
     private gustUpdateTimer: number = 0;
 
     // Pre-allocated objects to prevent garbage collection in hot paths
@@ -168,7 +168,7 @@ export class EnvironmentSystem {
             const gustY = Math.cos(t * 0.5 + this.gustPhaseY) * Math.sin(t * 0.4) * gustMagnitude;
 
             // Apply damping for smooth transitions
-            this.currentGust = vec2(this.currentGust.x * 0.7 + gustX * 0.3, this.currentGust.y * 0.7 + gustY * 0.3);
+            this.currentGust = { x: this.currentGust.x * 0.7 + gustX * 0.3, y: this.currentGust.y * 0.7 + gustY * 0.3 };
         }
     }
 
@@ -264,7 +264,7 @@ export class EnvironmentSystem {
             return out;
         }
 
-        return vec2(vx, vy);
+        return { x: vx, y: vy };
     }
 
     /**
@@ -370,7 +370,7 @@ export class EnvironmentSystem {
         this.simulationTime = 0;
         this.gustPhaseX = secureRandom() * Math.PI * 2;
         this.gustPhaseY = secureRandom() * Math.PI * 2;
-        this.currentGust = vec2(0, 0);
+        this.currentGust = { x: 0, y: 0 };
         this.gustUpdateTimer = 0;
     }
 

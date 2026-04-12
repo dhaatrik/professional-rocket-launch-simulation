@@ -3,6 +3,7 @@ import { Vessel } from '../../src/physics/Vessel';
 import { state } from '../../src/core/State';
 import * as ThermalProtection from '../../src/physics/ThermalProtection';
 import { Particle } from '../../src/physics/Particle';
+import { EngineStateCode } from '../../src/core/PhysicsBuffer';
 
 // Concrete implementation for abstract Vessel class
 class TestVessel extends Vessel {
@@ -187,5 +188,100 @@ describe('Vessel Thermal Integration', () => {
             'warn'
         );
         expect(vessel.crashed).toBe(true);
+    });
+});
+
+describe('Vessel Ground Collision Validation', () => {
+    let vessel: TestVessel;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+
+        // Setup State mocks
+        state.missionLog = { log: vi.fn() } as any;
+        state.groundY = 1000;
+        state.audio = null;
+
+        // Create vessel instance
+        vessel = new TestVessel(0, 0); // Start at y=0, above groundY=1000
+    });
+
+    it('should not collide if vessel is above ground', () => {
+        vessel.y = 500; // y + h (500 + 100) = 600, which is < 1000 (groundY)
+        vessel.vy = 10;
+        vessel.throttle = 1;
+
+        const explodeSpy = vi.spyOn(vessel, 'explode');
+
+        // Test checkGroundCollision directly to isolate from updatePhysics RK4 gravity modifications
+        (vessel as any).checkGroundCollision();
+
+        expect(explodeSpy).not.toHaveBeenCalled();
+        expect(vessel.y).toBe(500);
+        expect(vessel.vy).toBe(10);
+        expect(vessel.throttle).toBe(1);
+    });
+
+    it('should land successfully at low velocity and safe angle', () => {
+        vessel.y = 950; // y + h (950 + 100) = 1050, which is > 1000 (groundY)
+        vessel.vy = 10; // Safe velocity (<= 15)
+        vessel.vx = 5;
+        vessel.angle = 0.1; // Safe angle (<= 0.3)
+        vessel.engineState = EngineStateCode.OFF;
+        vessel.throttle = 1; // Should be cut to 0
+
+        const explodeSpy = vi.spyOn(vessel, 'explode');
+
+        (vessel as any).checkGroundCollision();
+
+        expect(explodeSpy).not.toHaveBeenCalled();
+        expect(vessel.y).toBe(state.groundY - vessel.h); // Snapped to ground
+        expect(vessel.vy).toBe(0);
+        expect(vessel.vx).toBe(0);
+        expect(vessel.throttle).toBe(0); // Throttle is cut
+    });
+
+    it('should explode if landing velocity is too high', () => {
+        vessel.y = 950; // y + h > groundY
+        vessel.vy = 20; // Unsafe velocity (> 15)
+        vessel.angle = 0;
+
+        const explodeSpy = vi.spyOn(vessel, 'explode');
+
+        (vessel as any).checkGroundCollision();
+
+        expect(explodeSpy).toHaveBeenCalled();
+        expect(vessel.y).toBe(state.groundY - vessel.h);
+    });
+
+    it('should explode if landing angle is too high', () => {
+        vessel.y = 950; // y + h > groundY
+        vessel.vy = 5; // Safe velocity
+        vessel.angle = 0.5; // Unsafe angle (> 0.3)
+
+        const explodeSpy = vi.spyOn(vessel, 'explode');
+
+        (vessel as any).checkGroundCollision();
+
+        expect(explodeSpy).toHaveBeenCalled();
+        expect(vessel.y).toBe(state.groundY - vessel.h);
+    });
+
+    it('should land successfully but not cut throttle if engine is starting or running', () => {
+        vessel.y = 950; // y + h > groundY
+        vessel.vy = 5; // Safe velocity
+        vessel.angle = 0; // Safe angle
+        vessel.throttle = 0.8;
+        vessel.engineState = EngineStateCode.RUNNING;
+
+        const explodeSpy = vi.spyOn(vessel, 'explode');
+
+        (vessel as any).checkGroundCollision();
+
+        expect(explodeSpy).not.toHaveBeenCalled();
+        expect(vessel.y).toBe(state.groundY - vessel.h);
+        expect(vessel.vy).toBe(0);
+        expect(vessel.vx).toBe(0);
+        expect(vessel.throttle).toBe(0.8); // Throttle is NOT cut
     });
 });
