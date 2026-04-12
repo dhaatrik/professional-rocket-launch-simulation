@@ -85,6 +85,8 @@ describe('Vessel Thermal Logging Benchmark', () => {
         const dt = 1/60;
         // Run for 60 frames = 1 second
         for (let i = 0; i < 60; i++) {
+            // Heal vessel to prevent structural failure log from taking over
+            vessel.health = 100;
             vessel.applyPhysics(dt, {});
             state.missionTime += dt;
         }
