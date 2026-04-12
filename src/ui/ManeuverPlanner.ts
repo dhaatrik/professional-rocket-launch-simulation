@@ -13,7 +13,7 @@ import {
     KeplerianElements,
     ManeuverPlan
 } from '../physics/OrbitalMechanics';
-import { vec2, IVessel } from '../types';
+import { IVessel } from '../types';
 import { PIXELS_PER_METER, R_EARTH } from '../config/Constants';
 import { createElement } from './DOMUtils';
 
@@ -265,8 +265,8 @@ export class ManeuverPlanner {
     private getCurrentOrbitalElements(vessel: IVessel): KeplerianElements {
         const altitude = (this.game.groundY - vessel.y - vessel.h) / PIXELS_PER_METER;
         const r = R_EARTH + altitude;
-        const rVec = vec2(0, r);
-        const vVec = vec2(vessel.vx, -vessel.vy);
+        const rVec = { x: 0, y: r };
+        const vVec = { x: vessel.vx, y: -vessel.vy };
         return calculateOrbitalElements(rVec, vVec);
     }
 
