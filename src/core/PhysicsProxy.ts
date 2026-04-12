@@ -151,7 +151,10 @@ export class PhysicsProxy {
     }
 
     private handleEvent(event: PhysicsEvent) {
-        this.eventListeners.forEach((cb) => cb(event));
+        // Optimization: Use standard for loop to avoid closure allocation and GC pressure on high-frequency dispatch
+        for (let i = 0; i < this.eventListeners.length; i++) {
+            this.eventListeners[i](event);
+        }
     }
 
     public syncView(dt: number, timeScale: number) {
