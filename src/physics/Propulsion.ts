@@ -333,22 +333,22 @@ export function updatePropulsionState(
 }
 
 /**
- * Get color for engine state display
+ * Get display string for engine state
  */
-export function getEngineStateColor(state: PropulsionState): string {
+export function getEngineStateDisplay(state: PropulsionState): string {
     switch (state.engineState) {
         case EngineStateCode.OFF:
-            return '#95a5a6'; // Gray
+            return 'OFF';
         case EngineStateCode.STARTING:
-            return '#f1c40f'; // Yellow
+            return `STARTING ${Math.round(state.spoolProgress * 100)}%`;
         case EngineStateCode.RUNNING:
-            return '#2ecc71'; // Green
+            return 'RUNNING';
         case EngineStateCode.SHUTDOWN:
-            return '#e67e22'; // Orange
+            return 'SHUTDOWN';
         case EngineStateCode.FLAMEOUT:
-            return '#e74c3c'; // Red
+            return 'FLAMEOUT';
         default:
-            return '#ffffff';
+            return 'UNKNOWN';
     }
 }
 
