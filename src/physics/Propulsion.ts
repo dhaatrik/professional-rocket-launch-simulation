@@ -149,7 +149,7 @@ export function createInitialPropulsionState(config: PropulsionConfig): Propulsi
  * Check if ullage requirements are satisfied
  * Fuel settles when under acceleration (gravity or thrust)
  */
-function updateUllageStatus(
+export function updateUllageStatus(
     state: PropulsionState,
     config: PropulsionConfig,
     currentAcceleration: number,
@@ -349,6 +349,26 @@ export function getEngineStateDisplay(state: PropulsionState): string {
             return 'FLAMEOUT';
         default:
             return 'UNKNOWN';
+    }
+}
+
+/**
+ * Get color for engine state display
+ */
+export function getEngineStateColor(state: PropulsionState): string {
+    switch (state.engineState) {
+        case EngineStateCode.OFF:
+            return '#95a5a6'; // Gray
+        case EngineStateCode.STARTING:
+            return '#f1c40f'; // Yellow
+        case EngineStateCode.RUNNING:
+            return '#2ecc71'; // Green
+        case EngineStateCode.SHUTDOWN:
+            return '#e67e22'; // Orange
+        case EngineStateCode.FLAMEOUT:
+            return '#e74c3c'; // Red
+        default:
+            return '#ffffff';
     }
 }
 

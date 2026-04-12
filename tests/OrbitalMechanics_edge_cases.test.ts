@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { calculateOrbitalElements, MU } from '../src/physics/OrbitalMechanics';
 import { R_EARTH } from '../src/config/Constants';
+import { vec2 } from '../src/types';
 
 describe('OrbitalMechanics Edge Cases', () => {
     describe('Hyperbolic Orbits (e > 1)', () => {
@@ -12,8 +13,8 @@ describe('OrbitalMechanics Edge Cases', () => {
             const vHyper = vEsc * 1.5;
 
             // Tangential velocity for simplicity (perpendicular to radius)
-            const r = { x: rMag, y: 0 };
-            const v = { x: 0, y: vHyper };
+            const r = vec2(rMag, 0);
+            const v = vec2(0, vHyper);
 
             const elements = calculateOrbitalElements(r, v);
 
@@ -33,8 +34,8 @@ describe('OrbitalMechanics Edge Cases', () => {
             const rMag = R_EARTH + 400000;
             const vEsc = Math.sqrt(2 * MU / rMag);
 
-            const r = { x: rMag, y: 0 };
-            const v = { x: 0, y: vEsc };
+            const r = vec2(rMag, 0);
+            const v = vec2(0, vEsc);
 
             const elements = calculateOrbitalElements(r, v);
 
@@ -50,8 +51,8 @@ describe('OrbitalMechanics Edge Cases', () => {
 
     describe('Singularity (r=0)', () => {
         it('should handle zero radius without crashing', () => {
-            const r = { x: 0, y: 0 };
-            const v = { x: 0, y: 0 };
+            const r = vec2(0, 0);
+            const v = vec2(0, 0);
 
             const elements = calculateOrbitalElements(r, v);
 
