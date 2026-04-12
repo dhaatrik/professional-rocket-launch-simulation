@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Particle, createParticles } from '../src/physics/Particle';
+import * as Security from '../src/utils/Security';
 
 describe('Particle Class', () => {
     let mockCtx: CanvasRenderingContext2D;
@@ -19,6 +20,7 @@ describe('Particle Class', () => {
         } as unknown as CanvasRenderingContext2D;
 
         vi.spyOn(Math, 'random').mockReturnValue(0.5); // Predictable random
+        vi.spyOn(Security, 'secureRandom').mockReturnValue(0.5); // Predictable random for secureRandom
     });
 
     afterEach(() => {
