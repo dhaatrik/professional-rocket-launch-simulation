@@ -32,46 +32,71 @@ export class FlightDataParser {
                 const line = lines[i];
                 if (!line) continue;
                 const values = line.split(',');
-                if (values.length !== headers.length) continue;
+                if (values.length !== headers.length) {
+                    throw new Error(`Line ${i + 1} has ${values.length} columns, expected ${headers.length}`);
+                }
 
                 const frame: Partial<FlightFrame> = {};
 
                 headers.forEach((header, index) => {
                     const val = values[index]?.trim();
                     if (val !== undefined) {
+                        let parsedVal: number;
                         switch (header) {
                             case 'timestamp':
-                                frame.timestamp = parseInt(val);
+                                parsedVal = parseInt(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for timestamp: ${val}`);
+                                frame.timestamp = parsedVal;
                                 break;
                             case 'missionTime':
-                                frame.missionTime = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for missionTime: ${val}`);
+                                frame.missionTime = parsedVal;
                                 break;
                             case 'altitude':
-                                frame.altitude = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for altitude: ${val}`);
+                                frame.altitude = parsedVal;
                                 break;
                             case 'velocity':
-                                frame.velocity = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for velocity: ${val}`);
+                                frame.velocity = parsedVal;
                                 break;
                             case 'fuel':
-                                frame.fuel = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for fuel: ${val}`);
+                                frame.fuel = parsedVal;
                                 break;
                             case 'throttle':
-                                frame.throttle = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for throttle: ${val}`);
+                                frame.throttle = parsedVal;
                                 break;
                             case 'q':
-                                frame.q = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for q: ${val}`);
+                                frame.q = parsedVal;
                                 break;
                             case 'gForce':
-                                frame.gForce = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for gForce: ${val}`);
+                                frame.gForce = parsedVal;
                                 break;
                             case 'angle':
-                                frame.angle = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for angle: ${val}`);
+                                frame.angle = parsedVal;
                                 break;
                             case 'posX':
-                                frame.posX = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for posX: ${val}`);
+                                frame.posX = parsedVal;
                                 break;
                             case 'posY':
-                                frame.posY = parseFloat(val);
+                                parsedVal = parseFloat(val);
+                                if (isNaN(parsedVal)) throw new Error(`Invalid number format for posY: ${val}`);
+                                frame.posY = parsedVal;
                                 break;
                             case 'event':
                                 frame.event = val;

@@ -28,3 +28,6 @@
 ## 2025-02-14 - Modals Missing Explicit Dismiss Controls
 **Learning:** Full-screen or large UI modals (like the VAB Editor) heavily depend on implicit dismiss actions (like clicking "Cancel" at the bottom or pressing Escape). This significantly impacts screen reader users and users navigating by mouse who expect a standard close control (`×`) in the header.
 **Action:** When creating or reviewing modals, ensure an explicit, ARIA-labeled close button is present in the header, even if other forms of dismissal exist.
+## 2026-03-03 - Accessible Toggle Buttons
+**Learning:** Found that custom toggle buttons in the Analysis Debrief app (`#btn-play`) updated their text visually but lacked `aria-pressed` attribute synchronization, leaving screen reader users unaware of their active state. This confirms a pattern previously identified in the main HUD.
+**Action:** Always synchronize `aria-pressed` (true/false) with the visual active state in JavaScript for toggle buttons across all apps.

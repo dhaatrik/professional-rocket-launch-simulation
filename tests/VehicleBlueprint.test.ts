@@ -489,6 +489,25 @@ describe('VehicleBlueprint Error Paths', () => {
             expect(() => loadBlueprints()).toThrow(/Failed to load blueprints:/);
         });
 
+        it('should handle thrown exceptions that are not Error objects', () => {
+            localStorage.setItem('vab-blueprints', '[]');
+            const originalParse = JSON.parse;
+            JSON.parse = vi.fn(() => {
+                throw 'String error';
+            });
+
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: String error/);
+
+            JSON.parse = originalParse;
+        });
+
+        it('should throw an error when localStorage returns a non-array valid JSON string', () => {
+            // Rationale: Requires mocking localStorage to return a non-array valid JSON string (e.g., '{"key":"value"}') to trigger the array validation error.
+            localStorage.setItem('vab-blueprints', '{"key":"value"}');
+
+            expect(() => loadBlueprints()).toThrow(/Failed to load blueprints: Stored blueprints data is not an array/);
+        });
+
         it('should successfully load valid blueprints and filter out invalid ones', () => {
             // Create a valid blueprint
             let bp1 = createBlueprint('Good Rocket');
