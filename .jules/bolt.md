@@ -27,7 +27,6 @@
 ## 2026-04-10 - Telemetry Receiver Spread Operator Overhead
 **Learning:** Using the spread operator with `Math.max(...array)` inside high-frequency render loops (e.g., triggered by `requestAnimationFrame` or 10Hz telemetry updates) causes severe memory allocation overhead. V8 has to allocate a new arguments array every time it executes, leading to rapid garbage collection cycles and potential `RangeError` if the array exceeds call stack limits.
 **Action:** When finding min/max values or aggregating data inside a continuous loop, strictly avoid the array spread operator (`...`). Use a standard `for` loop to compute the aggregate value inline.
-
-## 2024-05-24 - Pre-allocated Object Initialization
-**Learning:** Initializing pre-allocated vectors with `vec2(0, 0)` fails when `vec2` isn't imported. However, since the goal is to avoid allocations, an object literal `{ x: 0, y: 0 }` can be used safely without introducing new imports or dependencies.
-**Action:** Use `{ x: 0, y: 0 }` for structural typing of pre-allocated Vector2D properties instead of hallucinating factory functions.
+## 2025-02-18 - Avoid Map.values() Iterator in Performance Loops
+**Learning:** Iterating over `Map.values()` using a `for...of` loop in frequently called functions (like `getCompletionCount` in `LaunchChecklist`) introduces significant overhead due to iterator creation and GC pressure.
+**Action:** Cache the map values into an array when the map is updated, and iterate over this cached array using a standard `for` loop (e.g., `for (let i = 0; i < items.length; i++)`) to improve performance.

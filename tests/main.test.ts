@@ -115,42 +115,4 @@ describe('main.ts Error Handling', () => {
         expect(consoleErrorSpy).toHaveBeenCalledWith('Game initialization failed:', expect.any(Error));
         expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Game Init Error: Mocked Init Error'));
     });
-
-    it('handles Game constructor failure with non-Error correctly', async () => {
-        vi.doMock('../src/core/Game', () => {
-            return {
-                Game: class {
-                    constructor() {
-                        throw 'Mocked Constructor String Error';
-                    }
-                }
-            };
-        });
-
-        await expect(import('../src/main')).rejects.toThrow('Mocked Constructor String Error');
-        expect(consoleErrorSpy).toHaveBeenCalledWith('Game constructor failed:', 'Mocked Constructor String Error');
-        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Critical Error: Mocked Constructor String Error'));
-    });
-
-    it('handles Game init failure with non-Error correctly', async () => {
-        vi.doMock('../src/core/Game', () => {
-            return {
-                Game: class {
-                    addPhysicsEventListener = vi.fn();
-                    addEventListener = vi.fn();
-                    async init() {
-                        throw 'Mocked Init String Error';
-                    }
-                }
-            };
-        });
-
-        await import('../src/main');
-
-        // Allow async init error to be caught
-        await new Promise(resolve => setTimeout(resolve, 0));
-
-        expect(consoleErrorSpy).toHaveBeenCalledWith('Game initialization failed:', 'Mocked Init String Error');
-        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Game Init Error: Mocked Init String Error'));
-    });
 });

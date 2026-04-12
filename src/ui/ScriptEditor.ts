@@ -83,25 +83,18 @@ export class ScriptEditor {
         this.errorDisplay = document.getElementById('script-errors');
         this.saveSelect = document.getElementById('script-save-select') as HTMLSelectElement;
 
-        this.populatePresetScripts();
-        this.updateSavedScriptsList();
-    }
-
-    /**
-     * Safely populate preset scripts
-     */
-    private populatePresetScripts(): void {
+        // Safely populate preset scripts
         const presetSelect = document.getElementById('script-preset-select') as HTMLSelectElement;
-        if (!presetSelect) return;
+        if (presetSelect) {
+            Object.keys(PRESET_SCRIPTS).forEach((name) => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                presetSelect.appendChild(option);
+            });
+        }
 
-        const fragment = document.createDocumentFragment();
-        Object.keys(PRESET_SCRIPTS).forEach((name) => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            fragment.appendChild(option);
-        });
-        presetSelect.appendChild(fragment);
+        this.updateSavedScriptsList();
     }
 
     /**
@@ -512,10 +505,7 @@ export class ScriptEditor {
 
             const validScripts: SavedScriptsRecord = {};
 
-            // Use for...in to avoid allocating an array via Object.keys()
-            for (const key in parsed) {
-                if (!Object.prototype.hasOwnProperty.call(parsed, key)) continue;
-
+            for (const key of Object.keys(parsed)) {
                 const entry = parsed[key];
                 if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
 

@@ -128,7 +128,6 @@ describe('TelemetryReceiver', () => {
 
         // Trigger message
         mockChannel.onmessage({
-            origin: window.location.origin,
             data: {
                 type: 'TELEMETRY_UPDATE',
                 payload: packet

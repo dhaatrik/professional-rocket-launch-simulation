@@ -75,9 +75,7 @@ abc,def`;
                 throw new Error('Split error');
             });
 
-            expect(() => FlightDataParser.parseCSV('any,csv')).toThrowError(
-                'Failed to parse flight data CSV: Split error'
-            );
+            expect(() => FlightDataParser.parseCSV('any,csv')).toThrowError('Failed to parse flight data CSV: Split error');
 
             splitSpy.mockRestore();
         });
@@ -139,9 +137,7 @@ abc,def`;
             });
 
             try {
-                expect(() => FlightDataParser.parseJSON(json)).toThrowError(
-                    'Failed to parse flight data JSON: Mock JSON parse error'
-                );
+                expect(() => FlightDataParser.parseJSON(json)).toThrowError('Failed to parse flight data JSON: Mock JSON parse error');
             } finally {
                 parseSpy.mockRestore();
             }
