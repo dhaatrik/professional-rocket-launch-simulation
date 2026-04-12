@@ -447,11 +447,13 @@ describe('VehicleBlueprint Error Paths', () => {
             const blueprint = createBlueprint('Test');
 
             // Override the setItem mock for this specific test
+            const originalSetItem = localStorage.setItem;
             localStorage.setItem = vi.fn().mockImplementation(() => {
                 throw new Error('Quota exceeded');
             });
 
-            saveBlueprints([blueprint]);
+            try {
+                saveBlueprints([blueprint]);
 
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to save blueprints:', expect.any(Error));
         });

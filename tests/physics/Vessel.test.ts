@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Vessel } from '../../src/physics/Vessel';
 import { state } from '../../src/core/State';
 import * as ThermalProtection from '../../src/physics/ThermalProtection';
+import * as Aerodynamics from '../../src/physics/Aerodynamics';
 import { Particle } from '../../src/physics/Particle';
+import { EngineStateCode } from '../../src/core/PhysicsBuffer';
 
 // Concrete implementation for abstract Vessel class
 class TestVessel extends Vessel {
@@ -39,6 +41,15 @@ vi.mock('../../src/physics/Particle', () => {
             create: vi.fn(() => ({})), // Return dummy object
             release: vi.fn()
         }
+    };
+});
+
+// Mock Aerodynamics module
+vi.mock('../../src/physics/Aerodynamics', async (importOriginal) => {
+    const actual = await importOriginal<typeof Aerodynamics>();
+    return {
+        ...actual,
+        calculateAerodynamicDamageRate: vi.fn(),
     };
 });
 
@@ -187,5 +198,63 @@ describe('Vessel Thermal Integration', () => {
             'warn'
         );
         expect(vessel.crashed).toBe(true);
+    });
+});
+
+describe('Vessel Aerodynamic Stress', () => {
+    let vessel: TestVessel;
+    let mockMissionLog: any;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockMissionLog = { log: vi.fn() };
+        state.missionLog = mockMissionLog;
+        vessel = new TestVessel(0, 0);
+    });
+
+    it('should calculate damage and decrease health when aeroState is present and damageRate > 0', () => {
+        vessel.aeroState = { aoa: 0, stabilityMargin: -0.1, isStable: false, cp: 0, cg: 0, referenceArea: 1, referenceLength: 1 } as any;
+        vessel.isAeroStable = false;
+        vessel.q = 6000;
+        vi.mocked(Aerodynamics.calculateAerodynamicDamageRate).mockReturnValue(60);
+
+        const initialHealth = vessel.health;
+        (vessel as any).checkAerodynamicStress(100, 1000);
+
+        expect(vessel.health).toBe(initialHealth - 60 * (1 / 60));
+        expect(state.missionLog.log).toHaveBeenCalledWith(
+            expect.stringContaining('STABILITY WARNING'),
+            'warn'
+        );
+    });
+
+    it('should explode when health reaches 0 from aerodynamic stress', () => {
+        vessel.aeroState = { aoa: 0, stabilityMargin: -0.1, isStable: false, cp: 0, cg: 0, referenceArea: 1, referenceLength: 1 } as any;
+        vessel.q = 6000;
+        vessel.health = 1; // Low health
+        vi.mocked(Aerodynamics.calculateAerodynamicDamageRate).mockReturnValue(100);
+
+        const explodeSpy = vi.spyOn(vessel, 'explode');
+
+        (vessel as any).checkAerodynamicStress(100, 1000);
+
+        expect(explodeSpy).toHaveBeenCalled();
+        expect(state.missionLog.log).toHaveBeenCalledWith('STRUCTURAL FAILURE DUE TO AERO FORCES', 'warn');
+    });
+
+    it('should use legacy aerodynamic check when aeroState is undefined', () => {
+        // Legacy damage check triggers when q > 5000 and alpha > 0.2
+        vessel.aeroState = undefined;
+        vessel.q = 6000;
+        vessel.vx = 100;
+        vessel.vy = 0; // Velocity strictly horizontal
+        vessel.angle = 0; // Pointing up
+        vessel.health = 100;
+
+        // velocity > 10 triggers the alpha calculation branch
+        (vessel as any).checkAerodynamicStress(100, 1000);
+
+        // At angle=0, vx=100, vy=0 -> alpha = ~1.57 radians > 0.2
+        expect(vessel.health).toBe(100 - 100 * (1 / 60));
     });
 });
