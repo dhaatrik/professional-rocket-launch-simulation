@@ -146,7 +146,7 @@ describe('PhysicsProxy', () => {
 
             // Simulate worker message
             if (worker.onmessage) {
-                worker.onmessage({ data: { type: 'STATE', payload: statePayload } });
+                worker.onmessage({ data: { type: 'STATE', payload: statePayload }, origin: window.location.origin });
             }
 
             expect(proxy.getTrackedIndex()).toBe(1);
@@ -165,7 +165,7 @@ describe('PhysicsProxy', () => {
 
             // Simulate worker message
             if (worker.onmessage) {
-                worker.onmessage({ data: { type: 'EVENT', payload: eventPayload } });
+                worker.onmessage({ data: { type: 'EVENT', payload: eventPayload }, origin: window.location.origin });
             }
 
             expect(eventCallback).toHaveBeenCalledWith(eventPayload);

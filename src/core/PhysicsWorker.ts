@@ -67,7 +67,7 @@ export interface PhysicsWorkerConfig {
 }
 
 self.onmessage = (e: MessageEvent) => {
-    if (e.origin && e.origin !== self.location.origin) return;
+    if (e.origin !== self.location.origin) return;
 
     const { type, payload } = e.data;
 
