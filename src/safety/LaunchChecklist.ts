@@ -352,6 +352,8 @@ export class LaunchChecklist {
                         className: 'checklist-close',
                         id: 'checklist-close-btn',
                         'aria-label': 'Close Launch Checklist',
+                        'aria-keyshortcuts': 'Escape',
+                        title: 'Close [Esc]',
                         textContent: '✕'
                     })
                 ]),
