@@ -24,6 +24,7 @@ import { InputManager } from './InputManager';
 import { AudioEngine } from '../utils/AudioEngine';
 import { AssetLoader } from '../utils/AssetLoader';
 import { SAS } from '../utils/SAS';
+import { MathUtils } from '../utils/MathUtils';
 import { MissionLog } from '../ui/MissionLog';
 import { Navball } from '../ui/Navball';
 import { TelemetrySystem } from '../ui/Telemetry';
@@ -393,7 +394,7 @@ export class Game {
             for (let i = 0; i < 30; i++) {
                 addParticle(
                     Particle.create(
-                        (e.x ?? 0) + (Math.random() - 0.5) * 20,
+                        (e.x ?? 0) + (MathUtils.secureRandom() - 0.5) * 20,
                         (e.y ?? 0) + 80,
                         'smoke',
                         0, // velocity handled by particle logic?
@@ -934,8 +935,8 @@ export class Game {
             // Camera shake from dynamic pressure
             const q = this.trackedEntity.q ?? 0;
             const shake = Math.min(q / 200, 10);
-            this.cameraShakeX = (Math.random() - 0.5) * shake;
-            this.cameraShakeY = (Math.random() - 0.5) * shake;
+            this.cameraShakeX = (MathUtils.secureRandom() - 0.5) * shake;
+            this.cameraShakeY = (MathUtils.secureRandom() - 0.5) * shake;
         }
 
         this.ctx.save();
