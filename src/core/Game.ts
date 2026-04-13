@@ -383,7 +383,9 @@ export class Game {
      */
     private handlePhysicsEvent(e: PhysicsEvent): void {
         // Dispatch to listeners
-        this.physicsEventListeners.forEach((cb) => cb(e));
+        for (const cb of this.physicsEventListeners) {
+            cb(e);
+        }
 
         if (e.name === 'STAGING_S1') {
             this.missionLog.log('STAGING: S1 SEP', 'warn');
