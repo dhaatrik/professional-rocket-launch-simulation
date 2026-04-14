@@ -28,6 +28,7 @@ import {
 } from '../config/Constants';
 import { state, currentWindVelocity, currentDensityMultiplier } from '../core/State';
 import { addParticle } from '../core/State';
+import { MathUtils } from '../utils/MathUtils';
 import { Particle } from './Particle';
 import {
     AerodynamicsConfig,
@@ -399,7 +400,7 @@ export class Vessel implements IVessel {
             this.health -= thermalDamageRate * dt;
 
             // Spawn debris when taking thermal damage
-            if (Math.random() > 0.9) {
+            if (MathUtils.secureRandom() > 0.9) {
                 addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
             }
 
@@ -473,7 +474,7 @@ export class Vessel implements IVessel {
                 this.health -= damageRate * (1 / 60); // Assuming 60 FPS
 
                 // Spawn debris particles when taking damage
-                if (Math.random() > 0.8) {
+                if (MathUtils.secureRandom() > 0.8) {
                     addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
                 }
 
@@ -497,7 +498,7 @@ export class Vessel implements IVessel {
 
             if (this.q > 5000 && alpha > 0.2) {
                 this.health -= 100 * (1 / 60);
-                if (Math.random() > 0.8) {
+                if (MathUtils.secureRandom() > 0.8) {
                     addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
                 }
             }
@@ -551,7 +552,11 @@ export class Vessel implements IVessel {
         // Spawn explosion particles
         for (let i = 0; i < 30; i++) {
             addParticle(
-                Particle.create(this.x + Math.random() * 20 - 10, this.y + this.h - Math.random() * 20, 'fire')
+                Particle.create(
+                    this.x + MathUtils.secureRandom() * 20 - 10,
+                    this.y + this.h - MathUtils.secureRandom() * 20,
+                    'fire'
+                )
             );
             addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
         }
