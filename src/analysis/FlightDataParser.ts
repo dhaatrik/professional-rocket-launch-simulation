@@ -38,7 +38,9 @@ export class FlightDataParser {
 
                 const frame: Partial<FlightFrame> = {};
 
-                headers.forEach((header, index) => {
+                // Performance Optimization: Standard for loop avoids closure allocation overhead per line parsed
+                for (let index = 0; index < headers.length; index++) {
+                    const header = headers[index];
                     const val = values[index]?.trim();
                     if (val !== undefined) {
                         let parsedVal: number;
@@ -103,7 +105,7 @@ export class FlightDataParser {
                                 break;
                         }
                     }
-                });
+                }
 
                 // Ensure essential fields exist
                 if (frame.missionTime !== undefined) {
