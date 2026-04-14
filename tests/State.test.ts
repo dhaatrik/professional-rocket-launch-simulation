@@ -1,9 +1,20 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
-    store, state, currentWindVelocity, currentDensityMultiplier,
-    setWindVelocity, setDensityMultiplier, resetState, updateDimensions,
-    addEntity, removeEntity, setAudioEngine, setMissionLog, setAssetLoader,
-    addParticle, clearParticles
+    store,
+    state,
+    currentWindVelocity,
+    currentDensityMultiplier,
+    setWindVelocity,
+    setDensityMultiplier,
+    resetState,
+    updateDimensions,
+    addEntity,
+    removeEntity,
+    setAudioEngine,
+    setMissionLog,
+    setAssetLoader,
+    addParticle,
+    clearParticles
 } from '../src/core/State';
 import { IVessel, IParticle, IAudioEngine, IMissionLog, IAssetLoader } from '../src/types';
 
@@ -47,6 +58,17 @@ describe('Global State Container (Legacy)', () => {
             setDensityMultiplier(0.5);
             expect(store.getState().atmosphericDensityMultiplier).toBe(0.5);
             expect(currentDensityMultiplier).toBe(0.5);
+        });
+
+        it('setDensityMultiplier should dispatch correct action to store', () => {
+            const dispatchSpy = vi.spyOn(store, 'dispatch');
+            const multiplier = 0.75;
+            setDensityMultiplier(multiplier);
+            expect(dispatchSpy).toHaveBeenCalledWith({
+                type: 'SET_DENSITY_MULTIPLIER',
+                multiplier: multiplier
+            });
+            dispatchSpy.mockRestore();
         });
 
         it('resetState should dispatch RESET and clear particles', () => {
