@@ -5,7 +5,7 @@
  * Converts VehicleBlueprint into playable ModularVessel instances.
  */
 
-import { VehicleBlueprint, VehicleStage, calculateStats } from './VehicleBlueprint';
+import { VehicleBlueprint, calculateStats } from './VehicleBlueprint';
 import { RocketPart } from './PartsCatalog';
 
 /**
