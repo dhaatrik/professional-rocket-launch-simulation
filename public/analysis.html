@@ -16,7 +16,7 @@
     <header>
         <h1>📂 Mission Debrief <span class="badge">ANALYSIS</span></h1>
         <div class="toolbar">
-            <button id="load-new-btn">Load New Log</button>
+            <button id="load-new-btn" aria-haspopup="dialog">Load New Log</button>
             <button>Export Report</button>
         </div>
     </header>
@@ -67,9 +67,9 @@
     </footer>
 
     <!-- Upload Overlay -->
-    <div id="upload-overlay">
+    <div id="upload-overlay" role="dialog" aria-modal="true" aria-labelledby="upload-title">
         <label class="upload-box" id="drop-zone">
-            <h1>Drag & Drop Flight Log</h1>
+            <h1 id="upload-title">Drag & Drop Flight Log</h1>
             <p>or click to browse (.csv, .json)</p>
             <input type="file" id="file-input" accept=".csv,.json">
         </label>
