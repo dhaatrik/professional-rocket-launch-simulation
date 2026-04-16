@@ -379,9 +379,17 @@ export class FaultInjector {
             ]);
         });
 
-        const fisInner = createElement('div', { className: 'fis-inner' }, [
+        const fisInner = createElement(
+            'div',
+            {
+                className: 'fis-inner',
+                role: 'dialog',
+                'aria-modal': 'true',
+                'aria-labelledby': 'fis-title'
+            },
+            [
             createElement('div', { className: 'fis-header' }, [
-                createElement('h3', { textContent: '🎯 FAULT INJECTION SYSTEM' }),
+                createElement('h3', { id: 'fis-title', textContent: '🎯 FAULT INJECTION SYSTEM' }),
                 createElement('span', { className: 'fis-badge', textContent: 'INSTRUCTOR ONLY' }),
                 createElement('button', {
                     className: 'fis-close',
@@ -392,7 +400,8 @@ export class FaultInjector {
             ]),
             createElement('div', { className: 'fis-hint', textContent: 'Click once to ARM, click again to INJECT' }),
             ...categoryEls
-        ]);
+        ]
+        );
 
         this.containerEl.appendChild(fisInner);
     }
