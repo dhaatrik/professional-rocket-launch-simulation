@@ -52,7 +52,7 @@ type Listener = () => void;
 
 export class SimulationStore {
     private state: GameState;
-    private listeners: Set<Listener> = new Set();
+    private listeners: (Listener | null)[] = [];
 
     // Initial state matching the existing global state defaults
     private static readonly INITIAL_STATE: GameState = {
@@ -144,11 +144,35 @@ export class SimulationStore {
     }
 
     subscribe(listener: Listener): () => void {
-        this.listeners.add(listener);
-        return () => this.listeners.delete(listener);
+        this.listeners.push(listener);
+        return () => {
+            const index = this.listeners.indexOf(listener);
+            if (index > -1) {
+                // Nullify to prevent shifting array during notify loops
+                this.listeners[index] = null;
+            }
+        };
     }
 
     private notify(): void {
-        this.listeners.forEach((l) => l());
+        let activeCount = 0;
+        const len = this.listeners.length;
+
+        for (let i = 0; i < len; i++) {
+            const listener = this.listeners[i];
+            if (listener) {
+                listener();
+                // Compaction
+                if (i !== activeCount) {
+                    this.listeners[activeCount] = listener;
+                }
+                activeCount++;
+            }
+        }
+
+        // Truncate array to remove trailing nulls without allocating new array
+        if (activeCount < len) {
+            this.listeners.length = activeCount;
+        }
     }
 }
