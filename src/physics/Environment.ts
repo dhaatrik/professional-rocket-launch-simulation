@@ -168,7 +168,8 @@ export class EnvironmentSystem {
             const gustY = Math.cos(t * 0.5 + this.gustPhaseY) * Math.sin(t * 0.4) * gustMagnitude;
 
             // Apply damping for smooth transitions
-            this.currentGust = vec2(this.currentGust.x * 0.7 + gustX * 0.3, this.currentGust.y * 0.7 + gustY * 0.3);
+            this.currentGust.x = this.currentGust.x * 0.7 + gustX * 0.3;
+            this.currentGust.y = this.currentGust.y * 0.7 + gustY * 0.3;
         }
     }
 
@@ -370,7 +371,8 @@ export class EnvironmentSystem {
         this.simulationTime = 0;
         this.gustPhaseX = secureRandom() * Math.PI * 2;
         this.gustPhaseY = secureRandom() * Math.PI * 2;
-        this.currentGust = vec2(0, 0);
+        this.currentGust.x = 0;
+        this.currentGust.y = 0;
         this.gustUpdateTimer = 0;
     }
 

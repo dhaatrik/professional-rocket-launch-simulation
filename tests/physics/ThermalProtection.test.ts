@@ -38,11 +38,12 @@ describe('Thermal Protection Module', () => {
         it('should increase temperature when net heating is positive', () => {
             const config = DEFAULT_TPS_CONFIG;
             const state = createInitialThermalState();
+            const initialTemp = state.skinTemp;
             const dt = 1.0;
 
             // At high speed/low altitude
             const nextState = updateThermalState(config, state, 2000, 10000, 0, dt);
-            expect(nextState.skinTemp).toBeGreaterThan(state.skinTemp);
+            expect(nextState.skinTemp).toBeGreaterThan(initialTemp);
             expect(nextState.heatFlux).toBeGreaterThan(0);
         });
 

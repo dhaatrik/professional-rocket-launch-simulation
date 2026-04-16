@@ -269,15 +269,16 @@ export function updateThermalState(
 
     thermalDamage = Math.min(100, thermalDamage);
 
-    return {
-        skinTemp: newSkinTemp,
-        heatShieldRemaining,
-        heatFlux,
-        netHeatingRate,
-        isAblating,
-        isCritical: newSkinTemp > config.maxTemp * 0.85,
-        thermalDamage
-    };
+    // Update state object inline to reduce GC pressure
+    currentState.skinTemp = newSkinTemp;
+    currentState.heatShieldRemaining = heatShieldRemaining;
+    currentState.heatFlux = heatFlux;
+    currentState.netHeatingRate = netHeatingRate;
+    currentState.isAblating = isAblating;
+    currentState.isCritical = newSkinTemp > config.maxTemp * 0.85;
+    currentState.thermalDamage = thermalDamage;
+
+    return currentState;
 }
 
 /**
