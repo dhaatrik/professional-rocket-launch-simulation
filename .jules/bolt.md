@@ -1,3 +1,3 @@
-## 2024-05-14 - Mutating State in High-Frequency Physics Loops
+## 2026-04-16 - Mutating State in High-Frequency Physics Loops
 **Learning:** Functions like `updateThermalState` and `updateGusts` that use object spread (`{ ...state }`) or return new objects (`vec2(0,0)`) create significant GC pressure when called multiple times per frame (e.g., inside RK4 integration loops).
 **Action:** Refactor these hot-path functions to mutate the `currentState` object inline and return it, and use direct property assignments (`obj.x = ...`) instead of factory functions for vectors to eliminate unnecessary allocations. Update associated tests to cache initial state values before assertions.
