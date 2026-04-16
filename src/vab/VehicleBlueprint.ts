@@ -350,11 +350,13 @@ export function serializeBlueprint(blueprint: VehicleBlueprint): string {
  */
 export function deserializeBlueprint(json: string): VehicleBlueprint | null {
     try {
-        const data = JSON.parse(json);
+        const parsed = JSON.parse(json) as unknown;
 
-        if (!data || typeof data !== 'object') {
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
             throw new Error('Invalid blueprint format: not an object');
         }
+
+        const data = parsed as Record<string, unknown>;
 
         if (typeof data.name !== 'string') {
             throw new Error('Invalid blueprint format: name is not a string');
@@ -377,10 +379,12 @@ export function deserializeBlueprint(json: string): VehicleBlueprint | null {
         }
 
         // Reconstruct part instances from IDs
-        const stages: VehicleStage[] = data.stages.map((stage: any) => {
-            if (!stage || typeof stage !== 'object') {
+        const stages: VehicleStage[] = data.stages.map((rawStage: unknown) => {
+            if (!rawStage || typeof rawStage !== 'object' || Array.isArray(rawStage)) {
                 throw new Error('Invalid stage format: not an object');
             }
+
+            const stage = rawStage as Record<string, unknown>;
 
             if (typeof stage.stageNumber !== 'number') {
                 throw new Error('Invalid stage format: stageNumber is not a number');
@@ -397,10 +401,13 @@ export function deserializeBlueprint(json: string): VehicleBlueprint | null {
             return {
                 stageNumber: stage.stageNumber,
                 hasDecoupler: stage.hasDecoupler,
-                parts: stage.parts.map((inst: any) => {
-                    if (!inst || typeof inst !== 'object') {
+                parts: stage.parts.map((rawInst: unknown) => {
+                    if (!rawInst || typeof rawInst !== 'object' || Array.isArray(rawInst)) {
                         throw new Error('Invalid part instance format: not an object');
                     }
+
+                    const inst = rawInst as Record<string, unknown>;
+
                     if (typeof inst.partId !== 'string') {
                         throw new Error('Invalid part instance format: partId is not a string');
                     }
