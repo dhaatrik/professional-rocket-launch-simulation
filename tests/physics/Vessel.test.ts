@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Vessel } from '../../src/physics/Vessel';
-import { state } from '../../src/core/State';
+import { state, addParticle } from '../../src/core/State';
 import * as ThermalProtection from '../../src/physics/ThermalProtection';
 import { Particle } from '../../src/physics/Particle';
 
@@ -30,6 +30,57 @@ vi.mock('../../src/physics/ThermalProtection', async (importOriginal) => {
             thermalDamage: 0
         }))
     };
+});
+
+describe('Vessel explode()', () => {
+    let vessel: TestVessel;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        state.audio = { playExplosion: vi.fn() } as any;
+        vessel = new TestVessel(0, 1000);
+    });
+
+    it('should set crashed, active, and throttle states correctly', () => {
+        vessel.active = true;
+        vessel.throttle = 1.0;
+        expect(vessel.crashed).toBe(false);
+
+        vessel.explode();
+
+        expect(vessel.crashed).toBe(true);
+        expect(vessel.active).toBe(false);
+        expect(vessel.throttle).toBe(0);
+    });
+
+    it('should call audio.playExplosion if audio is available', () => {
+        vessel.explode();
+        expect(state.audio!.playExplosion).toHaveBeenCalledOnce();
+    });
+
+    it('should spawn explosion and debris particles', () => {
+        vessel.explode();
+
+        // 30 iteration loop, 2 particles each (fire and debris)
+        expect(addParticle).toHaveBeenCalledTimes(60);
+        expect(Particle.create).toHaveBeenCalledTimes(60);
+
+        // Check if fire and debris particles were requested
+        const calls = vi.mocked(Particle.create).mock.calls;
+        const fireCalls = calls.filter((c) => c[2] === 'fire');
+        const debrisCalls = calls.filter((c) => c[2] === 'debris');
+
+        expect(fireCalls.length).toBe(30);
+        expect(debrisCalls.length).toBe(30);
+    });
+
+    it('should do nothing if already crashed', () => {
+        vessel.crashed = true;
+        vessel.explode();
+
+        expect(state.audio!.playExplosion).not.toHaveBeenCalled();
+        expect(addParticle).not.toHaveBeenCalled();
+    });
 });
 
 // Mock Aerodynamics module
