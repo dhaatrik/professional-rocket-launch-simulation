@@ -10,7 +10,7 @@
 **Vulnerability:** Dynamically created text inputs and textareas lacked `maxLength` properties, which could allow users or automated scripts to paste excessively large strings, potentially causing a Denial of Service (DoS) due to memory exhaustion or parsing overhead on the client.
 **Learning:** Found several UI editor inputs (e.g., in `ScriptEditor.ts` and `VABEditor.ts`) constructed via `createElement` that omitted explicit length constraints.
 **Prevention:** Always enforce `maxLength` attributes when dynamically generating text input elements to ensure safe upper bounds on payload size.
-## 2026-04-20 - Replaced Insecure Math.random() in Particle Rendering
-**Vulnerability:** The Particle class used Math.random() directly for rendering physics, including spread velocities and sizes.
-**Learning:** While particle rendering is often just visual, strictly adhering to the secure random requirement across the codebase prevents automated vulnerability flags and establishes a uniform pattern. Replacing it with MathUtils.secureRandom() eliminates the vulnerability.
-**Prevention:** Require MathUtils.secureRandom() natively everywhere, including visual/aesthetic randomness within high-frequency rendering functions, to ensure uniform security standards.
+## 2026-04-19 - Replace Math.random with MathUtils.secureRandom in physics modules
+**Vulnerability:** Found insecure `Math.random()` usage in `src/physics/Particle.ts` causing potential deterministic random attacks and poor randomness distribution.
+**Learning:** Developer relied on built-in `Math.random()` for physics-related visual elements rather than the project's existing cryptographic standard.
+**Prevention:** Use the project's secure wrapper `MathUtils.secureRandom()` for all randomization, even for seemingly innocuous aesthetic properties in secure domains.
