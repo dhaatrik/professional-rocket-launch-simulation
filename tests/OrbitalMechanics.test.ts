@@ -7,6 +7,7 @@ import {
     calculateHohmannTransfer,
     calculateCircularizationFromElements,
     calculateGroundTrack,
+    predictOrbitPath,
     LAUNCH_SITE,
     MU
 } from '../src/physics/OrbitalMechanics';
@@ -103,6 +104,81 @@ describe('OrbitalMechanics', () => {
             const pos = calculateGroundTrack(0, oneHour);
             // Earth rotates East, point should drift West (negative long)
             expect(pos.lon).toBeLessThan(LAUNCH_SITE.lon);
+        });
+    });
+
+    describe('Orbit Path Prediction', () => {
+        it('should simulate stable circular orbit', () => {
+            const r0 = R_EARTH + 400000;
+            const phi0 = 0;
+            const vr0 = 0;
+            const vphi0 = calculateCircularVelocity(r0);
+            const path: { phi: number; r: number; relX?: number; relY?: number }[] = [];
+            const dtPred = 5.0;
+            const maxSteps = 400;
+
+            predictOrbitPath(path, r0, phi0, vr0, vphi0, dtPred, maxSteps);
+
+            // Sparse storing every 2 steps + initial point = (400 / 2) + 1 = 201 points?
+            // Let's actually check it returns an array of points
+            expect(path.length).toBeGreaterThan(0);
+
+            // For a circular orbit, the radius should stay constant
+            for (const point of path) {
+                expect(point.r).toBeCloseTo(r0, 0); // Allow some small integration drift
+            }
+        });
+
+        it('should stop prediction if hit ground', () => {
+            const r0 = R_EARTH + 10000; // Only 10km up
+            const phi0 = 0;
+            const vr0 = -2000; // Falling fast
+            const vphi0 = 1000; // Some horizontal speed
+            const path: { phi: number; r: number; relX?: number; relY?: number }[] = [];
+            const dtPred = 5.0;
+            const maxSteps = 400;
+
+            predictOrbitPath(path, r0, phi0, vr0, vphi0, dtPred, maxSteps);
+
+            // It should hit the ground before maxSteps
+            // The number of points added should be less than maxSteps/2 + 2
+            expect(path.length).toBeLessThan(200);
+
+            // The last point should be near or below the Earth's surface
+            const lastPoint = path[path.length - 1];
+            expect(lastPoint?.r).toBeLessThanOrEqual(R_EARTH);
+        });
+
+        it('should overwrite existing path arrays to avoid allocation', () => {
+            const r0 = R_EARTH + 400000;
+            const phi0 = 0;
+            const vr0 = 0;
+            const vphi0 = calculateCircularVelocity(r0);
+
+            // Create a path with pre-existing elements
+            const path = [
+                { phi: -1, r: -1 },
+                { phi: -2, r: -2 },
+                { phi: -3, r: -3 },
+                { phi: -4, r: -4 },
+                { phi: -5, r: -5 }
+            ];
+            const initialLength = path.length; // 5
+
+            // Run a very short prediction
+            const dtPred = 5.0;
+            const maxSteps = 2; // Will generate ~3 points (start, j=0, final)
+
+            predictOrbitPath(path, r0, phi0, vr0, vphi0, dtPred, maxSteps);
+
+            // The path array should be trimmed to the exact number of generated points
+            expect(path.length).toBeLessThan(initialLength);
+
+            // The remaining points should have valid values, not the dummy ones
+            for (const point of path) {
+                expect(point.r).toBeGreaterThan(0);
+                expect(point.phi).toBeGreaterThanOrEqual(0);
+            }
         });
     });
 });
