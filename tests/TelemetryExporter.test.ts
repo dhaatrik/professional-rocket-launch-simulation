@@ -148,6 +148,14 @@ describe('TelemetryExporter', () => {
             expect(result.metadata.exportedAt).toBeDefined();
             expect(result.metadata.summary).toEqual(mockSummary);
             expect(result.frames).toEqual(mockFrames);
+            expect(result.frames).not.toBe(mockFrames); // Should be a shallow copy
+        });
+
+        it('should handle empty frames', () => {
+            const result = framesToJSON([], mockSummary);
+
+            expect(result.frames).toEqual([]);
+            expect(result.metadata.summary).toEqual(mockSummary);
         });
     });
 
