@@ -254,7 +254,11 @@ export class FlightComputer {
         this.calculateTelemetry(vessel);
 
         // Evaluate each command
-        for (const command of this.state.script.commands) {
+        const commands = this.state.script.commands;
+        const len = commands.length;
+        for (let i = 0; i < len; i++) {
+            const command = commands[i]!;
+
             // Skip completed one-shot commands
             if (command.state === 'completed' && command.oneShot) {
                 continue;
