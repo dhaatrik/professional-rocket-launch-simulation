@@ -6,6 +6,7 @@
  */
 
 import { FlightDataParser, FlightFrame } from './FlightDataParser';
+import { MathUtils } from '../utils/MathUtils';
 
 export class AnalysisApp {
     private frames: FlightFrame[] = [];
@@ -325,7 +326,7 @@ export class AnalysisApp {
             ctx.beginPath();
             const flameLen = frame.throttle * 20;
             ctx.moveTo(-3, 20);
-            ctx.lineTo(0, 20 + flameLen + Math.random() * 5);
+            ctx.lineTo(0, 20 + flameLen + MathUtils.secureRandom() * 5);
             ctx.lineTo(3, 20);
             ctx.fill();
         }

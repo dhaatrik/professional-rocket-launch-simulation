@@ -18,13 +18,11 @@ import {
     CONFIG,
     PIXELS_PER_METER,
     getAtmosphericDensity,
-    SPEED_OF_SOUND,
     RHO_SL,
     R_EARTH,
     getGravity,
     getDynamicPressure,
-    getMachNumber,
-    DT
+    getMachNumber
 } from '../config/Constants';
 import { state, currentWindVelocity, currentDensityMultiplier } from '../core/State';
 import { addParticle } from '../core/State';
@@ -33,7 +31,6 @@ import { Particle } from './Particle';
 import {
     AerodynamicsConfig,
     AerodynamicState,
-    AerodynamicForces,
     DEFAULT_AERO_CONFIG,
     calculateAerodynamicState,
     calculateAerodynamicForces,
@@ -54,8 +51,6 @@ import {
     FULLSTACK_PROP_CONFIG,
     createInitialPropulsionState,
     updatePropulsionState,
-    attemptIgnition,
-    commandShutdown,
     getIgnitionFailureMessage
 } from './Propulsion';
 import { EngineStateCode } from '../core/PhysicsBuffer';
@@ -643,14 +638,14 @@ export class Vessel implements IVessel {
 
             ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${intensity})`;
             ctx.beginPath();
-            ctx.arc(0, this.h, 20 + Math.random() * 10 * intensity, 0, Math.PI * 2);
+            ctx.arc(0, this.h, 20 + MathUtils.secureRandom() * 10 * intensity, 0, Math.PI * 2);
             ctx.fill();
 
             // Nose cone glow
             if (intensity > 0.3) {
                 ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${intensity * 0.6})`;
                 ctx.beginPath();
-                ctx.arc(0, -10, 15 + Math.random() * 5, 0, Math.PI * 2);
+                ctx.arc(0, -10, 15 + MathUtils.secureRandom() * 5, 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -661,10 +656,10 @@ export class Vessel implements IVessel {
             }
 
             // Ablation particles when shield is active
-            if (this.isAblating && Math.random() > 0.7) {
+            if (this.isAblating && MathUtils.secureRandom() > 0.7) {
                 ctx.fillStyle = `rgba(255, 255, 200, 0.8)`;
-                const sparkX = (Math.random() - 0.5) * this.w;
-                const sparkY = Math.random() * this.h;
+                const sparkX = (MathUtils.secureRandom() - 0.5) * this.w;
+                const sparkY = MathUtils.secureRandom() * this.h;
                 ctx.beginPath();
                 ctx.arc(sparkX, sparkY, 2, 0, Math.PI * 2);
                 ctx.fill();

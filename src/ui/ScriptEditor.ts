@@ -162,7 +162,7 @@ export class ScriptEditor {
                 className: 'script-textarea',
                 'aria-label': 'Script editor content',
                 'aria-describedby': 'script-syntax-help',
-                maxLength: 5000,
+                maxLength: 10000,
                 placeholder:
                     '# Mission Script\n# Example:\nWHEN ALTITUDE > 1000 THEN PITCH 80\nWHEN ALTITUDE > 10000 THEN PITCH 60\nWHEN APOGEE > 100000 THEN THROTTLE 0'
             }),
