@@ -58,11 +58,32 @@ class TelemetryReceiver {
         this.resize();
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private isValidTelemetryPacket(data: any): data is TelemetryPacket {
+        if (!data || typeof data !== 'object') return false;
+
+        return (
+            typeof data.altitude === 'number' &&
+            typeof data.velocity === 'number' &&
+            typeof data.apogee === 'number' &&
+            typeof data.throttle === 'number' &&
+            typeof data.fuel === 'number' &&
+            typeof data.missionTime === 'number' &&
+            typeof data.stage === 'number' &&
+            typeof data.liftoff === 'boolean' &&
+            typeof data.status === 'string' &&
+            data.position && typeof data.position.x === 'number' && typeof data.position.y === 'number' &&
+            data.velocityVector && typeof data.velocityVector.x === 'number' && typeof data.velocityVector.y === 'number'
+        );
+    }
+
     private handleMessage(event: MessageEvent) {
         if (event.origin !== window.location.origin) return;
 
-        if (event.data.type === 'TELEMETRY_UPDATE') {
-            this.updateUI(event.data.payload);
+        if (event.data && typeof event.data === 'object') {
+            if (event.data.type === 'TELEMETRY_UPDATE' && this.isValidTelemetryPacket(event.data.payload)) {
+                this.updateUI(event.data.payload);
+            }
         }
     }
 
