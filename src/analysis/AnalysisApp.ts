@@ -5,7 +5,10 @@
  * Handles UI interactions, data loading, playback, and rendering.
  */
 
-import { FlightDataParser, FlightFrame } from './FlightDataParser';
+import { FlightFrame } from './FlightDataParser';
+import { VisualizerRenderer } from './VisualizerRenderer';
+import { ChartRenderer } from './ChartRenderer';
+import { DataLoader } from './DataLoader';
 
 export class AnalysisApp {
     private frames: FlightFrame[] = [];
@@ -13,6 +16,10 @@ export class AnalysisApp {
     private isPlaying: boolean = false;
     private playbackSpeed: number = 1;
     private animationFrameId: number | null = null;
+
+    private visualizerRenderer: VisualizerRenderer;
+    private chartRenderer: ChartRenderer;
+    private dataLoader: DataLoader;
 
     // UI Elements
     public timeScrubber: HTMLInputElement;
@@ -28,13 +35,17 @@ export class AnalysisApp {
         this.dispAlt = document.getElementById('disp-alt') as HTMLElement;
         this.dispVel = document.getElementById('disp-vel') as HTMLElement;
 
+        this.visualizerRenderer = new VisualizerRenderer();
+        this.chartRenderer = new ChartRenderer();
+        this.dataLoader = new DataLoader();
+
         this.initCharts();
         this.setupEventListeners();
 
         // Resize handler
         window.addEventListener('resize', () => {
             this.resizeCanvases();
-            if (this.frames.length > 0) this.renderCharts(); // Re-render static charts
+            if (this.frames.length > 0) this.chartRenderer.renderCharts(this.frames, this.ctxs, this.canvases); // Re-render static charts
             this.renderFrame(this.currentIndex);
         });
 
@@ -112,41 +123,25 @@ export class AnalysisApp {
         document.getElementById('btn-next')?.addEventListener('click', () => this.seekToFrame(this.currentIndex + 60)); // +1 sec
     }
 
-    private loadFile(file: File) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const target = e.target as FileReader;
-            if (!target) return;
-            const content = target.result as string;
-            try {
-                if (file.name.endsWith('.csv')) {
-                    this.frames = FlightDataParser.parseCSV(content);
-                } else if (file.name.endsWith('.json')) {
-                    this.frames = FlightDataParser.parseJSON(content);
-                } else {
-                    alert('Unsupported file type');
-                    return;
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Failed to parse file: ' + (err instanceof Error ? err.message : String(err)));
-                return;
-            }
-
+    private async loadFile(file: File) {
+        try {
+            this.frames = await this.dataLoader.loadFile(file);
             if (this.frames.length > 0) {
                 this.onDataLoaded();
             } else {
                 alert('No valid frames found in file.');
             }
-        };
-        reader.readAsText(file);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to parse file: ' + (err instanceof Error ? err.message : String(err)));
+        }
     }
 
     private onDataLoaded() {
         if (this.frames.length === 0) return;
         this.currentIndex = 0;
         this.timeScrubber.value = '0';
-        this.renderCharts(); // Draw static background charts
+        this.chartRenderer.renderCharts(this.frames, this.ctxs, this.canvases); // Draw static background charts
         this.renderFrame(0);
 
         // Update total duration label
@@ -238,277 +233,17 @@ export class AnalysisApp {
         this.dispVel.textContent = frame.velocity.toFixed(0);
 
         // Draw Visualizer (Map / Orientation)
-        this.drawVisualizer(frame);
+        this.visualizerRenderer.drawVisualizer(frame, this.ctxs['visualizer'], this.canvases['visualizer']);
 
         // Draw Cursor on Charts
-        this.drawChartCursors(index);
+        this.chartRenderer.drawChartCursors(index, this.frames, this.ctxs, this.canvases);
     }
 
-    private drawVisualizer(frame: FlightFrame) {
-        const ctx = this.ctxs['visualizer'];
-        const canvas = this.canvases['visualizer'];
-        if (!ctx || !canvas) return;
 
-        const w = canvas.width;
-        const h = canvas.height;
 
-        ctx.clearRect(0, 0, w, h);
 
-        // Simple Ground View
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, w, h);
 
-        // Ground line
-        const groundY = h - 50;
-        ctx.fillStyle = '#22c55e';
-        ctx.fillRect(0, groundY, w, 50);
 
-        // Altitude scaling (logarithmic-ish for vis?) or linear
-        // Let's keep it simple: Rocket moves up
-        const scale = 0.5; // pixels per m
-        const rocketY = groundY - frame.altitude * scale;
-
-        // Auto-pan camera logic: keep rocket vertically centered if high up
-        let camY = 0;
-        if (rocketY < h / 2) {
-            camY = h / 2 - rocketY;
-        }
-
-        ctx.save();
-        ctx.translate(w / 2, camY);
-
-        /** Draw Rocket path **/
-        // Optimization: Don't draw full path every frame in 2D viz if it's expensive,
-        // but here it's cheapish
-        /*
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-        this.frames.slice(0, this.currentIndex).forEach((f, i) => {
-            const fy = groundY - (f.altitude * scale);
-             // x position? if we have posX/Y we can do 2D trajectory. 
-             // FlightFrame has posX.
-             const fx = (f.posX ?? 0) * scale; // assuming 0 is center
-             if (i===0) ctx.moveTo(fx, fy);
-             else ctx.lineTo(fx, fy);
-        });
-        ctx.stroke();
-        */
-
-        // Draw Rocket
-        const rx = (frame.posX ?? 0) * scale;
-        const ry = groundY - frame.altitude * scale; // raw Y position relative to ground
-
-        ctx.translate(rx, ry);
-
-        // Rotation
-        if (frame.angle !== undefined) {
-            ctx.rotate(frame.angle); // Assuming angle is in radians
-        }
-
-        // Body
-        ctx.fillStyle = '#f1f5f9';
-        ctx.fillRect(-5, -20, 10, 40);
-        // Nose
-        ctx.beginPath();
-        ctx.moveTo(-5, -20);
-        ctx.lineTo(0, -30);
-        ctx.lineTo(5, -20);
-        ctx.fill();
-        // Fins
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(-8, 10, 3, 10);
-        ctx.fillRect(5, 10, 3, 10);
-
-        // Flame
-        if (frame.throttle > 0) {
-            ctx.fillStyle = '#f59e0b';
-            ctx.beginPath();
-            const flameLen = frame.throttle * 20;
-            ctx.moveTo(-3, 20);
-            ctx.lineTo(0, 20 + flameLen + Math.random() * 5);
-            ctx.lineTo(3, 20);
-            ctx.fill();
-        }
-
-        ctx.restore();
-    }
-
-    // Performance Optimization: Combine iterations into a single standard for loop
-    // to minimize GC pressure and redundant O(N) passes.
-    private renderCharts() {
-        if (this.frames.length === 0) return;
-
-        const canvasAlt = this.canvases['chart-alt'];
-        const canvasVel = this.canvases['chart-vel'];
-        const canvasThr = this.canvases['chart-throttle'];
-        const canvasQ = this.canvases['chart-q'];
-
-        const ctxAlt = this.ctxs['chart-alt'];
-        const ctxVel = this.ctxs['chart-vel'];
-        const ctxThr = this.ctxs['chart-throttle'];
-        const ctxQ = this.ctxs['chart-q'];
-
-        if (!ctxAlt || !ctxVel || !ctxThr || !ctxQ || !canvasAlt || !canvasVel || !canvasThr || !canvasQ) return;
-
-        const wAlt = canvasAlt.width,
-            hAlt = canvasAlt.height;
-        const wVel = canvasVel.width,
-            hVel = canvasVel.height;
-        const wThr = canvasThr.width,
-            hThr = canvasThr.height;
-        const wQ = canvasQ.width,
-            hQ = canvasQ.height;
-
-        ctxAlt.clearRect(0, 0, wAlt, hAlt);
-        ctxVel.clearRect(0, 0, wVel, hVel);
-        ctxThr.clearRect(0, 0, wThr, hThr);
-        ctxQ.clearRect(0, 0, wQ, hQ);
-
-        const len = this.frames.length;
-        let maxAlt = -Infinity;
-        let maxVel = -Infinity;
-        let maxQ = -Infinity;
-
-        for (let i = 0; i < len; i++) {
-            const f = this.frames[i]!;
-            if (f.altitude > maxAlt) maxAlt = f.altitude;
-            if (f.velocity > maxVel) maxVel = f.velocity;
-            if (f.q > maxQ) maxQ = f.q;
-        }
-
-        maxAlt *= 1.1;
-        maxVel *= 1.1;
-        maxQ *= 1.1;
-
-        const rangeAlt = maxAlt || 1;
-        const rangeVel = maxVel || 1;
-        const rangeThr = 1; // max is fixed at 1 for throttle
-        const rangeQ = maxQ || 1;
-
-        const xStepAlt = len > 1 ? wAlt / (len - 1) : 0;
-        const xStepVel = len > 1 ? wVel / (len - 1) : 0;
-        const xStepThr = len > 1 ? wThr / (len - 1) : 0;
-        const xStepQ = len > 1 ? wQ / (len - 1) : 0;
-
-        ctxAlt.beginPath();
-        ctxAlt.strokeStyle = '#3b82f6';
-        ctxAlt.lineWidth = 2;
-
-        ctxVel.beginPath();
-        ctxVel.strokeStyle = '#10b981';
-        ctxVel.lineWidth = 2;
-
-        ctxThr.beginPath();
-        ctxThr.strokeStyle = '#f59e0b';
-        ctxThr.lineWidth = 2;
-
-        ctxQ.beginPath();
-        ctxQ.strokeStyle = '#8b5cf6';
-        ctxQ.lineWidth = 2;
-
-        const eventXsAlt: number[] = [];
-        const eventXsVel: number[] = [];
-        const eventXsThr: number[] = [];
-        const eventXsQ: number[] = [];
-
-        for (let i = 0; i < len; i++) {
-            const f = this.frames[i]!;
-
-            const xAlt = i * xStepAlt;
-            const normAlt = f.altitude / rangeAlt;
-            const yAlt = hAlt - normAlt * hAlt;
-
-            const xVel = i * xStepVel;
-            const normVel = f.velocity / rangeVel;
-            const yVel = hVel - normVel * hVel;
-
-            const xThr = i * xStepThr;
-            const normThr = f.throttle / rangeThr;
-            const yThr = hThr - normThr * hThr;
-
-            const xQ = i * xStepQ;
-            const normQ = f.q / rangeQ;
-            const yQ = hQ - normQ * hQ;
-
-            if (i === 0) {
-                ctxAlt.moveTo(xAlt, yAlt);
-                ctxVel.moveTo(xVel, yVel);
-                ctxThr.moveTo(xThr, yThr);
-                ctxQ.moveTo(xQ, yQ);
-            } else {
-                ctxAlt.lineTo(xAlt, yAlt);
-                ctxVel.lineTo(xVel, yVel);
-                ctxThr.lineTo(xThr, yThr);
-                ctxQ.lineTo(xQ, yQ);
-            }
-
-            if (f.event) {
-                eventXsAlt.push(xAlt);
-                eventXsVel.push(xVel);
-                eventXsThr.push(xThr);
-                eventXsQ.push(xQ);
-            }
-        }
-
-        ctxAlt.stroke();
-        ctxVel.stroke();
-        ctxThr.stroke();
-        ctxQ.stroke();
-
-        if (eventXsAlt.length > 0) {
-            ctxAlt.fillStyle = 'white';
-            ctxAlt.globalAlpha = 0.5;
-            for (let i = 0; i < eventXsAlt.length; i++) ctxAlt.fillRect(eventXsAlt[i]!, 0, 1, hAlt);
-            ctxAlt.globalAlpha = 1.0;
-
-            ctxVel.fillStyle = 'white';
-            ctxVel.globalAlpha = 0.5;
-            for (let i = 0; i < eventXsVel.length; i++) ctxVel.fillRect(eventXsVel[i]!, 0, 1, hVel);
-            ctxVel.globalAlpha = 1.0;
-
-            ctxThr.fillStyle = 'white';
-            ctxThr.globalAlpha = 0.5;
-            for (let i = 0; i < eventXsThr.length; i++) ctxThr.fillRect(eventXsThr[i]!, 0, 1, hThr);
-            ctxThr.globalAlpha = 1.0;
-
-            ctxQ.fillStyle = 'white';
-            ctxQ.globalAlpha = 0.5;
-            for (let i = 0; i < eventXsQ.length; i++) ctxQ.fillRect(eventXsQ[i]!, 0, 1, hQ);
-            ctxQ.globalAlpha = 1.0;
-        }
-    }
-
-    private drawChartCursors(index: number) {
-        // Redraw charts cleanly first (could optimize to just save/restore image data)
-        // For now, let's just draw the cursor line on top, but valid point: clearing wipes chart.
-        // Actually, renderCharts() draws the lines. We should redraw them or use overlay canvas.
-        // Optimization: Just re-render everything for now, modern browsers can handle 4 simple paths.
-        this.renderCharts();
-
-        const xPct = index / (this.frames.length - 1);
-
-        const ids = ['chart-alt', 'chart-vel', 'chart-throttle', 'chart-q'];
-        for (let i = 0; i < ids.length; i++) {
-            const id = ids[i]!;
-            const ctx = this.ctxs[id];
-            const canvas = this.canvases[id];
-            if (!ctx || !canvas) continue;
-
-            const w = canvas.width;
-            const h = canvas.height;
-
-            const x = xPct * w;
-
-            ctx.beginPath();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([5, 5]);
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, h);
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
-    }
 }
 
 // Only auto-initialize if we're in a browser environment and not in a test

@@ -65,7 +65,7 @@ describe('AnalysisApp', () => {
     });
 
     describe('File Loading', () => {
-        it('should correctly process valid CSV files', () => {
+        it('should correctly process valid CSV files', async () => {
             const app = new AnalysisApp() as any;
             const mockCSV = `timestamp,missionTime,altitude,velocity\n1,10,100,50`;
 
@@ -88,10 +88,13 @@ describe('AnalysisApp', () => {
             // Override the actual loadFile logic a bit to capture the reader or simulate onload correctly
             // Since reader is created inside loadFile, we need to extract it or simulate the whole thing
             // The MockFileReader class gets instantiated inside loadFile
-            let capturedReader1: any;
             class MockFileReader1 {
                 readAsText = vi.fn().mockImplementation(function(this: any) {
-                    capturedReader1 = this;
+                    setTimeout(() => {
+                        if (this.onload) {
+                            this.onload({ target: this });
+                        }
+                    }, 0);
                 });
                 onload: any = null;
                 result = mockCSV;
@@ -99,12 +102,7 @@ describe('AnalysisApp', () => {
             vi.stubGlobal('FileReader', MockFileReader1);
 
             // Call loadFile
-            app.loadFile(mockFile);
-
-            // Simulate onload
-            if (capturedReader1 && capturedReader1.onload) {
-                capturedReader1.onload({ target: capturedReader1 });
-            }
+            await app.loadFile(mockFile);
 
             expect(app.frames.length).toBe(1);
             expect(app.frames[0].altitude).toBe(100);
@@ -112,7 +110,7 @@ describe('AnalysisApp', () => {
             vi.unstubAllGlobals();
         });
 
-        it('should alert on unsupported file types', () => {
+        it('should alert on unsupported file types', async () => {
             const app = new AnalysisApp() as any;
             const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
@@ -132,32 +130,28 @@ describe('AnalysisApp', () => {
             // Create an unsupported mock file
             const mockFile = new File(['content'], 'image.png', { type: 'image/png' });
 
-            let capturedReader2: any;
             class MockFileReader2 {
                 readAsText = vi.fn().mockImplementation(function(this: any) {
-                    capturedReader2 = this;
+                    setTimeout(() => {
+                        if (this.onload) {
+                            this.onload({ target: this });
+                        }
+                    }, 0);
                 });
                 onload: any = null;
-                result = 'content';
+                result = 'mock content';
             }
             vi.stubGlobal('FileReader', MockFileReader2);
 
-            // Call loadFile
-            app.loadFile(mockFile);
+            await app.loadFile(mockFile);
 
-            // Simulate onload
-            if (capturedReader2 && capturedReader2.onload) {
-                capturedReader2.onload({ target: capturedReader2 });
-            }
-
-            expect(alertSpy).toHaveBeenCalledWith('Unsupported file type');
+            expect(alertSpy).toHaveBeenCalledWith('Failed to parse file: Unsupported file type');
             expect(app.frames.length).toBe(0);
 
-            alertSpy.mockRestore();
             vi.unstubAllGlobals();
         });
 
-        it('should alert when file is empty or has no valid frames', () => {
+        it('should alert when file is empty or has no valid frames', async () => {
             const app = new AnalysisApp() as any;
             const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
@@ -177,28 +171,24 @@ describe('AnalysisApp', () => {
             // Create a mock file
             const mockFile = new File([''], 'empty.csv', { type: 'text/csv' });
 
-            let capturedReader3: any;
             class MockFileReader3 {
                 readAsText = vi.fn().mockImplementation(function(this: any) {
-                    capturedReader3 = this;
+                    setTimeout(() => {
+                        if (this.onload) {
+                            this.onload({ target: this });
+                        }
+                    }, 0);
                 });
                 onload: any = null;
-                result = 'timestamp,missionTime,altitude,velocity';
+                result = 'timestamp,missionTime,altitude,velocity\n';
             }
             vi.stubGlobal('FileReader', MockFileReader3);
 
-            // Call loadFile
-            app.loadFile(mockFile);
-
-            // Simulate onload
-            if (capturedReader3 && capturedReader3.onload) {
-                capturedReader3.onload({ target: capturedReader3 });
-            }
+            await app.loadFile(mockFile);
 
             expect(alertSpy).toHaveBeenCalledWith('No valid frames found in file.');
             expect(app.frames.length).toBe(0);
 
-            alertSpy.mockRestore();
             vi.unstubAllGlobals();
         });
     });
