@@ -54,8 +54,6 @@ import {
     FULLSTACK_PROP_CONFIG,
     createInitialPropulsionState,
     updatePropulsionState,
-    attemptIgnition,
-    commandShutdown,
     getIgnitionFailureMessage
 } from './Propulsion';
 import { EngineStateCode } from '../core/PhysicsBuffer';
