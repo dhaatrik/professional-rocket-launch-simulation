@@ -112,6 +112,6 @@ describe('ManeuverPlanner Stats Security', () => {
         expect(statsDiv?.querySelector('img')).toBeNull();
 
         // The text content should likely contain 'NaN'
-        expect(statsDiv?.textContent).toContain('Apoapsis: NaN km');
+        expect(statsDiv?.textContent).toContain('Apoapsis: N/A km');
     });
 });
