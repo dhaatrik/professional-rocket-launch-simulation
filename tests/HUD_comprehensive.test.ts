@@ -59,7 +59,10 @@ vi.stubGlobal('document', {
         getContext: () => ({}),
         width: 0,
         height: 0,
-        addEventListener: vi.fn()
+        addEventListener: vi.fn(),
+        setAttribute: vi.fn(),
+        style: {},
+        appendChild: vi.fn()
     })),
     addEventListener: vi.fn(),
 });

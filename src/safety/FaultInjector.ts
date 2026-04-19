@@ -399,7 +399,9 @@ export class FaultInjector {
                         className: 'fis-close',
                         id: 'fis-close-btn',
                         textContent: '✕',
-                        'aria-label': 'Close Fault Injection System'
+                        'aria-label': 'Close Fault Injection System',
+                        'aria-keyshortcuts': 'Escape',
+                        title: 'Close [Esc]'
                     })
                 ]),
                 createElement('div', {

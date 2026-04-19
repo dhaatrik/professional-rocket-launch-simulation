@@ -42,7 +42,10 @@ const mockDocument = {
     createElement: vi.fn((tag: string) => ({
         id: tag,
         getContext: () => ({}),
-        addEventListener: () => { }
+        addEventListener: () => { },
+        setAttribute: vi.fn(),
+        style: {},
+        appendChild: vi.fn()
     })),
     addEventListener: vi.fn()
 };
