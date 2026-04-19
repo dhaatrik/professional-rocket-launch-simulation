@@ -126,6 +126,11 @@ export class EnvironmentSystem {
 
     // Pre-allocated objects to prevent garbage collection in hot paths
     private _windPolarResult = { speed: 0, direction: 0 };
+    private _baseWindResult: Vector2D = { x: 0, y: 0 };
+    private _surfaceWindResult: Vector2D = { x: 0, y: 0 };
+    private _scaledGustResult: Vector2D = { x: 0, y: 0 };
+    private _wind10kResult: Vector2D = { x: 0, y: 0 };
+    private _wind14kResult: Vector2D = { x: 0, y: 0 };
 
     constructor(config: EnvironmentConfig = DEFAULT_ENVIRONMENT_CONFIG) {
         this.config = { ...config };
@@ -313,9 +318,9 @@ export class EnvironmentSystem {
      * @param altitude - Check altitude (usually 0 for surface)
      */
     isLaunchSafe(altitude: number = 0): boolean {
-        const surfaceWind = this.getWindAtAltitude(altitude, { x: 0, y: 0 });
+        this.getWindAtAltitude(altitude, this._surfaceWindResult);
         const gustMag = Vec2.magnitude(this.currentGust);
-        const totalWindSpeed = Vec2.magnitude(surfaceWind) + gustMag;
+        const totalWindSpeed = Vec2.magnitude(this._surfaceWindResult) + gustMag;
         return totalWindSpeed < this.config.launchWindLimit;
     }
 
@@ -324,8 +329,10 @@ export class EnvironmentSystem {
      */
     hasMaxQWindWarning(): boolean {
         // Check wind speed at typical Max-Q altitudes (10-14km)
-        const wind10k = Vec2.magnitude(this.getWindAtAltitude(10000, { x: 0, y: 0 }));
-        const wind14k = Vec2.magnitude(this.getWindAtAltitude(14000, { x: 0, y: 0 }));
+        this.getWindAtAltitude(10000, this._wind10kResult);
+        this.getWindAtAltitude(14000, this._wind14kResult);
+        const wind10k = Vec2.magnitude(this._wind10kResult);
+        const wind14k = Vec2.magnitude(this._wind14kResult);
         // Warning if wind exceeds 30 m/s at Max-Q altitude
         return wind10k > 30 || wind14k > 30;
     }
@@ -335,24 +342,33 @@ export class EnvironmentSystem {
      * @param altitude - Altitude in meters
      */
     getState(altitude: number): EnvironmentState {
-        // Since we need to return this state and baseWind/surfaceWind are distinct,
-        // we can allocate here as it's not a hot loop (only called on HUD updates).
-        const baseWind = this.getWindAtAltitude(altitude, { x: 0, y: 0 });
-        const surfaceWind = this.getWindAtAltitude(0, { x: 0, y: 0 });
-        const surfaceSpeed = Vec2.magnitude(surfaceWind);
+        // We allocate the returned EnvironmentState since consuming code (e.g. React/UI)
+        // may rely on immutability for state updates.
+        // However, we eliminate inline vector allocations for intermediate calculations.
+        this.getWindAtAltitude(altitude, this._baseWindResult);
+        this.getWindAtAltitude(0, this._surfaceWindResult);
+        const surfaceSpeed = Vec2.magnitude(this._surfaceWindResult);
 
         // Gusts diminish with altitude (more stable upper atmosphere)
         const gustScale = Math.max(0, 1 - altitude / 30000);
-        const scaledGust = Vec2.scale(this.currentGust, gustScale);
+
+        this._scaledGustResult.x = this.currentGust.x * gustScale;
+        this._scaledGustResult.y = this.currentGust.y * gustScale;
 
         return {
-            windVelocity: Vec2.add(baseWind, scaledGust),
-            gustVelocity: scaledGust,
+            windVelocity: {
+                x: this._baseWindResult.x + this._scaledGustResult.x,
+                y: this._baseWindResult.y + this._scaledGustResult.y
+            },
+            gustVelocity: {
+                x: this._scaledGustResult.x,
+                y: this._scaledGustResult.y
+            },
             timeOfDay: this.getTimeOfDay(),
             densityMultiplier: this.getDensityMultiplier(),
             isLaunchSafe: this.isLaunchSafe(),
             surfaceWindSpeed: surfaceSpeed,
-            surfaceWindDirection: Math.atan2(-surfaceWind.y, -surfaceWind.x),
+            surfaceWindDirection: Math.atan2(-this._surfaceWindResult.y, -this._surfaceWindResult.x),
             maxQWindWarning: this.hasMaxQWindWarning()
         };
     }

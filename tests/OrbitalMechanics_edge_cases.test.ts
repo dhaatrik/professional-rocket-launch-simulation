@@ -43,9 +43,7 @@ describe('OrbitalMechanics Edge Cases', () => {
             expect(elements.semiMajorAxis).toBe(Infinity);
             expect(elements.specificEnergy).toBeCloseTo(0, 5);
 
-            // Current limitation: trueAnomaly calculation results in NaN for parabolic orbits
-            // This test documents the behavior. Fixing it would require algorithm adjustment.
-            expect(elements.trueAnomaly).toBeNaN();
+            expect(elements.trueAnomaly).toBeCloseTo(0, 5);
         });
     });
 

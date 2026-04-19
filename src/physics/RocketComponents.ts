@@ -8,7 +8,7 @@
 
 import { Vessel } from './Vessel';
 import { EntityType } from '../core/PhysicsBuffer';
-import { CONFIG, PIXELS_PER_METER, ISP_TO_VELOCITY } from '../config/Constants';
+import { CONFIG, PIXELS_PER_METER } from '../config/Constants';
 import { state } from '../core/State';
 import { PIDController } from '../utils/PIDController';
 import { StageSeparation } from '../types';

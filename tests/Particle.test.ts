@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Particle, createParticles } from '../src/physics/Particle';
+import { MathUtils } from '../src/utils/MathUtils';
+
+vi.mock('../src/utils/MathUtils', () => ({
+    MathUtils: {
+        secureRandom: vi.fn().mockReturnValue(0.5)
+    }
+}));
 
 describe('Particle Class', () => {
     let mockCtx: CanvasRenderingContext2D;
@@ -19,6 +26,7 @@ describe('Particle Class', () => {
         } as unknown as CanvasRenderingContext2D;
 
         vi.spyOn(Math, 'random').mockReturnValue(0.5); // Predictable random
+        vi.spyOn(MathUtils, 'secureRandom').mockReturnValue(0.5); // Predictable secureRandom
     });
 
     afterEach(() => {

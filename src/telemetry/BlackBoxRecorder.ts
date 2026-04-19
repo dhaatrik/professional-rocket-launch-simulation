@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * BlackBoxRecorder - Flight Data Recorder
  *
@@ -7,8 +6,7 @@
  */
 
 import { IVessel } from '../types';
-import { state } from '../core/State';
-import { CONFIG, PIXELS_PER_METER, getMachNumber } from '../config/Constants';
+import { PIXELS_PER_METER, getMachNumber } from '../config/Constants';
 import { EngineStateCode } from '../core/PhysicsBuffer';
 
 // ============================================================================
