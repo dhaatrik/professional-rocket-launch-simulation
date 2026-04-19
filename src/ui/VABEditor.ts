@@ -42,7 +42,6 @@ export class VABEditor {
         try {
             this.savedBlueprints = loadBlueprints();
         } catch (e) {
-            console.error('VABEditor failed to load blueprints:', e);
             this.savedBlueprints = [];
         }
 

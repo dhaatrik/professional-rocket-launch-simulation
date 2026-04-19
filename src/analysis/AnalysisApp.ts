@@ -7,6 +7,7 @@
 
 import { MathUtils } from '../utils/MathUtils';
 import { FlightDataParser, FlightFrame } from './FlightDataParser';
+import { MathUtils } from '../utils/MathUtils';
 
 export class AnalysisApp {
     private frames: FlightFrame[] = [];

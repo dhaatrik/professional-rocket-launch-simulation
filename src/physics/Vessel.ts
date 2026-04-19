@@ -18,13 +18,11 @@ import {
     CONFIG,
     PIXELS_PER_METER,
     getAtmosphericDensity,
-    SPEED_OF_SOUND,
     RHO_SL,
     R_EARTH,
     getGravity,
     getDynamicPressure,
-    getMachNumber,
-    DT
+    getMachNumber
 } from '../config/Constants';
 import { state, currentWindVelocity, currentDensityMultiplier } from '../core/State';
 import { addParticle } from '../core/State';
@@ -33,7 +31,6 @@ import { Particle } from './Particle';
 import {
     AerodynamicsConfig,
     AerodynamicState,
-    AerodynamicForces,
     DEFAULT_AERO_CONFIG,
     calculateAerodynamicState,
     calculateAerodynamicForces,
@@ -54,8 +51,6 @@ import {
     FULLSTACK_PROP_CONFIG,
     createInitialPropulsionState,
     updatePropulsionState,
-    attemptIgnition,
-    commandShutdown,
     getIgnitionFailureMessage
 } from './Propulsion';
 import { EngineStateCode } from '../core/PhysicsBuffer';
@@ -78,6 +73,9 @@ export class Vessel implements IVessel {
     // Interpolation state
     public prevX: number = 0;
     public prevY: number = 0;
+
+    // Staging state
+    public isStageSeparating: boolean = false;
     public prevAngle: number = 0;
 
     // Physical properties
@@ -559,6 +557,10 @@ export class Vessel implements IVessel {
                 )
             );
             addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
+        }
+
+        if (this.isStageSeparating) {
+            Particle.create(this.x + MathUtils.secureRandom() * 20 - 10, this.y + this.h - MathUtils.secureRandom() * 20, 'fire', 0, 0);
         }
     }
 

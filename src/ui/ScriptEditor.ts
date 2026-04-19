@@ -5,14 +5,11 @@
  * Features syntax validation, preset loading, and localStorage persistence.
  */
 
-import { parseMissionScript, MissionScript } from '../guidance/FlightScript';
+import { parseMissionScript } from '../guidance/FlightScript';
 import { PRESET_SCRIPTS } from '../guidance/FlightComputer';
 import { Game } from '../core/Game';
 import { createElement } from './DOMUtils';
-
-const STORAGE_KEY = 'rocket-sim-scripts';
-
-type SavedScriptsRecord = Record<string, { text: string; script: MissionScript }>;
+import { ScriptStorage } from './ScriptStorage';
 
 export class ScriptEditor {
     private modal: HTMLElement | null = null;
@@ -162,7 +159,7 @@ export class ScriptEditor {
                 className: 'script-textarea',
                 'aria-label': 'Script editor content',
                 'aria-describedby': 'script-syntax-help',
-                maxLength: 5000,
+                maxLength: 10000,
                 placeholder:
                     '# Mission Script\n# Example:\nWHEN ALTITUDE > 1000 THEN PITCH 80\nWHEN ALTITUDE > 10000 THEN PITCH 60\nWHEN APOGEE > 100000 THEN THROTTLE 0'
             }),
@@ -451,16 +448,12 @@ export class ScriptEditor {
             return;
         }
 
-        // Get existing scripts
-        const scripts = this.getSavedScripts();
-        scripts[name] = {
-            text: scriptText,
-            script: result.script
-        };
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(scripts));
-        this.updateSavedScriptsList();
-        this.showSuccess(`Saved "${name}"`);
+        if (ScriptStorage.saveScript(name, scriptText, result.script)) {
+            this.updateSavedScriptsList();
+            this.showSuccess(`Saved "${name}"`);
+        } else {
+            this.showErrors('Failed to save script.');
+        }
     }
 
     /**
@@ -470,10 +463,7 @@ export class ScriptEditor {
         const name = (document.getElementById('script-name-input') as HTMLInputElement)?.value;
         if (!name) return;
 
-        const scripts = this.getSavedScripts();
-        if (scripts[name]) {
-            delete scripts[name];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(scripts));
+        if (ScriptStorage.deleteScript(name)) {
             this.updateSavedScriptsList();
             this.showSuccess(`Deleted "${name}"`);
         }
@@ -483,7 +473,7 @@ export class ScriptEditor {
      * Load a saved script
      */
     private loadSavedScript(name: string): void {
-        const scripts = this.getSavedScripts();
+        const scripts = ScriptStorage.getSavedScripts();
         if (scripts[name] && this.textarea) {
             this.textarea.value = scripts[name].text;
             const nameInput = document.getElementById('script-name-input') as HTMLInputElement;
@@ -493,59 +483,12 @@ export class ScriptEditor {
     }
 
     /**
-     * Get saved scripts from localStorage
-     */
-    private getSavedScripts(): SavedScriptsRecord {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (!stored) return {};
-
-            const parsed = JSON.parse(stored);
-            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-                return {};
-            }
-
-            const validScripts: SavedScriptsRecord = {};
-
-            for (const key of Object.keys(parsed)) {
-                const entry = parsed[key];
-                if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
-
-                if (typeof entry.text !== 'string') continue;
-
-                const rawScript = entry.script;
-                if (!rawScript || typeof rawScript !== 'object' || Array.isArray(rawScript)) continue;
-                if (typeof rawScript.name !== 'string') continue;
-                if (typeof rawScript.createdAt !== 'number') continue;
-
-                // Re-parse the text to safely reconstruct the script object
-                // This prevents prototype pollution and ensures absolute schema validity
-                const parseResult = parseMissionScript(entry.text, rawScript.name);
-                if (parseResult.success && parseResult.script) {
-                    validScripts[key] = {
-                        text: entry.text,
-                        script: {
-                            name: rawScript.name,
-                            commands: parseResult.script.commands,
-                            createdAt: rawScript.createdAt
-                        }
-                    };
-                }
-            }
-
-            return validScripts;
-        } catch {
-            return {};
-        }
-    }
-
-    /**
      * Update the saved scripts dropdown
      */
     private updateSavedScriptsList(): void {
         if (!this.saveSelect) return;
 
-        const scripts = this.getSavedScripts();
+        const scripts = ScriptStorage.getSavedScripts();
         const names = Object.keys(scripts);
 
         // Clear existing options except first

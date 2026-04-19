@@ -1,3 +1,4 @@
+import { ScriptStorage } from '../src/ui/ScriptStorage';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ScriptEditor } from '../src/ui/ScriptEditor';
 import { FlightComputer } from '../src/guidance/FlightComputer';
@@ -198,7 +199,8 @@ describe('ScriptEditor Syntax Highlighting Error Path', () => {
         }).not.toThrow();
 
         // Verify the fallback path inside the catch block was executed successfully, returning {}
-        expect((newEditor as any).getSavedScripts()).toEqual({});
+
+        expect(ScriptStorage.getSavedScripts()).toEqual({});
         expect(mockLocalStorage.getItem).toHaveBeenCalledWith('rocket-sim-scripts');
     });
 
@@ -210,7 +212,8 @@ describe('ScriptEditor Syntax Highlighting Error Path', () => {
             newEditor = new ScriptEditor((editor as any).game);
         }).not.toThrow();
 
-        expect((newEditor as any).getSavedScripts()).toEqual({});
+
+        expect(ScriptStorage.getSavedScripts()).toEqual({});
     });
 
     it('should handle valid JSON but invalid schema in localStorage', () => {
@@ -220,7 +223,8 @@ describe('ScriptEditor Syntax Highlighting Error Path', () => {
         let newEditor = new ScriptEditor((editor as any).game);
 
         // Should return empty object due to validation failure
-        expect((newEditor as any).getSavedScripts()).toEqual({});
+
+        expect(ScriptStorage.getSavedScripts()).toEqual({});
     });
 
     it('should handle valid JSON but invalid script entry in localStorage', () => {
@@ -240,7 +244,8 @@ describe('ScriptEditor Syntax Highlighting Error Path', () => {
         let newEditor = new ScriptEditor((editor as any).game);
 
         // Should return empty object due to validation failure of the entry
-        expect((newEditor as any).getSavedScripts()).toEqual({});
+
+        expect(ScriptStorage.getSavedScripts()).toEqual({});
     });
 
     it('should return valid scripts from localStorage', () => {
@@ -280,11 +285,12 @@ describe('ScriptEditor Syntax Highlighting Error Path', () => {
 
         // Since the new logic dynamically reconstructs the script using parseMissionScript,
         // it generates full command objects rather than exactly matching the mocked partial validData.
-        const savedScripts = (newEditor as any).getSavedScripts();
+
+        const savedScripts = ScriptStorage.getSavedScripts();
         expect(savedScripts['Valid Script']).toBeDefined();
-        expect(savedScripts['Valid Script'].text).toEqual(validData['Valid Script'].text);
-        expect(savedScripts['Valid Script'].script.name).toEqual(validData['Valid Script'].script.name);
-        expect(savedScripts['Valid Script'].script.createdAt).toEqual(validData['Valid Script'].script.createdAt);
-        expect(savedScripts['Valid Script'].script.commands.length).toBe(1);
+        expect(savedScripts['Valid Script']!.text).toEqual(validData['Valid Script'].text);
+        expect(savedScripts['Valid Script']!.script.name).toEqual(validData['Valid Script'].script.name);
+        expect(savedScripts['Valid Script']!.script.createdAt).toEqual(validData['Valid Script'].script.createdAt);
+        expect(savedScripts['Valid Script']!.script.commands.length).toBe(1);
     });
 });
