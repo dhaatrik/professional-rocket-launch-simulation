@@ -33,6 +33,12 @@ export class AudioEngine implements IAudioEngine {
     /** Whether audio is muted */
     public muted: boolean = true;
 
+    /** Cached preferred voice */
+    private preferredVoice: SpeechSynthesisVoice | null = null;
+
+    /** Whether voices have been loaded */
+    private voicesLoaded: boolean = false;
+
     /**
      * Initialize audio context and create nodes
      * Must be called after user interaction (browser policy)
@@ -191,10 +197,16 @@ export class AudioEngine implements IAudioEngine {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.1;
 
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find((v) => v.name.includes('Google US English') || v.name.includes('Samantha'));
-        if (preferred) {
-            utterance.voice = preferred;
+        if (!this.voicesLoaded) {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                this.preferredVoice = voices.find((v) => v.name.includes('Google US English') || v.name.includes('Samantha')) || null;
+                this.voicesLoaded = true;
+            }
+        }
+
+        if (this.preferredVoice) {
+            utterance.voice = this.preferredVoice;
         }
 
         window.speechSynthesis.speak(utterance);
