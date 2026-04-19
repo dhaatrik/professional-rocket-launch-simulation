@@ -273,6 +273,17 @@ export class ManeuverPlanner {
     /**
      * Update current orbit statistics display
      */
+    private formatNumberSafe(value: unknown, divisor: number, fractionDigits: number): string {
+        const num = Number(value);
+        if (Number.isFinite(num)) {
+            return (num / divisor).toFixed(fractionDigits);
+        }
+        return 'N/A';
+    }
+
+    /**
+     * Update current orbit statistics display
+     */
     private updateOrbitStats(): KeplerianElements | null {
         const vessel = this.game.mainStack; // Assume main stack for now
         if (!vessel) return null;
@@ -315,16 +326,16 @@ export class ManeuverPlanner {
         const elements = this.getCurrentOrbitalElements(vessel);
 
         const apoEl = document.getElementById('planner-stat-apo');
-        if (apoEl) apoEl.textContent = (elements.apoapsis / 1000).toFixed(1);
+        if (apoEl) apoEl.textContent = this.formatNumberSafe(elements.apoapsis, 1000, 1);
 
         const periEl = document.getElementById('planner-stat-peri');
-        if (periEl) periEl.textContent = (elements.periapsis / 1000).toFixed(1);
+        if (periEl) periEl.textContent = this.formatNumberSafe(elements.periapsis, 1000, 1);
 
         const periodEl = document.getElementById('planner-stat-period');
-        if (periodEl) periodEl.textContent = (elements.period / 60).toFixed(1);
+        if (periodEl) periodEl.textContent = this.formatNumberSafe(elements.period, 60, 1);
 
         const eccEl = document.getElementById('planner-stat-ecc');
-        if (eccEl) eccEl.textContent = elements.eccentricity.toFixed(3);
+        if (eccEl) eccEl.textContent = this.formatNumberSafe(elements.eccentricity, 1, 3);
 
         return elements;
     }
