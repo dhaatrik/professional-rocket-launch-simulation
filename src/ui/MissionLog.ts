@@ -40,7 +40,12 @@ export class MissionLog implements IMissionLog {
     private initToggle(): void {
         if (!this.toggleBtn || !this.container) return;
 
-        this.toggleBtn.addEventListener('click', () => {
+        // Attach listener to the header so the entire area is clickable,
+        // but ensure the button's ARIA state is properly updated.
+        const header = typeof this.container.querySelector === 'function' ? this.container.querySelector('h3') : null;
+        const toggleElement = header || this.toggleBtn;
+
+        toggleElement.addEventListener('click', () => {
             if (this.container) {
                 this.container.classList.toggle('collapsed');
                 const isCollapsed = this.container.classList.contains('collapsed');
