@@ -23,8 +23,7 @@ import {
     R_EARTH,
     getGravity,
     getDynamicPressure,
-    getMachNumber,
-    DT
+    getMachNumber
 } from '../config/Constants';
 import { state, currentWindVelocity, currentDensityMultiplier } from '../core/State';
 import { addParticle } from '../core/State';
@@ -33,7 +32,6 @@ import { Particle } from './Particle';
 import {
     AerodynamicsConfig,
     AerodynamicState,
-    AerodynamicForces,
     DEFAULT_AERO_CONFIG,
     calculateAerodynamicState,
     calculateAerodynamicForces,
