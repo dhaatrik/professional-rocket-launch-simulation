@@ -31,10 +31,20 @@ class TelemetryReceiver {
     private readonly MAX_POINTS = 100;
     private altHistory: number[] = new Array(this.MAX_POINTS).fill(0);
     private altHistoryHead: number = 0;
-    private path: Vector2D[] = [];
+
+    // Path ring buffer (avoids push/shift allocation)
+    private readonly MAX_PATH = 500;
+    private path: Vector2D[] = new Array(this.MAX_PATH);
+    private pathHead: number = 0;
+    private pathCount: number = 0;
 
     constructor() {
         this.channel = new BroadcastChannel('telemetry_channel');
+
+        // Pre-allocate path objects
+        for (let i = 0; i < this.MAX_PATH; i++) {
+            this.path[i] = { x: 0, y: 0 };
+        }
 
         // Cache DOM elements
         this.statusEl = document.getElementById('connection-status') as HTMLElement;
@@ -114,21 +124,35 @@ class TelemetryReceiver {
         const x = cx + pos.x * scale;
         const y = cy - pos.y * scale;
 
-        // Path history
-        this.path.push({ x, y });
-        if (this.path.length > 500) this.path.shift();
+        // Path history (ring buffer insertion)
+        const pathPoint = this.path[this.pathHead]!;
+        pathPoint.x = x;
+        pathPoint.y = y;
+
+        this.pathHead = (this.pathHead + 1) % this.MAX_PATH;
+        if (this.pathCount < this.MAX_PATH) {
+            this.pathCount++;
+        }
 
         // Draw Path
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)'; // Blue trace
-        ctx.lineWidth = 2;
-        // Optimization: Standard for loop avoids closure allocation in continuous render loop
-        for (let i = 0; i < this.path.length; i++) {
-            const p = this.path[i]!;
-            if (i === 0) ctx.moveTo(p.x, p.y);
-            else ctx.lineTo(p.x, p.y);
+        if (this.pathCount > 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)'; // Blue trace
+            ctx.lineWidth = 2;
+
+            // Start from the oldest point in the buffer
+            const startIdx = this.pathCount === this.MAX_PATH ? this.pathHead : 0;
+
+            // Optimization: Standard for loop avoids closure allocation in continuous render loop
+            for (let i = 0; i < this.pathCount; i++) {
+                const idx = (startIdx + i) % this.MAX_PATH;
+                const p = this.path[idx]!;
+
+                if (i === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            }
+            ctx.stroke();
         }
-        ctx.stroke();
 
         // Rocket Icon
         ctx.save();
