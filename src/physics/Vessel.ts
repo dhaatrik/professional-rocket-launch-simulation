@@ -23,8 +23,7 @@ import {
     R_EARTH,
     getGravity,
     getDynamicPressure,
-    getMachNumber,
-    DT
+    getMachNumber
 } from '../config/Constants';
 import { state, currentWindVelocity, currentDensityMultiplier } from '../core/State';
 import { addParticle } from '../core/State';
