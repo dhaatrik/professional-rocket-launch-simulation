@@ -16,14 +16,11 @@ import { type IVessel, SASMode } from '../types/index';
 import { PIXELS_PER_METER, getAtmosphericDensity, getDynamicPressure } from '../config/Constants';
 import {
     type MissionScript,
-    type ScriptCondition,
-    type ScriptAction,
-    type ComparisonOperator,
     type ConditionVariable,
     parseMissionScript,
-    resetScript,
-    type SASModeValue
+    resetScript
 } from './FlightScript';
+import { ScriptExecutor } from './ScriptExecutor';
 
 // ============================================================================
 // Flight Computer Modes
@@ -68,14 +65,11 @@ export class FlightComputer {
     /** Ground level Y position for altitude calculation */
     private groundY: number;
 
-    /** Callback for staging */
-    public onStage: (() => void) | null = null;
-
-    /** Callback for SAS mode change */
-    public onSASChange: ((mode: SASMode) => void) | null = null;
-
     /** Telemetry cache to avoid garbage collection */
     private telemetryCache: Record<ConditionVariable, number>;
+
+    /** Script executor instance */
+    private scriptExecutor: ScriptExecutor;
 
     /**
      * Create a new Flight Computer
@@ -83,6 +77,7 @@ export class FlightComputer {
     constructor(groundY: number) {
         this.groundY = groundY;
         this.state = this.createInitialState();
+        this.scriptExecutor = new ScriptExecutor();
         this.telemetryCache = {
             ALTITUDE: 0,
             VELOCITY: 0,
@@ -230,21 +225,37 @@ export class FlightComputer {
         return 'Waiting...';
     }
 
+    /** Callback setter for staging */
+    set onStage(callback: (() => void) | null) {
+        this.scriptExecutor.onStage = callback;
+    }
+
+    get onStage(): (() => void) | null {
+        return this.scriptExecutor.onStage;
+    }
+
+    /** Callback setter for SAS mode change */
+    set onSASChange(callback: ((mode: SASMode) => void) | null) {
+        this.scriptExecutor.onSASChange = callback;
+    }
+
+    get onSASChange(): ((mode: SASMode) => void) | null {
+        return this.scriptExecutor.onSASChange;
+    }
+
     /**
      * Update flight computer and get output commands
      */
     update(vessel: IVessel, dt: number): FlightComputerOutput {
-        const output: FlightComputerOutput = {
-            pitchAngle: null,
-            throttle: null,
-            stage: false,
-            sasMode: null,
-            abort: false
-        };
-
         // Only process when running
         if (this.state.mode !== 'RUNNING' || !this.state.script) {
-            return output;
+            return {
+                pitchAngle: null,
+                throttle: null,
+                stage: false,
+                sasMode: null,
+                abort: false
+            };
         }
 
         // Update elapsed time
@@ -253,49 +264,12 @@ export class FlightComputer {
         // Calculate telemetry values
         this.calculateTelemetry(vessel);
 
-        // Evaluate each command
-        const commands = this.state.script.commands;
-        const len = commands.length;
-        for (let i = 0; i < len; i++) {
-            const command = commands[i]!;
-
-            // Skip completed one-shot commands
-            if (command.state === 'completed' && command.oneShot) {
-                continue;
-            }
-
-            // Evaluate condition
-            const conditionMet = this.evaluateCondition(command.condition, this.telemetryCache);
-
-            if (conditionMet) {
-                // Execute action
-                const actionResult = this.executeAction(command.action);
-
-                // Merge into output
-                if (actionResult.pitchAngle !== null) {
-                    output.pitchAngle = actionResult.pitchAngle;
-                    this.state.targetPitch = (actionResult.pitchAngle * 180) / Math.PI;
-                }
-                if (actionResult.throttle !== null) {
-                    output.throttle = actionResult.throttle;
-                    this.state.targetThrottle = actionResult.throttle;
-                }
-                if (actionResult.stage) output.stage = true;
-                if (actionResult.sasMode !== null) output.sasMode = actionResult.sasMode;
-                if (actionResult.abort) output.abort = true;
-
-                // Update command state
-                if (command.oneShot) {
-                    command.state = 'completed';
-                    this.state.lastTriggeredCommand = command.rawText;
-                } else {
-                    command.state = 'active';
-                }
-            } else if (!command.oneShot && command.state === 'active') {
-                // Continuous command no longer satisfied
-                command.state = 'pending';
-            }
-        }
+        // Execute script commands
+        const output = this.scriptExecutor.execute(
+            this.state.script,
+            this.telemetryCache,
+            this.state
+        );
 
         // Apply stored targets if no new commands
         if (output.pitchAngle === null && this.state.targetPitch !== null) {
@@ -344,100 +318,6 @@ export class FlightComputer {
         this.telemetryCache.TIME = this.state.elapsedTime;
         this.telemetryCache.THROTTLE = vessel.throttle;
         this.telemetryCache.DYNAMIC_PRESSURE = q;
-    }
-
-    /**
-     * Evaluate a condition against telemetry values
-     */
-    private evaluateCondition(condition: ScriptCondition, telemetry: Record<ConditionVariable, number>): boolean {
-        // Optimized: direct boolean computation without array allocation
-        if (condition.clauses.length === 0) return false;
-
-        const firstClause = condition.clauses[0]!;
-        const val0 = telemetry[firstClause.variable];
-        let combined = this.evaluateComparison(val0, firstClause.operator, firstClause.value);
-
-        for (let i = 1; i < condition.clauses.length; i++) {
-            const clause = condition.clauses[i]!;
-            const val = telemetry[clause.variable];
-            const result = this.evaluateComparison(val, clause.operator, clause.value);
-
-            const op = condition.logicalOperators[i - 1]!;
-            if (op === 'AND') {
-                combined = combined && result;
-            } else if (op === 'OR') {
-                combined = combined || result;
-            }
-        }
-
-        return combined;
-    }
-
-    /**
-     * Evaluate a single comparison
-     */
-    private evaluateComparison(actual: number, operator: ComparisonOperator, expected: number): boolean {
-        switch (operator) {
-            case '>':
-                return actual > expected;
-            case '<':
-                return actual < expected;
-            case '>=':
-                return actual >= expected;
-            case '<=':
-                return actual <= expected;
-            case '==':
-                return Math.abs(actual - expected) < 0.001;
-            case '!=':
-                return Math.abs(actual - expected) >= 0.001;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Execute an action and return the output
-     */
-    private executeAction(action: ScriptAction): FlightComputerOutput {
-        const output: FlightComputerOutput = {
-            pitchAngle: null,
-            throttle: null,
-            stage: false,
-            sasMode: null,
-            abort: false
-        };
-
-        switch (action.type) {
-            case 'PITCH': {
-                // Convert degrees to radians
-                const pitchDeg = action.value as number;
-                output.pitchAngle = (pitchDeg * Math.PI) / 180;
-                break;
-            }
-
-            case 'THROTTLE':
-                output.throttle = action.value as number;
-                break;
-
-            case 'STAGE':
-                output.stage = true;
-                if (this.onStage) this.onStage();
-                break;
-
-            case 'SAS': {
-                const sasValue = action.value as SASModeValue;
-                output.sasMode = SASMode[sasValue];
-                if (this.onSASChange) this.onSASChange(output.sasMode);
-                break;
-            }
-
-            case 'ABORT':
-                output.abort = true;
-                output.throttle = 0;
-                break;
-        }
-
-        return output;
     }
 
     /**
