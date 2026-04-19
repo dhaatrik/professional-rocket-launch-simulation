@@ -44,7 +44,7 @@ const mockDocument = {
             addEventListener: () => { }
         };
     },
-    createElement: () => ({ style: {} }),
+    createElement: () => ({ style: {}, setAttribute: vi.fn(), appendChild: vi.fn(), addEventListener: vi.fn() }),
     addEventListener: () => { }
 };
 
