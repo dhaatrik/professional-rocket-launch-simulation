@@ -282,8 +282,7 @@ import {
     TANK_LARGE,
     TANK_MEDIUM,
     AVIONICS_BASIC,
-    FAIRING_SMALL,
-    DECOUPLER
+    FAIRING_SMALL
 } from './PartsCatalog';
 
 /**
