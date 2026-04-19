@@ -19,7 +19,8 @@ describe('Particle Class', () => {
             rotate: vi.fn()
         } as unknown as CanvasRenderingContext2D;
 
-        vi.spyOn(MathUtils, 'secureRandom').mockReturnValue(0.5); // Predictable random
+        vi.spyOn(Math, 'random').mockReturnValue(0.5); // Predictable random
+        vi.spyOn(MathUtils, 'secureRandom').mockReturnValue(0.5);
     });
 
     afterEach(() => {

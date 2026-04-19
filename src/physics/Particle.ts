@@ -7,7 +7,7 @@
 
 import { MathUtils } from '../utils/MathUtils';
 import type { IParticle, ParticleType } from '../types/index.ts';
-import { MathUtils } from '../utils/MathUtils.ts';
+import { MathUtils } from '../utils/MathUtils';
 
 /**
  * Particle configuration by type
