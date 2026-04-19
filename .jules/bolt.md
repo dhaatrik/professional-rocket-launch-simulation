@@ -1,3 +1,6 @@
 ## 2026-04-16 - Mutating State in High-Frequency Physics Loops
 **Learning:** Functions like `updateThermalState` and `updateGusts` that use object spread (`{ ...state }`) or return new objects (`vec2(0,0)`) create significant GC pressure when called multiple times per frame (e.g., inside RK4 integration loops).
 **Action:** Refactor these hot-path functions to mutate the `currentState` object inline and return it, and use direct property assignments (`obj.x = ...`) instead of factory functions for vectors to eliminate unnecessary allocations. Update associated tests to cache initial state values before assertions.
+## 2026-04-16 - Pre-allocated Object Return Value Risks
+**Learning:** Returning a single pre-allocated object instance from a method like `getState` instead of creating a new object on every call breaks consuming code that relies on object immutability (like React UI state updates).
+**Action:** When refactoring methods to reduce object allocation, only use pre-allocated class properties for intermediate mathematical calculations or when explicitly passing an `out` parameter. Do not mutate and return a single internal shared object instance if the returned state is meant to be consumed by external observers expecting unique objects.
