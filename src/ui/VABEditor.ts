@@ -267,6 +267,7 @@ export class VABEditor {
             className: 'vab-name-input',
             placeholder: 'Rocket Name',
             value: '',
+            maxLength: 50,
             'aria-label': 'Rocket Name',
             'aria-required': 'true',
             required: true
