@@ -188,6 +188,7 @@ export class ScriptEditor {
                     'aria-label': 'Script name',
                     'aria-required': 'true',
                     required: true,
+                    maxLength: 50,
                     placeholder: 'Script name...',
                     value: 'My Mission'
                 }),
