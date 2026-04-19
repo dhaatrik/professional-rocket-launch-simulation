@@ -388,21 +388,22 @@ export class FaultInjector {
                 'aria-labelledby': 'fis-title'
             },
             [
-            createElement('div', { className: 'fis-header' }, [
-                createElement('h3', { id: 'fis-title', textContent: '🎯 FAULT INJECTION SYSTEM' }),
-                createElement('span', { className: 'fis-badge', textContent: 'INSTRUCTOR ONLY' }),
-                createElement('button', {
-                    className: 'fis-close',
-                    id: 'fis-close-btn',
-                    textContent: '✕',
-                    'aria-label': 'Close Fault Injection System',
-                    'aria-keyshortcuts': 'Escape',
-                    title: 'Close [Esc]'
-                })
-            ]),
-            createElement('div', { className: 'fis-hint', textContent: 'Click once to ARM, click again to INJECT' }),
-            ...categoryEls
-        ]
+                createElement('div', { className: 'fis-header' }, [
+                    createElement('h3', { id: 'fis-title', textContent: '🎯 FAULT INJECTION SYSTEM' }),
+                    createElement('span', { className: 'fis-badge', textContent: 'INSTRUCTOR ONLY' }),
+                    createElement('button', {
+                        className: 'fis-close',
+                        id: 'fis-close-btn',
+                        textContent: '✕',
+                        'aria-label': 'Close Fault Injection System'
+                    })
+                ]),
+                createElement('div', {
+                    className: 'fis-hint',
+                    textContent: 'Click once to ARM, click again to INJECT'
+                }),
+                ...categoryEls
+            ]
         );
 
         this.containerEl.appendChild(fisInner);
