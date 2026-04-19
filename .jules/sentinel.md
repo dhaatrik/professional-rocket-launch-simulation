@@ -29,7 +29,7 @@
 **Vulnerability:** Dynamically created text inputs and textareas lacked `maxLength` properties, which could allow users or automated scripts to paste excessively large strings, potentially causing a Denial of Service (DoS) due to memory exhaustion or parsing overhead on the client.
 **Learning:** Found several UI editor inputs (e.g., in `ScriptEditor.ts` and `VABEditor.ts`) constructed via `createElement` that omitted explicit length constraints.
 **Prevention:** Always enforce `maxLength` attributes when dynamically generating text input elements to ensure safe upper bounds on payload size.
-## 2025-02-28 - Insecure Randomness in Particle System
+## 2026-04-19 - Insecure Randomness in Particle System
 **Vulnerability:** Found `Math.random()` used in `Particle.ts` to calculate explosion debris speeds, angles, and decay parameters.
 **Learning:** `Math.random()` is not cryptographically secure and shouldn't be used for physics or safety-critical logic, though it might sometimes be fine for pure aesthetics. However, in this project's standard, replacing it everywhere prevents future logic bugs and complies with strict security linters.
 **Prevention:** Use `MathUtils.secureRandom()` instead of `Math.random()` consistently in physics calculations.
