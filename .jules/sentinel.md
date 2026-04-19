@@ -29,7 +29,7 @@
 **Vulnerability:** Dynamically created text inputs and textareas lacked `maxLength` properties, which could allow users or automated scripts to paste excessively large strings, potentially causing a Denial of Service (DoS) due to memory exhaustion or parsing overhead on the client.
 **Learning:** Found several UI editor inputs (e.g., in `ScriptEditor.ts` and `VABEditor.ts`) constructed via `createElement` that omitted explicit length constraints.
 **Prevention:** Always enforce `maxLength` attributes when dynamically generating text input elements to ensure safe upper bounds on payload size.
-## 2024-05-24 - Unsafe Math.random Usage in Particles
+## 2026-04-19 - Unsafe Math.random Usage in Particles
 **Vulnerability:** Predictable random number generation used in `src/physics/Particle.ts` via `Math.random()`.
 **Learning:** Even visual particle behaviors can trigger security linters that strictly ban predictable PRNGs. Mocking rules change when updating code - replacing global `Math.random` requires also updating test files to properly mock `MathUtils.secureRandom`.
 **Prevention:** Consistently use the project's secure random generation utilities (like `MathUtils.secureRandom()`) everywhere instead of global `Math.random()`.
