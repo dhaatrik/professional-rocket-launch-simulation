@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Particle, createParticles } from '../src/physics/Particle';
 import { MathUtils } from '../src/utils/MathUtils';
 
+vi.mock('../src/utils/MathUtils', () => ({
+    MathUtils: {
+        secureRandom: vi.fn().mockReturnValue(0.5)
+    }
+}));
+
 describe('Particle Class', () => {
     let mockCtx: CanvasRenderingContext2D;
 

@@ -5,6 +5,7 @@
  * Each particle has physics properties and renders with type-specific appearance.
  */
 
+import { MathUtils } from '../utils/MathUtils';
 import type { IParticle, ParticleType } from '../types/index.ts';
 import { MathUtils } from '../utils/MathUtils.ts';
 

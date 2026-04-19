@@ -73,6 +73,9 @@ export class Vessel implements IVessel {
     // Interpolation state
     public prevX: number = 0;
     public prevY: number = 0;
+
+    // Staging state
+    public isStageSeparating: boolean = false;
     public prevAngle: number = 0;
 
     // Physical properties
@@ -554,6 +557,10 @@ export class Vessel implements IVessel {
                 )
             );
             addParticle(Particle.create(this.x, this.y + this.h / 2, 'debris'));
+        }
+
+        if (this.isStageSeparating) {
+            Particle.create(this.x + MathUtils.secureRandom() * 20 - 10, this.y + this.h - MathUtils.secureRandom() * 20, 'fire', 0, 0);
         }
     }
 
