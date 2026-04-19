@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { createPartInstance, RocketPart } from '../src/vab/PartsCatalog';
+import {
+    createPartInstance,
+    RocketPart,
+    getPartById,
+    getPartsByCategory,
+    PARTS_CATALOG
+} from '../src/vab/PartsCatalog';
 
 describe('PartsCatalog', () => {
     describe('createPartInstance', () => {
@@ -50,6 +56,54 @@ describe('PartsCatalog', () => {
             expect(instance.part.id).toBe('mock-part-id');
             expect(instance.part.name).toBe('Mock Part');
             expect(instance.part.mass).toBe(100);
+        });
+    });
+
+    describe('getPartById', () => {
+        it('should return the correct part for a valid ID', () => {
+            const part = getPartById('engine-merlin-1d');
+            expect(part).toBeDefined();
+            expect(part?.id).toBe('engine-merlin-1d');
+            expect(part?.name).toBe('Merlin 1D');
+        });
+
+        it('should return undefined for a non-existent ID', () => {
+            const part = getPartById('non-existent-part');
+            expect(part).toBeUndefined();
+        });
+
+        it('should find all parts from the PARTS_CATALOG in the map', () => {
+            for (const part of PARTS_CATALOG) {
+                const found = getPartById(part.id);
+                expect(found).toBeDefined();
+                expect(found).toBe(part);
+            }
+        });
+    });
+
+    describe('getPartsByCategory', () => {
+        it('should return parts for a valid category', () => {
+            const engines = getPartsByCategory('engine');
+            expect(engines.length).toBeGreaterThan(0);
+            expect(engines.every(p => p.category === 'engine')).toBe(true);
+        });
+
+        it('should return an empty array for an unknown category', () => {
+            // @ts-expect-error - Testing invalid category input
+            const parts = getPartsByCategory('invalid-category');
+            expect(parts).toEqual([]);
+        });
+
+        it('should contain all parts from the catalog in their respective categories', () => {
+            const categories = new Set(PARTS_CATALOG.map(p => p.category));
+            for (const cat of categories) {
+                const partsInCategory = getPartsByCategory(cat);
+                const expectedParts = PARTS_CATALOG.filter(p => p.category === cat);
+                expect(partsInCategory.length).toBe(expectedParts.length);
+                for (const p of expectedParts) {
+                    expect(partsInCategory).toContain(p);
+                }
+            }
         });
     });
 });
