@@ -619,16 +619,10 @@ export class Game {
         const tempWind = { speed: 0, direction: 0 };
         const screenX = 50 / this.ZOOM; // Draw on left side (scaled)
 
-        // Batches for each color category (stores vertices)
-        // Format: [x1, y1, x2, y2, ...]
-        this._windLowBatch.length = 0;
-        this._windMedBatch.length = 0;
-        this._windHighBatch.length = 0;
-
-        // Text batch: [speed, x, y] (SoA)
-        this._windTextStrings.length = 0;
-        this._windTextX.length = 0;
-        this._windTextY.length = 0;
+        let lowIdx = 0;
+        let medIdx = 0;
+        let highIdx = 0;
+        let textIdx = 0;
 
         for (let y = startY; y < camY + this.height / this.ZOOM; y += step) {
             const alt = (this.groundY - y) / PIXELS_PER_METER;
@@ -658,17 +652,32 @@ export class Game {
                     const ty = vx * s + vy * c + screenY;
 
                     // Add to appropriate batch
-                    if (speed < 10) this._windLowBatch.push(tx, ty);
-                    else if (speed < 30) this._windMedBatch.push(tx, ty);
-                    else this._windHighBatch.push(tx, ty);
+                    if (speed < 10) {
+                        this._windLowBatch[lowIdx++] = tx;
+                        this._windLowBatch[lowIdx++] = ty;
+                    } else if (speed < 30) {
+                        this._windMedBatch[medIdx++] = tx;
+                        this._windMedBatch[medIdx++] = ty;
+                    } else {
+                        this._windHighBatch[highIdx++] = tx;
+                        this._windHighBatch[highIdx++] = ty;
+                    }
                 }
 
                 // Add text info (offset by 10, 15 relative to arrow center)
-                this._windTextStrings.push(`${speed.toFixed(0)} m/s`);
-                this._windTextX.push(screenX + 10);
-                this._windTextY.push(screenY + 15);
+                this._windTextStrings[textIdx] = `${speed.toFixed(0)} m/s`;
+                this._windTextX[textIdx] = screenX + 10;
+                this._windTextY[textIdx] = screenY + 15;
+                textIdx++;
             }
         }
+
+        this._windLowBatch.length = lowIdx;
+        this._windMedBatch.length = medIdx;
+        this._windHighBatch.length = highIdx;
+        this._windTextStrings.length = textIdx;
+        this._windTextX.length = textIdx;
+        this._windTextY.length = textIdx;
 
         // Render batches
         const drawBatch = (points: number[], color: string) => {
