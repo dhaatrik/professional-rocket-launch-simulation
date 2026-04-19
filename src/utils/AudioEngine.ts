@@ -10,6 +10,7 @@
  */
 
 import { IAudioEngine } from '../types';
+import { MathUtils } from './MathUtils';
 
 export class AudioEngine implements IAudioEngine {
     /** Web Audio context */
@@ -32,6 +33,12 @@ export class AudioEngine implements IAudioEngine {
 
     /** Whether audio is muted */
     public muted: boolean = true;
+
+    /** Cached preferred voice */
+    private preferredVoice: SpeechSynthesisVoice | null = null;
+
+    /** Whether voices have been loaded */
+    private voicesLoaded: boolean = false;
 
     /**
      * Initialize audio context and create nodes
@@ -56,7 +63,7 @@ export class AudioEngine implements IAudioEngine {
             // Brown noise algorithm (integrated white noise)
             let lastOut = 0;
             for (let i = 0; i < bufferSize; i++) {
-                const white = Math.random() * 2 - 1;
+                const white = MathUtils.secureRandom() * 2 - 1;
                 output[i] = (lastOut + 0.02 * white) / 1.02;
                 lastOut = output[i]!;
                 output[i]! *= 3.5; // Amplify
@@ -191,10 +198,16 @@ export class AudioEngine implements IAudioEngine {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.1;
 
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find((v) => v.name.includes('Google US English') || v.name.includes('Samantha'));
-        if (preferred) {
-            utterance.voice = preferred;
+        if (!this.voicesLoaded) {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                this.preferredVoice = voices.find((v) => v.name.includes('Google US English') || v.name.includes('Samantha')) || null;
+                this.voicesLoaded = true;
+            }
+        }
+
+        if (this.preferredVoice) {
+            utterance.voice = this.preferredVoice;
         }
 
         window.speechSynthesis.speak(utterance);

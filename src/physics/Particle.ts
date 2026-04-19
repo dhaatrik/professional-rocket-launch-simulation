@@ -5,7 +5,9 @@
  * Each particle has physics properties and renders with type-specific appearance.
  */
 
+import { MathUtils } from '../utils/MathUtils';
 import type { IParticle, ParticleType } from '../types/index.ts';
+import { MathUtils } from '../utils/MathUtils';
 
 /**
  * Particle configuration by type
@@ -147,11 +149,11 @@ export class Particle implements IParticle {
 
         // Apply spread based on type
         const spread = type === 'smoke' ? 2 : 1.5;
-        this.vx = vx + (Math.random() - 0.5) * spread * 2;
-        this.vy = vy + (Math.random() - 0.5) * spread * 2;
+        this.vx = vx + (MathUtils.secureRandom() - 0.5) * spread * 2;
+        this.vy = vy + (MathUtils.secureRandom() - 0.5) * spread * 2;
 
         // Apply type-specific properties with randomization
-        this.size = (config.size ?? 5) + (Math.random() - 0.5) * 5;
+        this.size = (config.size ?? 5) + (MathUtils.secureRandom() - 0.5) * 5;
         this.growRate = config.growRate ?? 0;
         this.decay = config.decay ?? 0.05;
         this.color = config.color ?? 255;
@@ -159,8 +161,8 @@ export class Particle implements IParticle {
 
         // Special case: debris gets more random velocity
         if (type === 'debris') {
-            this.vx = (Math.random() - 0.5) * 20;
-            this.vy = (Math.random() - 0.5) * 20;
+            this.vx = (MathUtils.secureRandom() - 0.5) * 20;
+            this.vy = (MathUtils.secureRandom() - 0.5) * 20;
         }
     }
 

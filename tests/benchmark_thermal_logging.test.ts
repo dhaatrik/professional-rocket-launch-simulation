@@ -100,7 +100,11 @@ describe('Vessel Thermal Logging Benchmark', () => {
             state.missionTime += dt;
         }
 
-        // Should log a second time after 2 seconds passed
+        // We expect it to log once initially, then again after 2 seconds.
+        // It's possible that setting health to 100 doesn't perfectly prevent the
+        // structural failure from triggering later if other things occur, or
+        // if another error log triggers. But thermal warning should trigger exactly
+        // one more time.
         expect(mockLog.log).toHaveBeenCalledTimes(2);
     });
 });
