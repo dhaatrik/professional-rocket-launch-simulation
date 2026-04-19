@@ -53,3 +53,7 @@
 ## 2026-04-14 - Standard Accessibility Attributes for Custom Modals
 **Learning:** [a11y: Custom modal overlays created with a `div` element instead of the native `<dialog>` must include standard accessibility attributes to function correctly with screen readers.]
 **Action:** [Always ensure custom modal overlays have `role="dialog"`, `aria-modal="true"`, and an `aria-labelledby` attribute pointing to the ID of the modal's title element.]
+
+## 2024-11-20 - Consolidate Event Listeners for ARIA State
+**Learning:** When a UI component has multiple event listeners bound to it or its parents that toggle the same visual state (like `.collapsed`), it creates race conditions or canceled actions where the visual state toggles back and forth but the ARIA attributes (like `aria-expanded`) fail to stay in sync.
+**Action:** Always ensure that state-toggling logic is centralized in one place (preferably within the component's own file), and bind the listener to the largest possible click target (like an `h3` header) while explicitly maintaining ARIA attributes on the interactive element (like the `<button>`) within that same centralized logic.
