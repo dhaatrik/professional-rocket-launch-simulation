@@ -107,7 +107,8 @@ for (const fault of FAULT_CATALOG) {
 // ============================================================================
 
 export class FaultInjector {
-    private activeFaults: ActiveFault[] = [];
+    private activeFaults = new Map<string, ActiveFault>();
+    private activeFaultsList: ActiveFault[] | null = null;
     private containerEl: HTMLElement | null = null;
     private _visible: boolean = false;
     private escapeHandler: ((e: KeyboardEvent) => void) | null = null;
@@ -166,23 +167,21 @@ export class FaultInjector {
         const def = FAULT_CATALOG_BY_ID.get(faultId);
         if (!def) return;
 
-        // Remove existing instance of same fault
-        this.activeFaults = this.activeFaults.filter((f) => f.definition.id !== faultId);
-
-        this.activeFaults.push({
+        this.activeFaults.set(faultId, {
             definition: def,
             status: 'armed',
             triggerType,
             delay,
             elapsed: 0
         });
+        this.activeFaultsList = null;
 
         this.render();
     }
 
     /** Inject a fault immediately */
     injectFault(faultId: string, vessel: IVessel, reliability: ReliabilitySystem): void {
-        const fault = this.activeFaults.find((f) => f.definition.id === faultId);
+        const fault = this.activeFaults.get(faultId);
         if (!fault || fault.status === 'injected') return;
 
         this.executeFault(fault, vessel, reliability);
@@ -190,7 +189,7 @@ export class FaultInjector {
 
     /** Toggle a fault: first click arms, second click injects */
     toggleFault(faultId: string, vessel: IVessel, reliability: ReliabilitySystem): void {
-        const existing = this.activeFaults.find((f) => f.definition.id === faultId);
+        const existing = this.activeFaults.get(faultId);
 
         if (!existing) {
             // First click: arm
@@ -233,7 +232,13 @@ export class FaultInjector {
     update(vessel: IVessel, reliability: ReliabilitySystem, groundY: number, dt: number): void {
         const alt = (groundY - vessel.y - vessel.h) / PIXELS_PER_METER;
 
-        for (const fault of this.activeFaults) {
+        if (this.activeFaultsList === null) {
+            this.activeFaultsList = Array.from(this.activeFaults.values());
+        }
+
+        const len = this.activeFaultsList.length;
+        for (let i = 0; i < len; i++) {
+            const fault = this.activeFaultsList[i]!;
             if (fault.status !== 'armed') continue;
 
             // Timed trigger
@@ -320,7 +325,8 @@ export class FaultInjector {
 
     /** Reset all faults */
     reset(): void {
-        this.activeFaults = [];
+        this.activeFaults.clear();
+        this.activeFaultsList = null;
         this._throttleStuck = false;
         this._throttleStuckValue = 0;
         this._fuelLeakActive = false;
@@ -340,12 +346,10 @@ export class FaultInjector {
 
         this.containerEl.textContent = '';
 
-        const activeFaultsMap = new Map<string, ActiveFault>(this.activeFaults.map((f) => [f.definition.id, f]));
-
         const categoryEls = categories.map((cat) => {
             const faults = FAULT_CATALOG_BY_CATEGORY.get(cat) || [];
             const faultEls = faults.map((fault) => {
-                const active = activeFaultsMap.get(fault.id);
+                const active = this.activeFaults.get(fault.id);
                 const statusClass =
                     active?.status === 'injected' ? 'injected' : active?.status === 'armed' ? 'armed' : '';
                 const statusLabel =

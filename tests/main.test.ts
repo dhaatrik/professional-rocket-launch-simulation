@@ -5,6 +5,7 @@ describe('main.ts Error Handling', () => {
     let alertSpy: any;
 
     beforeEach(() => {
+        vi.useFakeTimers();
         consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
         vi.resetModules();
@@ -74,6 +75,8 @@ describe('main.ts Error Handling', () => {
     });
 
     afterEach(() => {
+        vi.runOnlyPendingTimers();
+        vi.useRealTimers();
         vi.restoreAllMocks();
         vi.unstubAllGlobals();
     });
@@ -100,6 +103,12 @@ describe('main.ts Error Handling', () => {
                 Game: class {
                     addPhysicsEventListener = vi.fn();
                     addEventListener = vi.fn();
+                    getFlightComputerStatus = vi.fn(() => ({ status: 'FC: OFF', program: 'None', lastUpdate: 0 }));
+                    blackBox = {
+                        getStatusString: vi.fn(() => 'IDLE'),
+                        isRecording: vi.fn(() => false),
+                        getFrames: vi.fn(() => [])
+                    };
                     async init() {
                         throw new Error('Mocked Init Error');
                     }
@@ -110,7 +119,10 @@ describe('main.ts Error Handling', () => {
         await import('../src/main');
 
         // Allow async init error to be caught
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Let promises resolve
+        await new Promise(resolve => process.nextTick(resolve));
 
         expect(consoleErrorSpy).toHaveBeenCalledWith('Game initialization failed:', expect.any(Error));
         expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Game Init Error: Mocked Init Error'));
