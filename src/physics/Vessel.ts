@@ -33,7 +33,6 @@ import { Particle } from './Particle';
 import {
     AerodynamicsConfig,
     AerodynamicState,
-    AerodynamicForces,
     DEFAULT_AERO_CONFIG,
     calculateAerodynamicState,
     calculateAerodynamicForces,
