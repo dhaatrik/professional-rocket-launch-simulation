@@ -1,3 +1,3 @@
-## 2023-10-27 - FlightComputer getCompletedCount optimization
+## 2026-04-19 - FlightComputer getCompletedCount optimization
 **Learning:** `for...of` loops allocate an iterator, which causes overhead. Replacing them with a standard indexed `for` loop, especially when iterating through large arrays in a high-frequency path (like HUD updates), avoids this allocation and speeds up execution significantly.
 **Action:** Use standard indexed `for` loops with cached lengths instead of `for...of` when iterating through command lists or other frequently accessed arrays where iteration performance is critical, and append the non-null assertion operator `!` to satisfy TypeScript if `noUncheckedIndexedAccess` is enabled.
