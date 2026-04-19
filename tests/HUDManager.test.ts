@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Game } from '../src/core/Game';
+import { HUDManager } from '../src/ui/HUDManager';
 import { EngineStateCode } from '../src/core/PhysicsBuffer';
 
 // Mock dependencies
@@ -30,7 +30,7 @@ const mockCanvas = {
 const createMockElement = (id: string) => {
     const el: any = {
         id,
-        style: { display: 'none', color: '', height: '' },
+        style: { display: 'none', color: '', height: '', width: '' },
         textContent: '',
         className: '',
         addEventListener: vi.fn(),
@@ -72,29 +72,14 @@ vi.stubGlobal('window', {
     R_EARTH: 6371000
 });
 
-// Mock other globals
-class MockAudioContext {
-    createGain() { return { connect: vi.fn(), gain: { value: 0, linearRampToValueAtTime: vi.fn() } }; }
-    createOscillator() { return { connect: vi.fn(), start: vi.fn(), stop: vi.fn(), frequency: { value: 0, linearRampToValueAtTime: vi.fn() } }; }
-    createBufferSource() { return { connect: vi.fn(), start: vi.fn(), stop: vi.fn(), buffer: null, loop: false }; }
-    decodeAudioData() { return Promise.resolve({}); }
-    currentTime = 0;
-    destination = {};
-}
-vi.stubGlobal('AudioContext', MockAudioContext);
-vi.stubGlobal('Worker', class {
-    addEventListener() { }
-    postMessage() { }
-});
-
-describe('Game HUD Comprehensive Tests', () => {
-    let game: Game;
+describe('HUDManager Comprehensive Tests', () => {
+    let hudManager: HUDManager;
 
     beforeEach(() => {
         // Reset mocks
         for (const key in mockElements) delete mockElements[key];
         vi.clearAllMocks();
-        game = new Game();
+        hudManager = new HUDManager();
     });
 
     it('should update Environment HUD correctly', () => {
@@ -105,11 +90,12 @@ describe('Game HUD Comprehensive Tests', () => {
             surfaceWindDirection: Math.PI, // South
             timeOfDay: 12 * 3600, // Noon
             isLaunchSafe: true,
-            maxQWindWarning: false
+            maxQWindWarning: false,
+            windSpeed: 12, // Needs to match what HUDManager uses
+            windDirection: Math.PI
         };
 
-        (game as any).lastEnvState = envState;
-        (game as any).drawHUD();
+        hudManager.update(null, 0, 0, envState as any, null as any);
 
         expect(mockElements['hud-wind-speed'].textContent).toBe('12 m/s');
         expect(mockElements['hud-wind-speed'].style.color).toBeDefined(); // Yellow
@@ -138,13 +124,9 @@ describe('Game HUD Comprehensive Tests', () => {
             ignitersRemaining: 2
         };
 
-        (game as any).groundY = 5550; // Set groundY so alt works out
-        (game as any).trackedEntity = trackedEntity;
+        const cachedVelocity = Math.sqrt(trackedEntity.vx ** 2 + trackedEntity.vy ** 2);
 
-        // Simulate animate() calculating velocity
-        (game as any)._cachedVelocity = Math.sqrt(trackedEntity.vx ** 2 + trackedEntity.vy ** 2);
-
-        (game as any).drawHUD();
+        hudManager.update(trackedEntity as any, 5550, cachedVelocity, null, null as any);
 
         expect(mockElements['hud-alt'].textContent).toBe('0.50 km'); // 500m / 1000
         expect(mockElements['hud-vel'].textContent).toBe('223.6 m/s'); // sqrt(100^2 + 200^2)
@@ -174,8 +156,8 @@ describe('Game HUD Comprehensive Tests', () => {
             engineState: EngineStateCode.OFF,
             ignitersRemaining: 0
         };
-        (game as any).trackedEntity = trackedEntity;
-        (game as any).drawHUD();
+
+        hudManager.update(trackedEntity as any, 5550, 0, null, null as any);
 
         expect(mockElements['hud-skin-temp'].textContent).toContain('727°C');
         expect(mockElements['hud-tps-status'].textContent).toBe('20%');
@@ -185,20 +167,20 @@ describe('Game HUD Comprehensive Tests', () => {
 
     it('should update FTS HUD correctly', () => {
         // Mock FTS status
-        (game as any).fts = {
+        const fts = {
             getStatus: () => ({ state: 'WARNING', armed: true, warningTimer: 2.5 }),
             config: { warningDurationS: 5 }
         };
 
         // Mock tracked entity with minimal required properties
-        (game as any).trackedEntity = {
+        const trackedEntity = {
             y: 0, h: 0, vx: 0, vy: 0, angle: 0,
-            throttle: 0, fuel: 0, aoa: 0, stabilityMargin: 0, isAeroStable: true,
+            throttle: 0, fuel: 0, maxFuel: 100, aoa: 0, stabilityMargin: 0, isAeroStable: true,
             skinTemp: 300, isThermalCritical: false, heatShieldRemaining: 1, isAblating: false,
             engineState: EngineStateCode.OFF, ignitersRemaining: 3
         };
 
-        (game as any).drawHUD();
+        hudManager.update(trackedEntity as any, 0, 0, null, fts as any);
 
         // Warning duration 5 - 2.5 = 2.5s -> rounded to "3" (toFixed(0))
         expect(mockElements['hud-fts-state'].textContent).toBe('WARN 3s');
