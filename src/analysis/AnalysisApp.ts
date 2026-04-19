@@ -5,6 +5,7 @@
  * Handles UI interactions, data loading, playback, and rendering.
  */
 
+import { MathUtils } from '../utils/MathUtils';
 import { FlightDataParser, FlightFrame } from './FlightDataParser';
 import { MathUtils } from '../utils/MathUtils';
 
