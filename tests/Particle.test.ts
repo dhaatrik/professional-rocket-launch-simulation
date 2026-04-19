@@ -26,9 +26,7 @@ describe('Particle Class', () => {
         } as unknown as CanvasRenderingContext2D;
 
         vi.spyOn(Math, 'random').mockReturnValue(0.5); // Predictable random
-
-        // Mock MathUtils.secureRandom since it is now used instead of Math.random
-        vi.spyOn(MathUtils, 'secureRandom').mockReturnValue(0.5);
+        vi.spyOn(MathUtils, 'secureRandom').mockReturnValue(0.5); // Predictable secureRandom
     });
 
     afterEach(() => {
