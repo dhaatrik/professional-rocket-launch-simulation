@@ -18,7 +18,6 @@ import {
     CONFIG,
     PIXELS_PER_METER,
     getAtmosphericDensity,
-    SPEED_OF_SOUND,
     RHO_SL,
     R_EARTH,
     getGravity,
