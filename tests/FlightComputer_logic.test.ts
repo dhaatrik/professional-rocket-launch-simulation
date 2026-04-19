@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { FlightComputer } from '../src/guidance/FlightComputer';
+import { ScriptExecutor } from '../src/guidance/ScriptExecutor';
 import type { ScriptCondition, ConditionVariable } from '../src/guidance/FlightScript';
 
-// Helper to access private method
-function evaluateCondition(fc: FlightComputer, condition: ScriptCondition, telemetry: Record<ConditionVariable, number>): boolean {
-    return (fc as any).evaluateCondition(condition, telemetry);
+// Helper to access evaluateCondition
+function evaluateCondition(executor: ScriptExecutor, condition: ScriptCondition, telemetry: Record<ConditionVariable, number>): boolean {
+    return executor.evaluateCondition(condition, telemetry);
 }
 
 // Helper to create simple condition clause
@@ -12,8 +12,8 @@ function createClause(variable: ConditionVariable, operator: any, value: number)
     return { variable, operator, value };
 }
 
-describe('FlightComputer Logic', () => {
-    const fc = new FlightComputer(0);
+describe('ScriptExecutor Logic', () => {
+    const executor = new ScriptExecutor();
     const telemetry: Record<ConditionVariable, number> = {
         ALTITUDE: 1000,
         VELOCITY: 500,
@@ -32,13 +32,13 @@ describe('FlightComputer Logic', () => {
                 clauses: [createClause('ALTITUDE', '>', 500)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true);
 
             const conditionFalse: ScriptCondition = {
                 clauses: [createClause('ALTITUDE', '>', 2000)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionFalse, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, conditionFalse, telemetry)).toBe(false);
         });
 
         it('should handle LESS_THAN (<)', () => {
@@ -46,13 +46,13 @@ describe('FlightComputer Logic', () => {
                 clauses: [createClause('VELOCITY', '<', 1000)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true);
 
             const conditionFalse: ScriptCondition = {
                 clauses: [createClause('VELOCITY', '<', 100)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionFalse, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, conditionFalse, telemetry)).toBe(false);
         });
 
         it('should handle GREATER_THAN_OR_EQUAL (>=)', () => {
@@ -60,19 +60,19 @@ describe('FlightComputer Logic', () => {
                 clauses: [createClause('ALTITUDE', '>=', 1000)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true);
 
              const conditionGt: ScriptCondition = {
                 clauses: [createClause('ALTITUDE', '>=', 500)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionGt, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, conditionGt, telemetry)).toBe(true);
 
             const conditionFalse: ScriptCondition = {
                 clauses: [createClause('ALTITUDE', '>=', 2000)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionFalse, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, conditionFalse, telemetry)).toBe(false);
         });
 
         it('should handle LESS_THAN_OR_EQUAL (<=)', () => {
@@ -80,19 +80,19 @@ describe('FlightComputer Logic', () => {
                 clauses: [createClause('VELOCITY', '<=', 500)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true);
 
             const conditionLt: ScriptCondition = {
                 clauses: [createClause('VELOCITY', '<=', 1000)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionLt, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, conditionLt, telemetry)).toBe(true);
 
             const conditionFalse: ScriptCondition = {
                 clauses: [createClause('VELOCITY', '<=', 100)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionFalse, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, conditionFalse, telemetry)).toBe(false);
         });
 
         it('should handle EQUAL (==) with tolerance', () => {
@@ -101,20 +101,20 @@ describe('FlightComputer Logic', () => {
                 clauses: [createClause('VELOCITY', '==', 500)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true); // Exact match (with float point potentially)
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true); // Exact match (with float point potentially)
 
             // Tolerance check (epsilon 0.001)
             const conditionClose: ScriptCondition = {
                 clauses: [createClause('VELOCITY', '==', 500.0009)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionClose, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, conditionClose, telemetry)).toBe(true);
 
              const conditionFar: ScriptCondition = {
                 clauses: [createClause('VELOCITY', '==', 500.002)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionFar, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, conditionFar, telemetry)).toBe(false);
         });
 
         it('should handle NOT_EQUAL (!=) with tolerance', () => {
@@ -123,20 +123,20 @@ describe('FlightComputer Logic', () => {
                 clauses: [createClause('VELOCITY', '!=', 600)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true);
 
             const conditionEqual: ScriptCondition = {
                 clauses: [createClause('VELOCITY', '!=', 500)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionEqual, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, conditionEqual, telemetry)).toBe(false);
 
             // Close enough to equal -> result false
             const conditionClose: ScriptCondition = {
                 clauses: [createClause('VELOCITY', '!=', 500.0009)],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, conditionClose, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, conditionClose, telemetry)).toBe(false);
         });
     });
 
@@ -150,7 +150,7 @@ describe('FlightComputer Logic', () => {
                 ],
                 logicalOperators: ['AND']
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true);
         });
 
         // A (True) AND B (False) -> False
@@ -162,7 +162,7 @@ describe('FlightComputer Logic', () => {
                 ],
                 logicalOperators: ['AND']
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(false);
         });
 
         // A (False) AND B (True) -> False
@@ -174,7 +174,7 @@ describe('FlightComputer Logic', () => {
                 ],
                 logicalOperators: ['AND']
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(false);
         });
 
         // A (True) OR B (False) -> True
@@ -186,7 +186,7 @@ describe('FlightComputer Logic', () => {
                 ],
                 logicalOperators: ['OR']
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true);
         });
 
         // A (False) OR B (True) -> True
@@ -198,7 +198,7 @@ describe('FlightComputer Logic', () => {
                 ],
                 logicalOperators: ['OR']
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true);
         });
 
         // A (False) OR B (False) -> False
@@ -210,7 +210,7 @@ describe('FlightComputer Logic', () => {
                 ],
                 logicalOperators: ['OR']
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(false);
         });
     });
 
@@ -241,7 +241,7 @@ describe('FlightComputer Logic', () => {
                 logicalOperators: ['OR', 'AND']
             };
             // Expectation based on current code: False
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(false);
         });
 
         it('should evaluate A OR B AND C where C is True', () => {
@@ -258,7 +258,7 @@ describe('FlightComputer Logic', () => {
                 ],
                 logicalOperators: ['OR', 'AND']
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(true);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(true);
         });
     });
 
@@ -268,7 +268,7 @@ describe('FlightComputer Logic', () => {
                 clauses: [],
                 logicalOperators: []
             };
-            expect(evaluateCondition(fc, condition, telemetry)).toBe(false);
+            expect(evaluateCondition(executor, condition, telemetry)).toBe(false);
         });
     });
 });

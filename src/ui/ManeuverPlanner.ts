@@ -7,15 +7,14 @@
 
 import { Game } from '../core/Game';
 import {
-    calculateOrbitalElements,
     calculateCircularizationFromElements,
     calculateHohmannTransfer,
     KeplerianElements,
     ManeuverPlan
 } from '../physics/OrbitalMechanics';
-import { vec2, IVessel } from '../types';
-import { PIXELS_PER_METER, R_EARTH } from '../config/Constants';
-import { createElement } from './DOMUtils';
+import { R_EARTH } from '../config/Constants';
+import { getCurrentOrbitalElements } from '../physics/OrbitPrediction';
+import { buildModalStructure, renderManeuverPlan, renderHohmannPlan, renderErrorMessage } from './ManeuverPlannerDOM';
 
 export class ManeuverPlanner {
     private game: Game;
@@ -43,128 +42,11 @@ export class ManeuverPlanner {
         modal.className = 'script-editor-modal'; // Reuse script editor styling for consistency
         modal.style.display = 'none'; // Hidden by default
 
-        modal.appendChild(this.buildModalStructure());
+        modal.appendChild(buildModalStructure());
 
         document.body.appendChild(modal);
         this.modal = modal;
         this.contentDiv = document.getElementById('planner-results');
-    }
-
-    private buildModalStructure(): HTMLElement {
-        return createElement(
-            'div',
-            {
-                className: 'script-editor-content maneuver-planner-content',
-                role: 'dialog',
-                'aria-modal': 'true',
-                'aria-labelledby': 'planner-title'
-            },
-            [
-                createElement('div', { className: 'script-editor-header' }, [
-                    createElement('h2', { id: 'planner-title', textContent: 'Orbital Maneuver Planner' }),
-                    createElement('button', {
-                        id: 'planner-close-btn',
-                        className: 'script-close-btn',
-                        'aria-label': 'Close Maneuver Planner',
-                        'aria-keyshortcuts': 'Escape',
-                        title: 'Close [Esc]',
-                        textContent: '×'
-                    })
-                ]),
-                createElement('div', { className: 'script-editor-body maneuver-planner-body' }, [
-                    createElement('div', { className: 'maneuver-section' }, [
-                        createElement('h3', { textContent: 'Current Orbit' }),
-                        createElement('div', { id: 'planner-orbit-stats', className: 'stats-grid' }, [
-                            createElement('div', {}, [
-                                createElement('strong', { textContent: 'Apoapsis:' }),
-                                ' ',
-                                createElement('span', { id: 'planner-stat-apo', textContent: '--' }),
-                                ' km'
-                            ]),
-                            createElement('div', {}, [
-                                createElement('strong', { textContent: 'Periapsis:' }),
-                                ' ',
-                                createElement('span', { id: 'planner-stat-peri', textContent: '--' }),
-                                ' km'
-                            ]),
-                            createElement('div', {}, [
-                                createElement('strong', { textContent: 'Period:' }),
-                                ' ',
-                                createElement('span', { id: 'planner-stat-period', textContent: '--' }),
-                                ' min'
-                            ]),
-                            createElement('div', {}, [
-                                createElement('strong', { textContent: 'Eccentricity:' }),
-                                ' ',
-                                createElement('span', { id: 'planner-stat-ecc', textContent: '--' })
-                            ])
-                        ])
-                    ]),
-                    createElement('div', { className: 'maneuver-section' }, [
-                        createElement('h3', { textContent: 'Select Maneuver' }),
-                        createElement(
-                            'select',
-                            {
-                                id: 'maneuver-type-select',
-                                className: 'script-select maneuver-select',
-                                'aria-label': 'Select maneuver type'
-                            },
-                            [
-                                createElement('option', {
-                                    value: 'circularize-apo',
-                                    textContent: 'Circularize at Apoapsis'
-                                }),
-                                createElement('option', {
-                                    value: 'circularize-peri',
-                                    textContent: 'Circularize at Periapsis'
-                                }),
-                                createElement('option', { value: 'hohmann', textContent: 'Hohmann Transfer' })
-                            ]
-                        ),
-                        createElement(
-                            'div',
-                            {
-                                id: 'hohmann-inputs',
-                                className: 'maneuver-input-group',
-                                style: { display: 'none' }
-                            },
-                            [
-                                createElement('label', {
-                                    className: 'maneuver-label',
-                                    htmlFor: 'target-alt-input',
-                                    textContent: 'Target Altitude (km):'
-                                }),
-                                createElement('input', {
-                                    type: 'number',
-                                    id: 'target-alt-input',
-                                    className: 'script-name-input maneuver-input',
-                                    'aria-required': 'true',
-                                    required: true,
-                                    value: '500'
-                                })
-                            ]
-                        )
-                    ]),
-                    createElement('div', { className: 'maneuver-section' }, [
-                        createElement('h3', { textContent: 'Maneuver Plan' }),
-                        createElement('div', {
-                            id: 'planner-results',
-                            className: 'maneuver-results',
-                            'aria-live': 'polite',
-                            textContent: 'Select a maneuver to calculate...'
-                        })
-                    ])
-                ]),
-                createElement('div', { className: 'script-editor-footer' }, [
-                    createElement('button', {
-                        id: 'planner-refresh-btn',
-                        className: 'script-btn',
-                        'aria-label': 'Refresh maneuver plan',
-                        textContent: 'Refresh'
-                    })
-                ])
-            ]
-        );
     }
 
     /**
@@ -262,12 +144,15 @@ export class ManeuverPlanner {
         else this.show();
     }
 
-    private getCurrentOrbitalElements(vessel: IVessel): KeplerianElements {
-        const altitude = (this.game.groundY - vessel.y - vessel.h) / PIXELS_PER_METER;
-        const r = R_EARTH + altitude;
-        const rVec = vec2(0, r);
-        const vVec = vec2(vessel.vx, -vessel.vy);
-        return calculateOrbitalElements(rVec, vVec);
+    /**
+     * Update current orbit statistics display
+     */
+    private formatNumberSafe(value: unknown, divisor: number, fractionDigits: number): string {
+        const num = Number(value);
+        if (Number.isFinite(num)) {
+            return (num / divisor).toFixed(fractionDigits);
+        }
+        return 'N/A';
     }
 
     /**
@@ -312,19 +197,19 @@ export class ManeuverPlanner {
         // BUT, for the purpose of this "Planner", we can pretend we are in a central force field
         // where r = R_EARTH + altitude, and v_tangential = vx, v_radial = -vy.
 
-        const elements = this.getCurrentOrbitalElements(vessel);
+        const elements = getCurrentOrbitalElements(vessel, this.game.groundY);
 
         const apoEl = document.getElementById('planner-stat-apo');
-        if (apoEl) apoEl.textContent = (elements.apoapsis / 1000).toFixed(1);
+        if (apoEl) apoEl.textContent = this.formatNumberSafe(elements.apoapsis, 1000, 1);
 
         const periEl = document.getElementById('planner-stat-peri');
-        if (periEl) periEl.textContent = (elements.periapsis / 1000).toFixed(1);
+        if (periEl) periEl.textContent = this.formatNumberSafe(elements.periapsis, 1000, 1);
 
         const periodEl = document.getElementById('planner-stat-period');
-        if (periodEl) periodEl.textContent = (elements.period / 60).toFixed(1);
+        if (periodEl) periodEl.textContent = this.formatNumberSafe(elements.period, 60, 1);
 
         const eccEl = document.getElementById('planner-stat-ecc');
-        if (eccEl) eccEl.textContent = elements.eccentricity.toFixed(3);
+        if (eccEl) eccEl.textContent = this.formatNumberSafe(elements.eccentricity, 1, 3);
 
         return elements;
     }
@@ -337,7 +222,7 @@ export class ManeuverPlanner {
         if (!vessel) return;
 
         // Recalculate elements (should ideally cache this)
-        const elements = this.getCurrentOrbitalElements(vessel);
+        const elements = getCurrentOrbitalElements(vessel, this.game.groundY);
 
         const select = document.getElementById('maneuver-type-select') as HTMLSelectElement;
         const type = select.value;
@@ -361,10 +246,10 @@ export class ManeuverPlanner {
 
             if (type === 'circularize-apo') {
                 plan = calculateCircularizationFromElements(elements, true, thrust, mass);
-                this.renderManeuverPlan(plan, resultDiv);
+                renderManeuverPlan(plan, resultDiv);
             } else if (type === 'circularize-peri') {
                 plan = calculateCircularizationFromElements(elements, false, thrust, mass);
-                this.renderManeuverPlan(plan, resultDiv);
+                renderManeuverPlan(plan, resultDiv);
             } else if (type === 'hohmann') {
                 const targetAltKm =
                     parseFloat((document.getElementById('target-alt-input') as HTMLInputElement).value) || 500;
@@ -387,102 +272,11 @@ export class ManeuverPlanner {
                 const r1 = elements.semiMajorAxis;
                 const hResult = calculateHohmannTransfer(r1, targetR, thrust, mass);
 
-                this.renderHohmannPlan(hResult, targetAltKm, resultDiv);
+                renderHohmannPlan(hResult, targetAltKm, resultDiv);
             }
         } catch (e: unknown) {
             resultDiv.textContent = '';
-            this.createElement('span', resultDiv, {
-                className: 'maneuver-error',
-                text: `Error: ${e instanceof Error ? e.message : String(e)}`
-            });
+            renderErrorMessage(`Error: ${e instanceof Error ? e.message : String(e)}`, resultDiv);
         }
-    }
-
-    private renderManeuverPlan(plan: ManeuverPlan, container: HTMLElement): void {
-        this.createElement('strong', container, { text: plan.description });
-
-        this.createElement('br', container);
-
-        this.createElement('hr', container, { className: 'maneuver-separator' });
-
-        this.createElement('div', container, {
-            text: `Target Orbit: ${(plan.targetOrbit.apoapsis / 1000).toFixed(0)} x ${(plan.targetOrbit.periapsis / 1000).toFixed(0)} km`
-        });
-
-        const dvDiv = this.createElement('div', container, {
-            className: 'maneuver-dv-container'
-        });
-        this.createElement('span', dvDiv, {
-            className: 'maneuver-dv-value',
-            text: `ΔV: ${plan.deltaV.toFixed(1)} m/s`
-        });
-
-        this.createElement('div', container, {
-            text: `Burn Duration: ${plan.burnTime.toFixed(1)} s`
-        });
-
-        this.createElement('div', container, {
-            className: 'maneuver-wait-text',
-            text: `Wait for ${plan.description.includes('Apoapsis') ? 'Apoapsis' : 'Periapsis'} to execute.`
-        });
-    }
-
-    private renderHohmannPlan(
-        hResult: { deltaV1: number; deltaV2: number; transferTime: number; burnTime1: number },
-        targetAltKm: number,
-        container: HTMLElement
-    ): void {
-        this.createElement('strong', container, {
-            text: `Hohmann Transfer to ${targetAltKm} km`
-        });
-
-        this.createElement('br', container);
-
-        this.createElement('hr', container, { className: 'maneuver-separator' });
-
-        this.createElement('div', container, {
-            text: `Transfer Time: ${(hResult.transferTime / 60).toFixed(1)} min`
-        });
-
-        this.createElement('div', container, {
-            className: 'maneuver-burn-header',
-            text: 'Burn 1 (Departure):'
-        });
-
-        this.createElement('div', container, {
-            text: `ΔV: ${hResult.deltaV1.toFixed(1)} m/s`
-        });
-
-        this.createElement('div', container, {
-            text: `Duration: ${hResult.burnTime1.toFixed(1)} s`
-        });
-
-        this.createElement('div', container, {
-            className: 'maneuver-burn-header',
-            text: 'Burn 2 (Arrival):'
-        });
-
-        this.createElement('div', container, {
-            text: `ΔV: ${hResult.deltaV2.toFixed(1)} m/s`
-        });
-
-        this.createElement('div', container, {
-            text: `Total ΔV: ${(hResult.deltaV1 + hResult.deltaV2).toFixed(1)} m/s`
-        });
-    }
-
-    /**
-     * Helper to create and append DOM elements
-     */
-    private createElement(
-        tag: string,
-        parent: HTMLElement,
-        options: { text?: string; className?: string } = {}
-    ): HTMLElement {
-        const el = document.createElement(tag);
-        if (options.className) el.className = options.className;
-        if (options.text) el.textContent = options.text;
-        parent.appendChild(el);
-        return el;
     }
 }

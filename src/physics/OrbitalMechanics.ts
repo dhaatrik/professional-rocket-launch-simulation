@@ -104,10 +104,11 @@ export function calculateOrbitalElements(r: Vector2D, v: Vector2D): KeplerianEle
     // difficult in 2D without argument of periapsis. Simplified:
     // angle between e_vec and r_vec.
     // For now, return angle of position vector relative to some reference if needed
-    // or calc via: cos(nu) = (a(1-e^2)/r - 1) / e
+    // or calc via: cos(nu) = (p/r - 1) / e, where p is semi-latus rectum
     let trueAnomaly = 0;
     if (e > 1e-6) {
-        const cosNu = ((a * (1 - e * e)) / rMag - 1) / e;
+        const p = (h * h) / MU;
+        const cosNu = (p / rMag - 1) / e;
         // Clamp to [-1, 1] for acos
         trueAnomaly = Math.acos(Math.max(-1, Math.min(1, cosNu)));
         // Check sign using flight path angle (v dot r)

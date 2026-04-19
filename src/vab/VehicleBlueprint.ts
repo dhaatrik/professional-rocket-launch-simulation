@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Vehicle Blueprint
  *
@@ -282,8 +282,7 @@ import {
     TANK_LARGE,
     TANK_MEDIUM,
     AVIONICS_BASIC,
-    FAIRING_SMALL,
-    DECOUPLER
+    FAIRING_SMALL
 } from './PartsCatalog';
 
 /**
