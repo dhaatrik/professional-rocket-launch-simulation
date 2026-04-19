@@ -1,3 +1,3 @@
-## 2026-04-16 - Mutating State in High-Frequency Physics Loops
-**Learning:** Functions like `updateThermalState` and `updateGusts` that use object spread (`{ ...state }`) or return new objects (`vec2(0,0)`) create significant GC pressure when called multiple times per frame (e.g., inside RK4 integration loops).
-**Action:** Refactor these hot-path functions to mutate the `currentState` object inline and return it, and use direct property assignments (`obj.x = ...`) instead of factory functions for vectors to eliminate unnecessary allocations. Update associated tests to cache initial state values before assertions.
+## 2023-10-27 - FlightComputer getCompletedCount optimization
+**Learning:** `for...of` loops allocate an iterator, which causes overhead. Replacing them with a standard indexed `for` loop, especially when iterating through large arrays in a high-frequency path (like HUD updates), avoids this allocation and speeds up execution significantly.
+**Action:** Use standard indexed `for` loops with cached lengths instead of `for...of` when iterating through command lists or other frequently accessed arrays where iteration performance is critical, and append the non-null assertion operator `!` to satisfy TypeScript if `noUncheckedIndexedAccess` is enabled.
