@@ -211,6 +211,14 @@ export class Particle implements IParticle {
         Array.from({ length: 20 }, () => [])
     ];
 
+    // Local array tracking to avoid .push() overhead
+    private static batchLengths: number[][] = [
+        new Array(20).fill(0),
+        new Array(20).fill(0),
+        new Array(20).fill(0),
+        new Array(20).fill(0)
+    ];
+
     /**
      * Batch render multiple particles
      * Optimizes performance by grouping particles with similar visual properties
@@ -220,14 +228,17 @@ export class Particle implements IParticle {
         if (len === 0) return;
 
         const batches = Particle.batchArrays;
+        const lengths = Particle.batchLengths;
 
         // Clear existing batches
         for (let i = 0; i < 4; i++) {
             const buckets = batches[i];
-            if (!buckets) continue;
+            const typeLengths = lengths[i];
+            if (!buckets || !typeLengths) continue;
             for (let j = 0; j < 20; j++) {
                 const bucket = buckets[j];
                 if (bucket) bucket.length = 0;
+                typeLengths[j] = 0;
             }
         }
 
@@ -241,10 +252,11 @@ export class Particle implements IParticle {
             const lifeIndex = Math.max(0, Math.min(19, (p.life * 20) | 0));
 
             const buckets = batches[p.typeId];
-            if (buckets) {
+            const typeLengths = lengths[p.typeId];
+            if (buckets && typeLengths) {
                 const bucket = buckets[lifeIndex];
                 if (bucket) {
-                    bucket.push(p);
+                    bucket[typeLengths[lifeIndex]++] = p;
                 }
             }
         }
@@ -301,14 +313,19 @@ export class Particle implements IParticle {
                 // Optimization: Use rect for small, simple particles (spark, debris)
                 // Use arc for larger, round particles (smoke, fire)
                 // 0=smoke, 1=fire use arc; 2=spark, 3=debris use rect
+                const groupLen = group.length;
                 if (i === 2 || i === 3) {
-                    for (const p of group) {
+                    for (let k = 0; k < groupLen; k++) {
+                        const p = group[k];
+                        if (!p) continue;
                         const size = Math.max(0, p.size);
                         // Center the rect to match arc behavior
                         ctx.rect(p.x - size, p.y - size, size * 2, size * 2);
                     }
                 } else {
-                    for (const p of group) {
+                    for (let k = 0; k < groupLen; k++) {
+                        const p = group[k];
+                        if (!p) continue;
                         const radius = Math.max(0, p.size);
                         // Move to start of arc to avoid connecting lines
                         ctx.moveTo(p.x + radius, p.y);
