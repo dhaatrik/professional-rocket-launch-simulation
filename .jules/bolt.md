@@ -4,3 +4,6 @@
 ## 2024-05-30 - Caching window.speechSynthesis.getVoices()
 **Learning:** `window.speechSynthesis.getVoices()` is asynchronous and may return an empty array initially. Caching it too early without checking its length can result in a permanent cache miss.
 **Action:** Always verify `voices.length > 0` before storing the result in a cache to ensure voices are actually loaded.
+## 2024-06-25 - Array.push Overhead in Render Loops
+**Learning:** In high-frequency rendering loops (e.g., `drawWindVectors` in `Game.ts` which processes hundreds of vertices per frame), `Array.prototype.push()` introduces significant function call overhead compared to direct indexed assignment (`arr[idx++] = val`).
+**Action:** Replace `.push()` with direct index assignments when populating batch arrays in performance-critical paths, especially when the arrays are cleared (`length = 0`) and reused every frame.
