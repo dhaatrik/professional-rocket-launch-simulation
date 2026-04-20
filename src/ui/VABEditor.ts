@@ -106,9 +106,11 @@ export class VABEditor {
             const removeStageBtn = target.closest('.remove-stage') as HTMLElement;
             if (removeStageBtn) {
                 e.stopPropagation();
-                const stageIndex = parseInt(removeStageBtn.dataset.stage || '0');
-                this.blueprint = removeStage(this.blueprint, stageIndex);
-                this.render();
+                if (window.confirm('Are you sure you want to remove this stage? All parts in it will be lost.')) {
+                    const stageIndex = parseInt(removeStageBtn.dataset.stage || '0');
+                    this.blueprint = removeStage(this.blueprint, stageIndex);
+                    this.render();
+                }
                 return;
             }
 
