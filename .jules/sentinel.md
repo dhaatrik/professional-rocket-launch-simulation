@@ -14,3 +14,7 @@
 **Vulnerability:** Weak randomness used in Particle class rendering and physics propagation.
 **Learning:** Even visual calculations might trigger security checks if they rely on inherently unsecure standard random generation, particularly in physics-related contexts.
 **Prevention:** Use MathUtils.secureRandom() universally for stochastic components to satisfy strict static analysis requirements without causing performance regressions.
+## 2026-04-20 - [Missing Input Limits on Number Inputs]
+**Vulnerability:** A dynamically created `type="number"` input lacked structural boundaries (`maxLength` or `max`), allowing theoretically unbounded string lengths or values to be pasted, which poses a memory or parsing DoS risk on the client.
+**Learning:** For `<input type="number">`, the `maxLength` attribute is technically invalid and not respected by browsers. Using `max` controls the numerical value but does not strictly limit the *string length* of the pasted input. Thus, applying both `max` and `maxLength` (or handling it via JavaScript input validation) provides defense-in-depth, even if browsers ignore `maxLength` for numbers in some implementations.
+**Prevention:** When creating inputs dynamically, apply `maxLength` for string limits and `max`/`min` for numerical limits to ensure inputs are comprehensively bound.

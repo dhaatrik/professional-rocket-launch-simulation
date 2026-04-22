@@ -91,7 +91,9 @@ export function buildModalStructure(): HTMLElement {
                                 className: 'script-name-input maneuver-input',
                                 'aria-required': 'true',
                                 required: true,
-                                value: '500'
+                                value: '500',
+                                max: 1000000000,
+                                maxLength: 20
                             })
                         ]
                     )
