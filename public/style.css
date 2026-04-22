@@ -400,6 +400,17 @@ button.primary:hover {
     transition: var(--transition-fast);
 }
 
+.vab-save-btn:hover,
+.vab-cancel-btn:hover {
+    background: var(--glass-bg);
+}
+
+.vab-save-btn.success {
+    background: var(--success-color, #4CAF50);
+    border-color: var(--success-color, #4CAF50);
+    color: white;
+}
+
 .vab-cat-tab:hover {
     border-color: var(--color-primary);
     color: white;

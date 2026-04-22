@@ -147,7 +147,18 @@ export class VABEditor {
                     this.savedBlueprints.push(this.blueprint);
                 }
                 saveBlueprints(this.savedBlueprints);
-                alert('Blueprint saved!');
+
+                // Inline success feedback
+                const originalText = saveBtn.textContent;
+                saveBtn.textContent = 'Saved!';
+                saveBtn.classList.add('success');
+                saveBtn.setAttribute('aria-live', 'polite');
+
+                setTimeout(() => {
+                    saveBtn.textContent = originalText;
+                    saveBtn.classList.remove('success');
+                    saveBtn.removeAttribute('aria-live');
+                }, 2000);
                 return;
             }
 
