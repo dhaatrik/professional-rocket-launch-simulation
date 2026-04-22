@@ -15,11 +15,13 @@ export class TelemetrySystem {
     /** 2D rendering context */
     private ctx: CanvasRenderingContext2D | null;
 
-    /** Recorded data points */
-    private data: TelemetryDataPoint[] = [];
-
     /** Maximum number of data points to store */
     private readonly maxDataPoints: number = 300;
+
+    /** Recorded data points (Circular Buffer) */
+    private data: TelemetryDataPoint[] = new Array(this.maxDataPoints);
+    private dataHead: number = 0;
+    private dataCount: number = 0;
 
     /** Last sample time */
     private lastSample: number = 0;
@@ -54,16 +56,20 @@ export class TelemetrySystem {
             this.maxAltQueue.push(alt);
             this.maxVelQueue.push(vel);
 
-            this.data.push({ t: time, alt, vel });
-
-            // Limit data size
-            if (this.data.length > this.maxDataPoints) {
-                const removed = this.data.shift();
-
+            if (this.dataCount === this.maxDataPoints) {
+                const removed = this.data[this.dataHead];
                 if (removed) {
                     this.maxAltQueue.pop(removed.alt);
                     this.maxVelQueue.pop(removed.vel);
                 }
+                // Overwrite the oldest
+                this.data[this.dataHead] = { t: time, alt, vel };
+                this.dataHead = (this.dataHead + 1) % this.maxDataPoints;
+            } else {
+                // Add new
+                const index = (this.dataHead + this.dataCount) % this.maxDataPoints;
+                this.data[index] = { t: time, alt, vel };
+                this.dataCount++;
             }
 
             // Update cached max values
@@ -86,7 +92,7 @@ export class TelemetrySystem {
 
         this.ctx.clearRect(0, 0, w, h);
 
-        const len = this.data.length;
+        const len = this.dataCount;
         if (len < 2) return;
 
         const maxAlt = this.maxAlt;
@@ -99,7 +105,8 @@ export class TelemetrySystem {
         const velPath = new Path2D();
 
         for (let i = 0; i < len; i++) {
-            const d = this.data[i];
+            const index = (this.dataHead + i) % this.maxDataPoints;
+            const d = this.data[index];
             if (!d) continue;
             const x = i * xStep;
 
@@ -129,7 +136,9 @@ export class TelemetrySystem {
      * Clear all recorded data
      */
     clear(): void {
-        this.data = [];
+        // Keep the pre-allocated array, just reset counters
+        this.dataHead = 0;
+        this.dataCount = 0;
         this.maxAltQueue.clear();
         this.maxVelQueue.clear();
         this.lastSample = 0;
@@ -139,15 +148,22 @@ export class TelemetrySystem {
 
     /**
      * Get current data
+     * Returns an array in correct chronological order
      */
-    getData(): readonly TelemetryDataPoint[] {
-        return this.data;
+    getData(): TelemetryDataPoint[] {
+        const result = new Array(this.dataCount);
+        for (let i = 0; i < this.dataCount; i++) {
+            result[i] = this.data[(this.dataHead + i) % this.maxDataPoints];
+        }
+        return result;
     }
 
     /**
      * Get latest data point
      */
     getLatest(): TelemetryDataPoint | undefined {
-        return this.data[this.data.length - 1];
+        if (this.dataCount === 0) return undefined;
+        const tailIndex = (this.dataHead + this.dataCount - 1) % this.maxDataPoints;
+        return this.data[tailIndex];
     }
 }
