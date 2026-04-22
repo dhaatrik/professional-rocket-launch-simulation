@@ -5,6 +5,7 @@
  */
 export class MonotonicMaxQueue {
     private deque: number[] = [];
+    private head: number = 0;
 
     /**
      * Push a value into the queue.
@@ -13,7 +14,7 @@ export class MonotonicMaxQueue {
      * @param val - The value to push
      */
     push(val: number): void {
-        while (this.deque.length > 0 && this.deque[this.deque.length - 1]! < val) {
+        while (this.deque.length > this.head && this.deque[this.deque.length - 1]! < val) {
             this.deque.pop();
         }
         this.deque.push(val);
@@ -26,8 +27,15 @@ export class MonotonicMaxQueue {
      * @param val - The value that is leaving the sliding window
      */
     pop(val: number): void {
-        if (this.deque.length > 0 && this.deque[0] === val) {
-            this.deque.shift();
+        if (this.deque.length > this.head && this.deque[this.head] === val) {
+            this.head++;
+
+            // Periodically compact the array to prevent infinite memory growth
+            // This happens when the head advances past half the array length, and it's large enough
+            if (this.head > 100 && this.head > this.deque.length / 2) {
+                this.deque = this.deque.slice(this.head);
+                this.head = 0;
+            }
         }
     }
 
@@ -35,7 +43,10 @@ export class MonotonicMaxQueue {
      * Get the current maximum value in the window.
      */
     get max(): number | undefined {
-        return this.deque[0];
+        if (this.deque.length > this.head) {
+            return this.deque[this.head];
+        }
+        return undefined;
     }
 
     /**
@@ -43,5 +54,6 @@ export class MonotonicMaxQueue {
      */
     clear(): void {
         this.deque = [];
+        this.head = 0;
     }
 }
