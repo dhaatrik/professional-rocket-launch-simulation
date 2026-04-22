@@ -92,6 +92,7 @@ export function buildModalStructure(): HTMLElement {
                                 'aria-required': 'true',
                                 required: true,
                                 value: '500',
+                                min: 0,
                                 max: 1000000000,
                                 maxLength: 20
                             })
