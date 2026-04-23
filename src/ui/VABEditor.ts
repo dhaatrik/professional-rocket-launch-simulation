@@ -41,7 +41,7 @@ export class VABEditor {
         this.blueprint = createFalconPreset();
         try {
             this.savedBlueprints = loadBlueprints();
-        } catch (e) {
+        } catch {
             this.savedBlueprints = [];
         }
 
