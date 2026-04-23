@@ -2407,3 +2407,7 @@ button.primary:hover {
     z-index: 1000;
     pointer-events: none;
 }
+
+#mc-close-btn {
+    pointer-events: auto;
+}
