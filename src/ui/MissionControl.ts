@@ -29,7 +29,37 @@ export class MissionControl {
         this.addPathPoint(LAUNCH_SITE.lat, LAUNCH_SITE.lon);
     }
 
+    private initUI(): void {
+        const mcOverlay = document.getElementById('mission-control-overlay');
+        if (mcOverlay) {
+            // Check if close button already exists to prevent duplicates
+            if (!document.getElementById('mc-close-btn')) {
+                const closeBtn = document.createElement('button');
+                closeBtn.id = 'mc-close-btn';
+                closeBtn.className = 'script-close-btn';
+                closeBtn.setAttribute('aria-label', 'Close Mission Control');
+                closeBtn.setAttribute('aria-keyshortcuts', 'Escape');
+                closeBtn.title = 'Close [Esc]';
+                closeBtn.textContent = '×';
+
+                // Position absolute to match overlay layout without modifying canvas
+                closeBtn.style.position = 'absolute';
+                closeBtn.style.top = '15px';
+                closeBtn.style.right = '20px';
+                closeBtn.style.zIndex = '1001';
+
+                closeBtn.addEventListener('click', () => {
+                    this.toggle();
+                });
+
+                mcOverlay.appendChild(closeBtn);
+            }
+        }
+    }
+
     toggle(): void {
+        this.initUI();
+
         if (!this.isVisible) {
             this.invokingElement = document.activeElement as HTMLElement;
         }
@@ -39,6 +69,11 @@ export class MissionControl {
 
         if (mcOverlay) {
             mcOverlay.style.display = this.isVisible ? 'block' : 'none';
+            if (this.isVisible) {
+                mcOverlay.classList.add('visible');
+            } else {
+                mcOverlay.classList.remove('visible');
+            }
         }
 
         if (this.isVisible) {

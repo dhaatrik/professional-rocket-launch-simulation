@@ -105,6 +105,9 @@ describe('Vessel Thermal Logging Benchmark', () => {
         // structural failure from triggering later if other things occur, or
         // if another error log triggers. But thermal warning should trigger exactly
         // one more time.
-        expect(mockLog.log).toHaveBeenCalledTimes(2);
+
+        // Count just the thermal warnings
+        const thermalWarnings = mockLog.log.mock.calls.filter(call => call[0].includes('THERMAL WARNING'));
+        expect(thermalWarnings.length).toBe(2);
     });
 });
