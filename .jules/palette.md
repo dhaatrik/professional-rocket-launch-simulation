@@ -13,6 +13,6 @@
 **Learning:** When a UI component has multiple event listeners bound to it or its parents that toggle the same visual state (like `.collapsed`), it creates race conditions or canceled actions where the visual state toggles back and forth but the ARIA attributes (like `aria-expanded`) fail to stay in sync.
 **Action:** Always ensure that state-toggling logic is centralized in one place (preferably within the component's own file), and bind the listener to the largest possible click target (like an `h3` header) while explicitly maintaining ARIA attributes on the interactive element (like the `<button>`) within that same centralized logic.
 
-## $(date +%Y-%m-%d) - Adding interactive elements to pass-through overlays
-**Learning:** When adding buttons to full-screen UI overlays that use `pointer-events: none` to allow clicks to pass through to an underlying 3D scene, do not toggle `pointer-events: auto` on the entire overlay when it's open. This causes the overlay container to swallow all clicks. Instead, `pointer-events: none` on a parent can be overridden by specific interactive child elements by directly setting `pointer-events: auto` on the child.
-**Action:** Apply `pointer-events: auto` explicitly to the newly added button (`#mc-close-btn`), not the `#mission-control-overlay`.
+## 2026-04-23 - Adding interactive elements to pass-through overlays
+**Learning:** [When adding buttons to full-screen UI overlays that use `pointer-events: none` to allow clicks to pass through to an underlying 3D scene, do not toggle `pointer-events: auto` on the entire overlay when it's open. This causes the overlay container to swallow all clicks. Instead, `pointer-events: none` on a parent can be overridden by specific interactive child elements by directly setting `pointer-events: auto` on the child.]
+**Action:** [Apply `pointer-events: auto` explicitly to the newly added button (`#mc-close-btn`), not the `#mission-control-overlay`.]
